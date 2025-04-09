@@ -7,6 +7,20 @@ import { getPoolId } from "./getPoolId";
 import { computeV4Price } from "./computeV4Price";
 import { getAssetData } from "../getAssetData";
 
+export interface V4PoolConfig {
+  numTokensToSell: bigint;
+  minProceeds: bigint;
+  maxProceeds: bigint;
+  startingTime: bigint;
+  endingTime: bigint;
+  startingTick: number;
+  endingTick: number;
+  epochLength: bigint;
+  gamma: number;
+  isToken0: boolean;
+  numPdSlugs: bigint;
+}
+
 export interface Slot0Data {
   sqrtPrice: bigint;
   tick: number;
@@ -19,17 +33,20 @@ export interface V4PoolData {
   slot0Data: Slot0Data;
   liquidity: bigint;
   price: bigint;
+  poolConfig: V4PoolConfig;
 }
 
 export const getV4PoolData = async ({
-  context,
   hook,
+  context,
 }: {
-  context: Context;
   hook: Address;
+  context: Context;
 }): Promise<V4PoolData> => {
   const { stateView } = configs[context.network.name].v4;
   const { client, network } = context;
+
+  const poolConfig = await getV4PoolConfig({ hook, context });
 
   const poolKey = await client.readContract({
     abi: DopplerABI,
@@ -106,5 +123,126 @@ export const getV4PoolData = async ({
     slot0Data,
     liquidity: liquidityResult,
     price,
+    poolConfig,
+  };
+};
+
+const getV4PoolConfig = async ({
+  hook,
+  context,
+}: {
+  hook: Address;
+  context: Context;
+}): Promise<V4PoolConfig> => {
+  const { client } = context;
+
+  const [
+    numTokensToSell,
+    minProceeds,
+    maxProceeds,
+    startingTime,
+    endingTime,
+    startingTick,
+    endingTick,
+    epochLength,
+    gamma,
+    isToken0,
+    numPdSlugs,
+  ] = await client.multicall({
+    contracts: [
+      {
+        abi: DopplerABI,
+        address: hook,
+        functionName: "numTokensToSell",
+        args: [],
+      },
+      {
+        abi: DopplerABI,
+        address: hook,
+        functionName: "minimumProceeds",
+        args: [],
+      },
+      {
+        abi: DopplerABI,
+        address: hook,
+        functionName: "maximumProceeds",
+      },
+      {
+        abi: DopplerABI,
+        address: hook,
+        functionName: "startingTime",
+      },
+      {
+        abi: DopplerABI,
+        address: hook,
+        functionName: "endingTime",
+      },
+      {
+        abi: DopplerABI,
+        address: hook,
+        functionName: "startingTick",
+        args: [],
+      },
+      {
+        abi: DopplerABI,
+        address: hook,
+        functionName: "endingTick",
+        args: [],
+      },
+      {
+        abi: DopplerABI,
+        address: hook,
+        functionName: "epochLength",
+        args: [],
+      },
+      {
+        abi: DopplerABI,
+        address: hook,
+        functionName: "gamma",
+        args: [],
+      },
+      {
+        abi: DopplerABI,
+        address: hook,
+        functionName: "isToken0",
+        args: [],
+      },
+      {
+        abi: DopplerABI,
+        address: hook,
+        functionName: "numPDSlugs",
+        args: [],
+      },
+    ],
+  });
+
+  if (
+    !numTokensToSell.result ||
+    !minProceeds.result ||
+    !maxProceeds.result ||
+    !startingTime.result ||
+    !endingTime.result ||
+    !startingTick.result ||
+    !endingTick.result ||
+    !epochLength.result ||
+    !gamma.result ||
+    !isToken0.result ||
+    !numPdSlugs.result
+  ) {
+    throw new Error("Failed to get pool config");
+  }
+
+  return {
+    numTokensToSell: numTokensToSell.result,
+    minProceeds: minProceeds.result,
+    maxProceeds: maxProceeds.result,
+    startingTime: startingTime.result,
+    endingTime: endingTime.result,
+    startingTick: startingTick.result,
+    endingTick: endingTick.result,
+    epochLength: epochLength.result,
+    gamma: gamma.result,
+    isToken0: isToken0.result,
+    numPdSlugs: numPdSlugs.result,
   };
 };

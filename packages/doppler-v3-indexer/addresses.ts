@@ -165,10 +165,10 @@ export const configs: IndexerConfigs = {
       v3Initializer: "0xBEd386a1Fc62B6598c9b8d2BF634471B6Fe75EB7" as Address,
     },
     v4: {
-      poolManager: zeroAddress as Address,
-      dopplerDeployer: zeroAddress as Address,
-      v4Initializer: zeroAddress as Address,
-      stateView: zeroAddress as Address,
+      poolManager: "0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408" as Address,
+      dopplerDeployer: "0x6ddfED58D238Ca3195E49d8ac3d4cEa6386E5C33" as Address,
+      v4Initializer: "0x49F3fBB2dFF7f3d03B622e3b2a6d3F2E6fdB2a5A" as Address,
+      stateView: "0x571291b572ed32ce6751a2cb2486ebee8defb9b4" as Address,
     },
     shared: {
       airlock: "0xa24E35a5d71d02a59b41E7c93567626302da1958" as Address,

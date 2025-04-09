@@ -271,6 +271,10 @@ export default createConfig({
           startBlock: unichain.startBlock,
           address: unichain.v4.poolManager,
         },
+        baseSepolia: {
+          startBlock: baseSepolia.startBlock,
+          address: baseSepolia.v4.poolManager,
+        },
       },
     },
     UniswapV4Pool: {
@@ -280,6 +284,14 @@ export default createConfig({
           startBlock: unichain.startBlock,
           address: factory({
             address: unichain.v4.v4Initializer,
+            event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
+            parameter: "poolOrHook",
+          }),
+        },
+        baseSepolia: {
+          startBlock: baseSepolia.startBlock,
+          address: factory({
+            address: baseSepolia.v4.v4Initializer,
             event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
             parameter: "poolOrHook",
           }),
