@@ -146,36 +146,11 @@ export const insertPoolIfNotExistsV4 = async ({
     context,
   });
 
-  const { poolKey, slot0Data, liquidity, price } = poolData;
+  const { poolKey, slot0Data, liquidity, price, poolConfig } = poolData;
   const { fee } = poolKey;
 
-  // const {
-  //   slot0Data,
-  //   liquidity,
-  //   price,
-  //   fee,
-  //   reserve0,
-  //   reserve1,
-  //   token0,
-  //   poolState,
-  // } = poolData;
-
-  const ethPrice = await fetchEthPrice(timestamp, context);
-
-  const isToken0 = token0.toLowerCase() === poolState.asset.toLowerCase();
-
-  const assetAddr = poolState.asset.toLowerCase() as `0x${string}`;
-  const numeraireAddr = poolState.numeraire.toLowerCase() as `0x${string}`;
-
-  let dollarLiquidity;
-  if (ethPrice) {
-    dollarLiquidity = await computeDollarLiquidity({
-      assetBalance: isToken0 ? reserve0 : reserve1,
-      quoteBalance: isToken0 ? reserve1 : reserve0,
-      price,
-      ethPrice,
-    });
-  }
+  const assetAddr = poolKey.currency0.toLowerCase() as `0x${string}`;
+  const numeraireAddr = poolKey.currency1.toLowerCase() as `0x${string}`;
 
   return await db.insert(pool).values({
     ...poolData,
@@ -187,10 +162,10 @@ export const insertPoolIfNotExistsV4 = async ({
     baseToken: assetAddr,
     quoteToken: numeraireAddr,
     price,
-    type: "v3",
+    type: "v4",
     chainId: BigInt(network.chainId),
     fee,
-    dollarLiquidity: dollarLiquidity ?? 0n,
+    dollarLiquidity: 0n,
     dailyVolume: address,
     graduationThreshold: 0n,
     graduationBalance: 0n,
@@ -198,6 +173,6 @@ export const insertPoolIfNotExistsV4 = async ({
     totalFee1: 0n,
     volumeUsd: 0n,
     percentDayChange: 0,
-    isToken0,
+    isToken0: poolConfig.isToken0,
   });
 };

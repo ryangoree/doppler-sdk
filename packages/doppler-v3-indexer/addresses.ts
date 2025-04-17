@@ -24,6 +24,7 @@ const unichainSepoliaStartBlock = 11932039;
 const unichainStartBlock = 8536880;
 
 const baseSepoliaStartBlock = 22668126;
+const v4BaseSepoliaStartBlock = 24187305;
 
 const inkStartBlock = 9500879;
 
@@ -38,6 +39,7 @@ export type DopplerConfig = {
   shared: SharedAddresses;
   oracle: OracleAddresses;
   startBlock: number;
+  v4StartBlock?: number;
   oracleStartBlock: number;
 };
 
@@ -181,6 +183,7 @@ export const configs: IndexerConfigs = {
     },
     oracle: oracleAddresses,
     startBlock: baseSepoliaStartBlock,
+    v4StartBlock: v4BaseSepoliaStartBlock,
     oracleStartBlock: mainnetStartBlock,
   },
   ink: {

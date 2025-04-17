@@ -62,7 +62,11 @@ export const getV4PoolData = async ({
     hooks: poolKey[4],
   };
 
+  console.log(key);
+
   const poolId = getPoolId(key);
+
+  console.log(poolId);
 
   let multiCallAddress = {};
   if (network.name == "ink") {
@@ -87,6 +91,8 @@ export const getV4PoolData = async ({
     ],
     ...multiCallAddress,
   });
+
+  console.log(slot0.result);
 
   if (!slot0.result?.[3]) {
     console.error("Failed to get slot0 data");
@@ -216,6 +222,18 @@ const getV4PoolConfig = async ({
     ],
   });
 
+  console.log(numTokensToSell.result);
+  console.log(minProceeds.result);
+  console.log(maxProceeds.result);
+  console.log(startingTime.result);
+  console.log(endingTime.result);
+  console.log(startingTick.result);
+  console.log(endingTick.result);
+  console.log(epochLength.result);
+  console.log(gamma.result);
+  console.log(isToken0.result);
+  console.log(numPdSlugs.result);
+
   if (
     !numTokensToSell.result ||
     !minProceeds.result ||
@@ -226,7 +244,7 @@ const getV4PoolConfig = async ({
     !endingTick.result ||
     !epochLength.result ||
     !gamma.result ||
-    !isToken0.result ||
+    isToken0.result == undefined ||
     !numPdSlugs.result
   ) {
     throw new Error("Failed to get pool config");

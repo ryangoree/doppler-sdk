@@ -163,7 +163,7 @@ export const module = onchainTable(
 );
 
 export const v4PoolConfig = onchainTable("v4_pool_config", (t) => ({
-  hookAddress: t.hex().notNull(),
+  hookAddress: t.hex().notNull().primaryKey(),
   numTokensToSell: t.bigint().notNull(),
   minProceeds: t.bigint().notNull(),
   maxProceeds: t.bigint().notNull(),
@@ -179,6 +179,7 @@ export const v4PoolConfig = onchainTable("v4_pool_config", (t) => ({
 }));
 
 export const v4PoolState = onchainTable("v4_pool_state", (t) => ({
+  hookAddress: t.hex().notNull().primaryKey(),
   lastEpoch: t.integer().notNull(),
   tickAccumulator: t.bigint().notNull(),
   totalTokensSold: t.bigint().notNull(),
