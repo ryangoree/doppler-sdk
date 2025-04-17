@@ -133,7 +133,7 @@ export const getV4PoolData = async ({
   };
 };
 
-const getV4PoolConfig = async ({
+export const getV4PoolConfig = async ({
   hook,
   context,
 }: {
@@ -221,18 +221,6 @@ const getV4PoolConfig = async ({
       },
     ],
   });
-
-  console.log(numTokensToSell.result);
-  console.log(minProceeds.result);
-  console.log(maxProceeds.result);
-  console.log(startingTime.result);
-  console.log(endingTime.result);
-  console.log(startingTick.result);
-  console.log(endingTick.result);
-  console.log(epochLength.result);
-  console.log(gamma.result);
-  console.log(isToken0.result);
-  console.log(numPdSlugs.result);
 
   if (
     !numTokensToSell.result ||

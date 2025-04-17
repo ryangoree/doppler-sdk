@@ -171,11 +171,10 @@ export const v4PoolConfig = onchainTable("v4_pool_config", (t) => ({
   endingTime: t.bigint().notNull(),
   startingTick: t.integer().notNull(),
   endingTick: t.integer().notNull(),
-  epochLength: t.integer().notNull(),
+  epochLength: t.bigint().notNull(),
   gamma: t.integer().notNull(),
   isToken0: t.boolean().notNull(),
-  numPdSlugs: t.integer().notNull(),
-  totalEpochs: t.integer().notNull(),
+  numPdSlugs: t.bigint().notNull(),
 }));
 
 export const v4PoolState = onchainTable("v4_pool_state", (t) => ({

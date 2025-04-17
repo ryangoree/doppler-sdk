@@ -1,9 +1,8 @@
-import { UniswapV3InitializerABI } from "@app/abis";
 import { SqrtPriceMath, TickMath } from "@uniswap/v3-sdk";
 import JSBI from "jsbi";
 import { Context } from "ponder:registry";
-import { Address } from "viem";
-import { configs } from "addresses";
+import { Address, parseEther } from "viem";
+import { insertV4ConfigIfNotExists } from "@app/indexer/shared/entities/v4-entities/v4Config";
 
 const MIN_TICK = -887222;
 const MAX_TICK = 887272;
@@ -88,4 +87,32 @@ export const computeGraduationThresholdDelta = async ({
     : await getAmount0Delta({ tickLower, tickUpper, liquidity, roundUp: true });
 
   return delta;
+};
+
+export const computeGraduationThresholdDeltaV4 = async ({
+  hookAddress,
+  totalProceeds,
+  context,
+}: {
+  hookAddress: Address;
+  totalProceeds: bigint;
+  context: Context;
+}): Promise<number> => {
+  const poolConfig = await insertV4ConfigIfNotExists({
+    hookAddress: hookAddress,
+    context,
+  });
+
+  const { minProceeds } = poolConfig;
+
+  if (totalProceeds > minProceeds) {
+    return 100;
+  }
+
+  const minProceedsInt = parseEther(minProceeds.toString());
+  const totalProceedsInt = parseEther(totalProceeds.toString());
+
+  const percentage = Number(totalProceedsInt) / Number(minProceedsInt);
+
+  return percentage;
 };

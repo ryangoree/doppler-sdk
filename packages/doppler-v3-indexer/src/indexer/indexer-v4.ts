@@ -7,10 +7,18 @@ import { fetchEthPrice } from "./shared/oracle";
 import {
   insertPoolIfNotExists,
   insertPoolIfNotExistsV4,
+  updatePool,
 } from "./shared/entities/pool";
 import { insertOrUpdateDailyVolume } from "./shared/timeseries";
-import { insertAssetIfNotExists } from "./shared/entities/asset";
+import { insertAssetIfNotExists, updateAsset } from "./shared/entities/asset";
 import { insertOrUpdateBuckets } from "./shared/timeseries";
+import {
+  computeGraduationThresholdDelta,
+  computeGraduationThresholdDeltaV4,
+} from "@app/utils/v3-utils/computeGraduationThreshold";
+import { getV3PoolReserves } from "@app/utils/v3-utils/getV3PoolData";
+import { computeDollarLiquidity } from "@app/utils/computeDollarLiquidity";
+import { insertV4ConfigIfNotExists } from "./shared/entities/v4-entities/v4Config";
 
 ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
   const { poolOrHook, asset: assetId, numeraire } = event.args;
@@ -42,7 +50,10 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
     context,
   });
 
-  console.log(poolEntity);
+  await insertV4ConfigIfNotExists({
+    hookAddress: poolOrHook,
+    context,
+  });
 
   await insertAssetIfNotExists({
     assetAddress: assetId,
@@ -72,25 +83,15 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
   }
 });
 
-ponder.on("UniswapV4Pool:Mint", async ({ event, context }) => {
+ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
   const address = event.log.address;
-  const { tickLower, tickUpper, amount, owner } = event.args;
+  const { currentTick, totalProceeds, totalTokensSold } = event.args;
 
   const poolEntity = await insertPoolIfNotExists({
     poolAddress: address,
     timestamp: event.block.timestamp,
     context,
   });
-
-  const { reserve0, reserve1 } = await getV3PoolReserves({
-    address,
-    token0: poolEntity.isToken0 ? poolEntity.baseToken : poolEntity.quoteToken,
-    token1: poolEntity.isToken0 ? poolEntity.quoteToken : poolEntity.baseToken,
-    context,
-  });
-
-  const assetBalance = poolEntity.isToken0 ? reserve0 : reserve1;
-  const quoteBalance = poolEntity.isToken0 ? reserve1 : reserve0;
 
   const ethPrice = await fetchEthPrice(event.block.timestamp, context);
 
@@ -103,14 +104,11 @@ ponder.on("UniswapV4Pool:Mint", async ({ event, context }) => {
       ethPrice,
     });
 
-    const graduationThresholdDelta = await computeGraduationThresholdDelta({
-      poolAddress: address,
-      context,
-      tickLower,
-      tickUpper,
-      liquidity: amount,
-      isToken0: poolEntity.isToken0,
-    });
+    // const graduationThresholdDelta = await computeGraduationThresholdDeltaV4({
+    //   hookAddress: address,
+    //   totalProceeds,
+    //   context,
+    // });
 
     if (dollarLiquidity) {
       await updateAsset({
@@ -125,8 +123,8 @@ ponder.on("UniswapV4Pool:Mint", async ({ event, context }) => {
         poolAddress: address,
         context,
         update: {
-          graduationThreshold:
-            poolEntity.graduationThreshold + graduationThresholdDelta,
+          // graduationThreshold:
+          //   poolEntity.graduationThreshold + graduationThresholdDelta,
           liquidity: poolEntity.liquidity + amount,
           dollarLiquidity: dollarLiquidity,
         },
@@ -136,8 +134,8 @@ ponder.on("UniswapV4Pool:Mint", async ({ event, context }) => {
         poolAddress: address,
         context,
         update: {
-          graduationThreshold:
-            poolEntity.graduationThreshold + graduationThresholdDelta,
+          // graduationThreshold:
+          //   poolEntity.graduationThreshold + graduationThresholdDelta,
           liquidity: poolEntity.liquidity + amount,
         },
       });
