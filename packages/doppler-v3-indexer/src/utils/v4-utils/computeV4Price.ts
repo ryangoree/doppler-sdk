@@ -6,16 +6,20 @@ import { getV4PoolData, getPoolId } from "@app/utils/v4-utils";
 import { getAssetData } from "@app/utils/getAssetData";
 import { PoolKey } from "@app/types/v4-types";
 import { configs } from "addresses";
+import { TickMath } from "@uniswap/v3-sdk";
 
 export const computeV4Price = async ({
   isToken0,
-  sqrtPriceX96,
+  currentTick,
   baseTokenDecimals,
 }: {
   isToken0: boolean;
-  sqrtPriceX96: bigint;
+  currentTick: number;
   baseTokenDecimals: number;
 }) => {
+  const sqrtPriceX96 = BigInt(
+    TickMath.getSqrtRatioAtTick(currentTick).toString()
+  );
   const ratioX192 = sqrtPriceX96 * sqrtPriceX96;
   const baseTokenDecimalScale = 10 ** baseTokenDecimals;
 

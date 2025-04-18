@@ -10,6 +10,7 @@ import {
   getAmount0Delta,
   getAmount1Delta,
 } from "../v3-utils/computeGraduationThreshold";
+
 export interface V4PoolConfig {
   numTokensToSell: bigint;
   minProceeds: bigint;
@@ -98,8 +99,6 @@ export const getV4PoolData = async ({
     ...multiCallAddress,
   });
 
-  console.log(slot0.result);
-
   if (!slot0.result?.[3]) {
     console.error("Failed to get slot0 data");
   }
@@ -126,7 +125,7 @@ export const getV4PoolData = async ({
 
   const price = await computeV4Price({
     isToken0,
-    sqrtPriceX96: slot0Data.sqrtPrice,
+    currentTick: slot0Data.tick,
     baseTokenDecimals,
   });
 
@@ -292,7 +291,7 @@ export const getReservesV4 = async ({
     args: [],
   });
 
-  const [sqrtPrice, tick] = await client.readContract({
+  const [, tick] = await client.readContract({
     abi: StateViewABI,
     address: stateView,
     functionName: "getSlot0",
@@ -307,7 +306,7 @@ export const getReservesV4 = async ({
       abi: DopplerABI,
       address: hook,
       functionName: "positions",
-      args: [numberToHex(i + 2)],
+      args: [numberToHex(i + 3, { size: 32 })],
     };
   });
 
@@ -317,13 +316,13 @@ export const getReservesV4 = async ({
         abi: DopplerABI,
         address: hook,
         functionName: "positions",
-        args: [numberToHex(0)],
+        args: [numberToHex(1, { size: 32 })],
       },
       {
         abi: DopplerABI,
         address: hook,
         functionName: "positions",
-        args: [numberToHex(1)],
+        args: [numberToHex(2, { size: 32 })],
       },
       ...positionArgs,
     ],

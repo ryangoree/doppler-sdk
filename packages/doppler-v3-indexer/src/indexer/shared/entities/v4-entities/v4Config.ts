@@ -10,8 +10,7 @@ export const insertV4ConfigIfNotExists = async ({
   hookAddress: Address;
   context: Context;
 }) => {
-  const { db, network } = context;
-  const address = hookAddress.toLowerCase() as `0x${string}`;
+  const { db } = context;
 
   const existingConfig = await db.find(v4PoolConfig, {
     hookAddress,
@@ -20,8 +19,6 @@ export const insertV4ConfigIfNotExists = async ({
   if (existingConfig) {
     return existingConfig;
   }
-
-  const chainId = BigInt(network.chainId);
 
   const config = await getV4PoolConfig({ hook: hookAddress, context });
 
@@ -41,7 +38,6 @@ export const updateV4Config = async ({
   update?: Partial<typeof v4PoolConfig.$inferInsert>;
 }) => {
   const { db } = context;
-  const address = hookAddress.toLowerCase() as `0x${string}`;
 
   await db
     .update(v4PoolConfig, {

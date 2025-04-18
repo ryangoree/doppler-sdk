@@ -107,7 +107,7 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
       ethPrice,
     });
 
-    const graduationThresholdDelta = await computeGraduationThresholdDelta({
+    const graduationThresholdDelta = computeGraduationThresholdDelta({
       poolAddress: address,
       context,
       tickLower,
@@ -241,7 +241,7 @@ ponder.on("UniswapV3Pool:Burn", async ({ event, context }) => {
     });
   }
 
-  const graduationThresholdDelta = await computeGraduationThresholdDelta({
+  const graduationThresholdDelta = computeGraduationThresholdDelta({
     poolAddress: address,
     context,
     tickLower,

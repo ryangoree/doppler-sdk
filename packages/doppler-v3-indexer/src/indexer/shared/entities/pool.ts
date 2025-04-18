@@ -5,6 +5,7 @@ import { pool } from "ponder:schema";
 import { Address } from "viem";
 import { Context } from "ponder:registry";
 import { fetchEthPrice } from "../oracle";
+import { getReservesV4 } from "@app/utils/v4-utils/getV4PoolData";
 
 export const insertPoolIfNotExists = async ({
   poolAddress,
@@ -149,6 +150,11 @@ export const insertPoolIfNotExistsV4 = async ({
   const { poolKey, slot0Data, liquidity, price, poolConfig } = poolData;
   const { fee } = poolKey;
 
+  const { token0Reserve, token1Reserve } = await getReservesV4({
+    hook: address,
+    context,
+  });
+
   const assetAddr = poolKey.currency0.toLowerCase() as `0x${string}`;
   const numeraireAddr = poolKey.currency1.toLowerCase() as `0x${string}`;
 
@@ -174,5 +180,7 @@ export const insertPoolIfNotExistsV4 = async ({
     volumeUsd: 0n,
     percentDayChange: 0,
     isToken0: poolConfig.isToken0,
+    reserves0: token0Reserve,
+    reserves1: token1Reserve,
   });
 };

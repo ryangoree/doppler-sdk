@@ -55,7 +55,7 @@ export const getAmount1Delta = ({
   return BigInt(amount1Delta.toString());
 };
 
-export const computeGraduationThresholdDelta = async ({
+export const computeGraduationThresholdDelta = ({
   tickLower,
   tickUpper,
   liquidity,
@@ -67,7 +67,7 @@ export const computeGraduationThresholdDelta = async ({
   tickUpper: number;
   liquidity: bigint;
   isToken0: boolean;
-}): Promise<bigint> => {
+}): bigint => {
   if (
     tickLower <= MIN_TICK + 100 ||
     tickLower >= MAX_TICK - 100 ||
@@ -78,41 +78,13 @@ export const computeGraduationThresholdDelta = async ({
   }
 
   const delta = isToken0
-    ? await getAmount1Delta({
+    ? getAmount1Delta({
         tickLower,
         tickUpper,
         liquidity,
         roundUp: true,
       })
-    : await getAmount0Delta({ tickLower, tickUpper, liquidity, roundUp: true });
+    : getAmount0Delta({ tickLower, tickUpper, liquidity, roundUp: true });
 
   return delta;
-};
-
-export const computeGraduationThresholdDeltaV4 = async ({
-  hookAddress,
-  totalProceeds,
-  context,
-}: {
-  hookAddress: Address;
-  totalProceeds: bigint;
-  context: Context;
-}): Promise<number> => {
-  const poolConfig = await insertV4ConfigIfNotExists({
-    hookAddress: hookAddress,
-    context,
-  });
-
-  const { minProceeds } = poolConfig;
-
-  if (totalProceeds > minProceeds) {
-    return 100;
-  }
-
-  const minProceedsInt = parseEther(minProceeds.toString());
-  const totalProceedsInt = parseEther(totalProceeds.toString());
-
-  const percentage = Number(totalProceedsInt) / Number(minProceedsInt);
-
-  return percentage;
 };
