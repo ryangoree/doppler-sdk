@@ -7,7 +7,7 @@ import { insertV4ConfigIfNotExists } from "@app/indexer/shared/entities/v4-entit
 const MIN_TICK = -887222;
 const MAX_TICK = 887272;
 
-const getAmount0Delta = async ({
+export const getAmount0Delta = ({
   tickLower,
   tickUpper,
   liquidity,
@@ -17,7 +17,7 @@ const getAmount0Delta = async ({
   tickUpper: number;
   liquidity: bigint;
   roundUp: boolean;
-}): Promise<bigint> => {
+}): bigint => {
   const sqrtPriceA = TickMath.getSqrtRatioAtTick(tickLower);
   const sqrtPriceB = TickMath.getSqrtRatioAtTick(tickUpper);
 
@@ -31,7 +31,7 @@ const getAmount0Delta = async ({
   return BigInt(amount0Delta.toString());
 };
 
-const getAmount1Delta = async ({
+export const getAmount1Delta = ({
   tickLower,
   tickUpper,
   liquidity,
@@ -41,7 +41,7 @@ const getAmount1Delta = async ({
   tickUpper: number;
   liquidity: bigint;
   roundUp: boolean;
-}): Promise<bigint> => {
+}): bigint => {
   const sqrtPriceA = TickMath.getSqrtRatioAtTick(tickLower);
   const sqrtPriceB = TickMath.getSqrtRatioAtTick(tickUpper);
 

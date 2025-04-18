@@ -19,6 +19,7 @@ import {
 import { getV3PoolReserves } from "@app/utils/v3-utils/getV3PoolData";
 import { computeDollarLiquidity } from "@app/utils/computeDollarLiquidity";
 import { insertV4ConfigIfNotExists } from "./shared/entities/v4-entities/v4Config";
+import { getReservesV4 } from "@app/utils/v4-utils/getV4PoolData";
 
 ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
   const { poolOrHook, asset: assetId, numeraire } = event.args;
@@ -41,6 +42,12 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
     isDerc20: true,
     poolAddress: poolOrHook,
   });
+
+  const reserves = await getReservesV4({
+    hook: poolOrHook,
+    context,
+  });
+  console.log(reserves);
 
   const ethPrice = await fetchEthPrice(event.block.timestamp, context);
 
@@ -83,110 +90,110 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
   }
 });
 
-ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
-  const address = event.log.address;
-  const { currentTick, totalProceeds, totalTokensSold } = event.args;
+// ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
+//   const address = event.log.address;
+//   const { currentTick, totalProceeds, totalTokensSold } = event.args;
 
-  const poolEntity = await insertPoolIfNotExists({
-    poolAddress: address,
-    timestamp: event.block.timestamp,
-    context,
-  });
+//   const poolEntity = await insertPoolIfNotExists({
+//     poolAddress: address,
+//     timestamp: event.block.timestamp,
+//     context,
+//   });
 
-  const ethPrice = await fetchEthPrice(event.block.timestamp, context);
+//   const ethPrice = await fetchEthPrice(event.block.timestamp, context);
 
-  let dollarLiquidity;
-  if (ethPrice) {
-    dollarLiquidity = await computeDollarLiquidity({
-      assetBalance,
-      quoteBalance,
-      price: poolEntity.price,
-      ethPrice,
-    });
+//   let dollarLiquidity;
+//   if (ethPrice) {
+//     dollarLiquidity = await computeDollarLiquidity({
+//       assetBalance,
+//       quoteBalance,
+//       price: poolEntity.price,
+//       ethPrice,
+//     });
 
-    // const graduationThresholdDelta = await computeGraduationThresholdDeltaV4({
-    //   hookAddress: address,
-    //   totalProceeds,
-    //   context,
-    // });
+//     // const graduationThresholdDelta = await computeGraduationThresholdDeltaV4({
+//     //   hookAddress: address,
+//     //   totalProceeds,
+//     //   context,
+//     // });
 
-    if (dollarLiquidity) {
-      await updateAsset({
-        assetAddress: poolEntity.baseToken,
-        context,
-        update: {
-          liquidityUsd: dollarLiquidity,
-        },
-      });
+//     if (dollarLiquidity) {
+//       await updateAsset({
+//         assetAddress: poolEntity.baseToken,
+//         context,
+//         update: {
+//           liquidityUsd: dollarLiquidity,
+//         },
+//       });
 
-      await updatePool({
-        poolAddress: address,
-        context,
-        update: {
-          // graduationThreshold:
-          //   poolEntity.graduationThreshold + graduationThresholdDelta,
-          liquidity: poolEntity.liquidity + amount,
-          dollarLiquidity: dollarLiquidity,
-        },
-      });
-    } else {
-      await updatePool({
-        poolAddress: address,
-        context,
-        update: {
-          // graduationThreshold:
-          //   poolEntity.graduationThreshold + graduationThresholdDelta,
-          liquidity: poolEntity.liquidity + amount,
-        },
-      });
-    }
-  } else {
-    await updatePool({
-      poolAddress: address,
-      context,
-      update: {
-        graduationThreshold: poolEntity.graduationThreshold,
-        liquidity: poolEntity.liquidity + amount,
-      },
-    });
-  }
+//       await updatePool({
+//         poolAddress: address,
+//         context,
+//         update: {
+//           // graduationThreshold:
+//           //   poolEntity.graduationThreshold + graduationThresholdDelta,
+//           liquidity: poolEntity.liquidity + amount,
+//           dollarLiquidity: dollarLiquidity,
+//         },
+//       });
+//     } else {
+//       await updatePool({
+//         poolAddress: address,
+//         context,
+//         update: {
+//           // graduationThreshold:
+//           //   poolEntity.graduationThreshold + graduationThresholdDelta,
+//           liquidity: poolEntity.liquidity + amount,
+//         },
+//       });
+//     }
+//   } else {
+//     await updatePool({
+//       poolAddress: address,
+//       context,
+//       update: {
+//         graduationThreshold: poolEntity.graduationThreshold,
+//         liquidity: poolEntity.liquidity + amount,
+//       },
+//     });
+//   }
 
-  if (ethPrice) {
-    await updateMarketCap({
-      assetAddress: poolEntity.baseToken,
-      price: poolEntity.price,
-      ethPrice,
-      context,
-    });
-  }
+//   if (ethPrice) {
+//     await updateMarketCap({
+//       assetAddress: poolEntity.baseToken,
+//       price: poolEntity.price,
+//       ethPrice,
+//       context,
+//     });
+//   }
 
-  await updateAsset({
-    assetAddress: poolEntity.baseToken,
-    context,
-    update: {
-      liquidityUsd: dollarLiquidity ?? 0n,
-    },
-  });
+//   await updateAsset({
+//     assetAddress: poolEntity.baseToken,
+//     context,
+//     update: {
+//       liquidityUsd: dollarLiquidity ?? 0n,
+//     },
+//   });
 
-  const positionEntity = await insertPositionIfNotExists({
-    poolAddress: address,
-    tickLower,
-    tickUpper,
-    liquidity: amount,
-    owner,
-    timestamp: event.block.timestamp,
-    context,
-  });
+//   const positionEntity = await insertPositionIfNotExists({
+//     poolAddress: address,
+//     tickLower,
+//     tickUpper,
+//     liquidity: amount,
+//     owner,
+//     timestamp: event.block.timestamp,
+//     context,
+//   });
 
-  if (positionEntity.createdAt != event.block.timestamp) {
-    await updatePosition({
-      poolAddress: address,
-      tickLower,
-      tickUpper,
-      context,
-      update: {
-        liquidity: positionEntity.liquidity + amount,
-      },
-    });
-  }
-});
+//   if (positionEntity.createdAt != event.block.timestamp) {
+//     await updatePosition({
+//       poolAddress: address,
+//       tickLower,
+//       tickUpper,
+//       context,
+//       update: {
+//         liquidity: positionEntity.liquidity + amount,
+//       },
+//     });
+//   }
+// });
