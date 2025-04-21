@@ -43,11 +43,6 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
     poolAddress: poolOrHook,
   });
 
-  const reserves = await getReservesV4({
-    hook: poolOrHook,
-    context,
-  });
-
   const ethPrice = await fetchEthPrice(event.block.timestamp, context);
 
   const poolEntity = await insertPoolIfNotExistsV4({
@@ -66,6 +61,8 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
     timestamp: event.block.timestamp,
     context,
   });
+
+  console.log(assetId);
 
   if (ethPrice) {
     await insertOrUpdateBuckets({
@@ -109,6 +106,8 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
     hook: address,
     context,
   });
+
+  console.log(poolEntity.baseToken);
 
   const ethPrice = await fetchEthPrice(event.block.timestamp, context);
 

@@ -1,8 +1,7 @@
 import { SqrtPriceMath, TickMath } from "@uniswap/v3-sdk";
 import JSBI from "jsbi";
 import { Context } from "ponder:registry";
-import { Address, parseEther } from "viem";
-import { insertV4ConfigIfNotExists } from "@app/indexer/shared/entities/v4-entities/v4Config";
+import { Address } from "viem";
 
 const MIN_TICK = -887222;
 const MAX_TICK = 887272;

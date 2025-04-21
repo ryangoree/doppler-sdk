@@ -155,8 +155,8 @@ export const insertPoolIfNotExistsV4 = async ({
     context,
   });
 
-  const assetAddr = poolKey.currency0.toLowerCase() as `0x${string}`;
-  const numeraireAddr = poolKey.currency1.toLowerCase() as `0x${string}`;
+  const assetAddr = poolKey.currency1.toLowerCase() as `0x${string}`;
+  const numeraireAddr = poolKey.currency0.toLowerCase() as `0x${string}`;
 
   return await db.insert(pool).values({
     ...poolData,
