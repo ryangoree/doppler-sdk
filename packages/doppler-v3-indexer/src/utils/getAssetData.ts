@@ -1,6 +1,6 @@
-import { Address, Hex } from "viem";
+import { Address, Hex, zeroAddress } from "viem";
 import { Context } from "ponder:registry";
-import { AirlockABI } from "@app/abis";
+import { AirlockABI, ZoraCoinABI } from "@app/abis";
 
 export interface AssetData {
   numeraire: Address;
@@ -42,4 +42,50 @@ export const getAssetData = async (
     totalSupply: BigInt(assetData[8]),
     integrator: assetData[9],
   };
+};
+
+export const getZoraAssetData = async (
+  assetTokenAddr: Hex,
+  context: Context
+): Promise<AssetData> => {
+  const { client } = context;
+
+  const [numeraireAddr, poolAddr, totalSupply] = await client.multicall({
+    contracts: [
+      {
+        abi: ZoraCoinABI,
+        address: assetTokenAddr,
+        functionName: "currency",
+      },
+      {
+        abi: ZoraCoinABI,
+        address: assetTokenAddr,
+        functionName: "poolAddress",
+      },
+      {
+        abi: ZoraCoinABI,
+        address: assetTokenAddr,
+        functionName: "totalSupply",
+      },
+    ],
+  });
+
+  const numeraireResult = numeraireAddr.result ?? zeroAddress;
+  const poolResult = poolAddr.result ?? zeroAddress;
+  const totalSupplyResult = totalSupply.result ?? BigInt(0);
+
+  const zoraAssetData = {
+    numeraire: numeraireResult,
+    pool: poolResult,
+    timelock: zeroAddress,
+    governance: zeroAddress,
+    liquidityMigrator: zeroAddress,
+    poolInitializer: zeroAddress,
+    migrationPool: zeroAddress,
+    numTokensToSell: BigInt(0),
+    totalSupply: totalSupplyResult,
+    integrator: zeroAddress,
+  };
+
+  return zoraAssetData;
 };

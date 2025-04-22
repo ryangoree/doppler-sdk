@@ -9,16 +9,17 @@ import {
   keccak256,
 } from 'viem';
 import { encodeTokenFactoryData } from './factory';
+import { TokenFactoryData, DopplerData } from '../types';
 
 const FLAG_MASK = BigInt(0x3fff);
 
 const flags = BigInt(
   (1 << 13) | // BEFORE_INITIALIZE_FLAG
-  (1 << 12) | // AFTER_INITIALIZE_FLAG
-  (1 << 11) | // BEFORE_ADD_LIQUIDITY_FLAG
-  (1 << 7) | // BEFORE_SWAP_FLAG
-  (1 << 6) | // AFTER_SWAP_FLAG
-  (1 << 5) // BEFORE_DONATE_FLAG
+    (1 << 12) | // AFTER_INITIALIZE_FLAG
+    (1 << 11) | // BEFORE_ADD_LIQUIDITY_FLAG
+    (1 << 7) | // BEFORE_SWAP_FLAG
+    (1 << 6) | // AFTER_SWAP_FLAG
+    (1 << 5) // BEFORE_DONATE_FLAG
 );
 
 export interface MineV4Params {
@@ -32,34 +33,6 @@ export interface MineV4Params {
   tokenFactoryData: TokenFactoryData;
   poolInitializer: Address;
   poolInitializerData: DopplerData;
-}
-
-export interface DopplerData {
-  initialPrice: bigint;
-  minimumProceeds: bigint;
-  maximumProceeds: bigint;
-  startingTime: bigint;
-  endingTime: bigint;
-  startingTick: number;
-  endingTick: number;
-  epochLength: bigint;
-  gamma: number;
-  isToken0: boolean;
-  numPDSlugs: bigint;
-  fee: number;
-  tickSpacing: number;
-}
-
-export interface TokenFactoryData {
-  name: string;
-  symbol: string;
-  airlock: Address;
-  initialSupply: bigint;
-  yearlyMintRate: bigint;
-  vestingDuration: bigint;
-  recipients: Address[];
-  amounts: bigint[];
-  tokenURI: string;
 }
 
 function computeCreate2Address(
@@ -143,6 +116,7 @@ export function mine(params: MineV4Params): [Hash, Address, Address, Hex, Hex] {
       { type: 'bool' },
       { type: 'uint256' },
       { type: 'address' },
+      { type: 'uint24' },
     ],
     [
       poolManager,
@@ -158,6 +132,7 @@ export function mine(params: MineV4Params): [Hash, Address, Address, Hex, Hex] {
       isToken0,
       numPDSlugs,
       poolInitializer,
+      fee,
     ]
   );
 

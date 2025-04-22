@@ -3,8 +3,7 @@ import {
   ReadWriteAdapter,
   Drift,
   createDrift,
-  ContractWriteOptions,
-  OnMinedParam,
+  TransactionOptions,
 } from '@delvtech/drift';
 import { Address, Hex } from 'viem';
 import { Derc20ABI, ReadDerc20 } from './ReadDerc20';
@@ -20,27 +19,14 @@ export class ReadWriteDerc20 extends ReadDerc20 {
   }
 
   async approve(spender: Address, value: bigint): Promise<Hex> {
-    return this.contract.write(
-      'approve',
-      { spender, value },
-      {
-        onMined: () => {
-          this.contract.invalidateReadsMatching('allowance');
-        },
-      }
-    );
+    return this.contract.write('approve', { spender, value });
   }
 
-  async release(
-    amount: bigint,
-    options?: ContractWriteOptions & OnMinedParam
-  ): Promise<Hex> {
+  async release(amount: bigint, options?: TransactionOptions): Promise<Hex> {
     return this.contract.write('release', { amount }, options);
   }
 
-  async renounceOwnership(
-    options?: ContractWriteOptions & OnMinedParam
-  ): Promise<Hex> {
+  async renounceOwnership(options?: TransactionOptions): Promise<Hex> {
     return this.contract.write('renounceOwnership', {}, options);
   }
 }

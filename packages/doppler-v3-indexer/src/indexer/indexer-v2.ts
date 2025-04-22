@@ -3,13 +3,18 @@ import { asset, pool, v2Pool } from "ponder.schema";
 import {
   insertOrUpdateBuckets,
   insertOrUpdateDailyVolume,
-  update24HourPriceChange,
+  compute24HourPriceChange,
 } from "./shared/timeseries";
 import { computeV2Price } from "@app/utils/v2-utils/computeV2Price";
 import { getPairData } from "@app/utils/v2-utils/getPairData";
 import { computeDollarLiquidity } from "@app/utils/computeDollarLiquidity";
 import { fetchEthPrice } from "./shared/oracle";
-import { insertPoolIfNotExists, updateAsset, updatePool, updateV2Pool } from "./shared/entities";
+import {
+  insertPoolIfNotExists,
+  updateAsset,
+  updatePool,
+  updateV2Pool,
+} from "./shared/entities";
 import { CHAINLINK_ETH_DECIMALS } from "@app/utils/constants";
 
 ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
@@ -83,9 +88,8 @@ ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
       }),
     ]);
 
-    await update24HourPriceChange({
+    const priceChange = await compute24HourPriceChange({
       poolAddress,
-      assetAddress: poolEntity.baseToken,
       currentPrice: price,
       ethPrice,
       currentTimestamp: timestamp,
@@ -122,6 +126,7 @@ ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
           dollarLiquidity,
           lastRefreshed: timestamp,
           lastSwapTimestamp: timestamp,
+          percentDayChange: priceChange,
         },
       });
     } else {
@@ -132,6 +137,7 @@ ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
           price,
           lastRefreshed: timestamp,
           lastSwapTimestamp: timestamp,
+          percentDayChange: priceChange,
         },
       });
     }
@@ -209,9 +215,8 @@ ponder.on("UniswapV2PairUnichain:Swap", async ({ event, context }) => {
       }),
     ]);
 
-    await update24HourPriceChange({
+    const priceChange = await compute24HourPriceChange({
       poolAddress,
-      assetAddress: poolEntity.baseToken,
       currentPrice: price,
       ethPrice,
       currentTimestamp: timestamp,
@@ -237,6 +242,7 @@ ponder.on("UniswapV2PairUnichain:Swap", async ({ event, context }) => {
         context,
         update: {
           liquidityUsd: dollarLiquidity,
+          percentDayChange: priceChange,
         },
       });
 
@@ -248,6 +254,7 @@ ponder.on("UniswapV2PairUnichain:Swap", async ({ event, context }) => {
           dollarLiquidity,
           lastRefreshed: timestamp,
           lastSwapTimestamp: timestamp,
+          percentDayChange: priceChange,
         },
       });
     } else {
@@ -258,6 +265,7 @@ ponder.on("UniswapV2PairUnichain:Swap", async ({ event, context }) => {
           price,
           lastRefreshed: timestamp,
           lastSwapTimestamp: timestamp,
+          percentDayChange: priceChange,
         },
       });
     }

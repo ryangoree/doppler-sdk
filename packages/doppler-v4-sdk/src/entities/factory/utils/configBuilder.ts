@@ -1,23 +1,23 @@
 import { DopplerPreDeploymentConfig, PriceRange } from '@/types';
-import { DAY_SECONDS, DEFAULT_PD_SLUGS, MAX_TICK_SPACING } from '@/constants';
+import {
+  DAY_SECONDS,
+  DEFAULT_PD_SLUGS,
+  MAX_TICK_SPACING,
+  WAD_STRING,
+} from '@/constants';
 import { DopplerV4Addresses } from '@/types';
 import { Price, Token } from '@uniswap/sdk-core';
 import { encodeSqrtRatioX96, tickToPrice, TickMath } from '@uniswap/v3-sdk';
 import { encodeAbiParameters, parseEther, toHex, Address } from 'viem';
 import { ETH_ADDRESS } from '@/constants';
-import {
-  MineV4Params,
-  mine,
-  TokenFactoryData,
-  DopplerData,
-} from '@/entities/factory';
+import { MineV4Params, mine } from '@/entities/factory';
 import { sortsBefore } from '@uniswap/v4-sdk';
 import {
   DEFAULT_INITIAL_VOTING_DELAY,
   DEFAULT_INITIAL_VOTING_PERIOD,
   DEFAULT_INITIAL_PROPOSAL_THRESHOLD,
 } from '@/constants';
-import { CreateParams } from '../types';
+import { CreateParams, TokenFactoryData, DopplerData } from '../types';
 
 /**
  * Validates and builds pool configuration from user-friendly parameters
@@ -147,44 +147,23 @@ export function buildConfig(
 }
 
 // Converts price range to tick range, ensuring alignment with tick spacing
-function computeTicks(
-  priceRange: PriceRange,
-  tickSpacing: number
-): { startTick: number; endTick: number } {
-  const quoteToken = new Token(1, ETH_ADDRESS, 18);
-  const assetToken = new Token(
-    1,
-    '0x0000000000000000000000000000000000000001',
-    18
-  );
-  // Convert prices to sqrt price X96
-  let startTick = priceToClosestTick(
-    new Price(
-      assetToken,
-      quoteToken,
-      parseEther('1').toString(),
-      parseEther(priceRange.startPrice.toString()).toString()
-    )
-  );
-  let endTick = priceToClosestTick(
-    new Price(
-      assetToken,
-      quoteToken,
-      parseEther('1').toString(),
-      parseEther(priceRange.endPrice.toString()).toString()
-    )
-  );
 
-  // Align to tick spacing
-  startTick = Math.floor(startTick / tickSpacing) * tickSpacing;
-  endTick = Math.floor(endTick / tickSpacing) * tickSpacing;
+function computeTicks(priceRange: PriceRange, tickSpacing: number) {
+  const startPriceString = parseEther(
+    priceRange.startPrice.toString()
+  ).toString();
+  const endPriceString = parseEther(priceRange.endPrice.toString()).toString();
 
-  // Validate tick range
-  if (startTick === endTick) {
-    throw new Error('Start and end prices must result in different ticks');
-  }
+  const minSqrtRatio = encodeSqrtRatioX96(WAD_STRING, startPriceString);
+  const maxSqrtRatio = encodeSqrtRatioX96(WAD_STRING, endPriceString);
 
-  return { startTick, endTick };
+  const startTick = TickMath.getTickAtSqrtRatio(minSqrtRatio);
+  const endTick = TickMath.getTickAtSqrtRatio(maxSqrtRatio);
+
+  return {
+    startTick: Math.floor(startTick / tickSpacing) * tickSpacing,
+    endTick: Math.ceil(endTick / tickSpacing) * tickSpacing,
+  };
 }
 
 // Computes optimal gamma parameter based on price range and time parameters

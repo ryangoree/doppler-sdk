@@ -17,6 +17,7 @@ export interface DopplerV4Addresses {
   dopplerDeployer: Address;
   universalRouter: Address;
   stateView: Address;
+  v4Quoter: Address;
 }
 
 export interface TokenConfig {
@@ -80,6 +81,7 @@ export interface DopplerPreDeploymentConfig {
   epochLength: number; // in seconds
 
   // Price parameters
+  numeraire?: Address; // defaults to native if unset
   priceRange: PriceRange;
   tickSpacing: number;
   fee: number; // In bips
@@ -94,6 +96,8 @@ export interface DopplerPreDeploymentConfig {
   vestingDuration: bigint;
   recipients: Address[];
   amounts: bigint[];
+
+  integrator: Address;
 }
 
 export interface AssetData {

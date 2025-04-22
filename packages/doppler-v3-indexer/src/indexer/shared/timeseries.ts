@@ -84,9 +84,8 @@ const insertOrUpdateHourBucketUsd = async ({
   }
 };
 
-export const update24HourPriceChange = async ({
+export const compute24HourPriceChange = async ({
   poolAddress,
-  assetAddress,
   currentPrice,
   currentTimestamp,
   ethPrice,
@@ -94,7 +93,6 @@ export const update24HourPriceChange = async ({
   context,
 }: {
   poolAddress: Address;
-  assetAddress: Address;
   currentPrice: bigint;
   currentTimestamp: bigint;
   ethPrice: bigint;
@@ -108,8 +106,8 @@ export const update24HourPriceChange = async ({
   const timestampFrom = dayHasElapsed
     ? Math.floor(Number(createdAt) / secondsInHour) * secondsInHour
     : Math.floor(
-      Number(currentTimestamp - BigInt(secondsInDay)) / secondsInHour
-    ) * secondsInHour;
+        Number(currentTimestamp - BigInt(secondsInDay)) / secondsInHour
+      ) * secondsInHour;
 
   const priceFrom = await db.find(hourBucketUsd, {
     pool: poolAddress.toLowerCase() as `0x${string}`,
@@ -118,24 +116,7 @@ export const update24HourPriceChange = async ({
   });
 
   if (!priceFrom) {
-    // Default to 0% change if no previous price data found
-    await updateAsset({
-      assetAddress,
-      context,
-      update: {
-        percentDayChange: 0,
-      },
-    });
-
-    await updatePool({
-      poolAddress,
-      context,
-      update: {
-        percentDayChange: 0,
-      },
-    });
-
-    return;
+    return 0;
   }
 
   // Calculate the price change percentage
@@ -147,21 +128,7 @@ export const update24HourPriceChange = async ({
     priceChangePercent = 0;
   }
 
-  await updateAsset({
-    assetAddress,
-    context,
-    update: {
-      percentDayChange: priceChangePercent,
-    },
-  });
-
-  await updatePool({
-    poolAddress,
-    context,
-    update: {
-      percentDayChange: priceChangePercent,
-    },
-  });
+  return priceChangePercent;
 };
 
 export const insertOrUpdateDailyVolume = async ({

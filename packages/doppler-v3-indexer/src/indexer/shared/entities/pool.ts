@@ -2,7 +2,7 @@ import { getV3PoolData } from "@app/utils/v3-utils";
 import { getV4PoolData } from "@app/utils/v4-utils";
 import { computeDollarLiquidity } from "@app/utils/computeDollarLiquidity";
 import { pool } from "ponder:schema";
-import { Address } from "viem";
+import { Address, zeroAddress } from "viem";
 import { Context } from "ponder:registry";
 import { fetchEthPrice } from "../oracle";
 import { getReservesV4 } from "@app/utils/v4-utils/getV4PoolData";
@@ -11,10 +11,12 @@ export const insertPoolIfNotExists = async ({
   poolAddress,
   timestamp,
   context,
+  isZora = false,
 }: {
   poolAddress: Address;
   timestamp: bigint;
   context: Context;
+  isZora?: boolean;
 }): Promise<typeof pool.$inferSelect> => {
   const { db, network } = context;
   const address = poolAddress.toLowerCase() as `0x${string}`;
@@ -31,6 +33,7 @@ export const insertPoolIfNotExists = async ({
   const poolData = await getV3PoolData({
     address,
     context,
+    isZora,
   });
 
   const {

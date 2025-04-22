@@ -4,6 +4,7 @@ import {
   Drift,
   createDrift,
   FunctionReturn,
+  EventFilter,
 } from '@delvtech/drift';
 import { Address } from 'abitype';
 import { dopplerAbi, stateViewAbi } from '@/abis';
@@ -26,7 +27,8 @@ export class ReadDoppler {
   constructor(
     dopplerAddress: Hex,
     stateViewAddress: Hex,
-    drift: Drift<ReadAdapter> = createDrift()
+    drift: Drift<ReadAdapter> = createDrift(),
+    poolId: Hex
   ) {
     this.address = dopplerAddress;
     this.doppler = drift.contract({
@@ -37,32 +39,32 @@ export class ReadDoppler {
       abi: stateViewAbi,
       address: stateViewAddress,
     });
+    this.poolId = poolId;
+    this.drift = drift;
   }
 
-  async getState(): Promise<FunctionReturn<DopplerABI, 'state'>> {
-    return this.doppler.read('state');
-  }
-
-  async getPosition(
+  public async getPosition(
     salt: Hex
   ): Promise<FunctionReturn<DopplerABI, 'positions'>> {
     return this.doppler.read('positions', { salt });
   }
 
-  async getSlot0(id: Hex): Promise<FunctionReturn<StateViewABI, 'getSlot0'>> {
+  public async getSlot0(
+    id: Hex
+  ): Promise<FunctionReturn<StateViewABI, 'getSlot0'>> {
     return this.stateView.read('getSlot0', { poolId: id });
   }
 
-  async getCurrentPrice(): Promise<bigint> {
+  public async getCurrentPrice(): Promise<bigint> {
     const { sqrtPriceX96 } = await this.getSlot0(this.poolId);
     return (sqrtPriceX96 * sqrtPriceX96) / BigInt(2 ** 192);
   }
 
-  async getPoolKey(): Promise<PoolKey> {
+  public async getPoolKey(): Promise<PoolKey> {
     return this.doppler.read('poolKey');
   }
 
-  async getPoolId(): Promise<Hex> {
+  public async getPoolId(): Promise<Hex> {
     const poolKey = await this.getPoolKey();
     const tokenA =
       poolKey.currency0.toLowerCase() > poolKey.currency1.toLowerCase()
@@ -83,27 +85,71 @@ export class ReadDoppler {
     return poolId;
   }
 
-  async getAssetToken(): Promise<ReadDerc20> {
+  public async getAssetToken(): Promise<ReadDerc20> {
     const poolKey = await this.getPoolKey();
     return new ReadDerc20(poolKey.currency1, this.drift);
   }
 
-  async getQuoteToken(): Promise<ReadDerc20 | ReadEth> {
+  public async getQuoteToken(): Promise<ReadDerc20 | ReadEth> {
     const poolKey = await this.getPoolKey();
     return poolKey.currency0.toLowerCase() === ETH_ADDRESS.toLowerCase()
       ? new ReadEth(this.drift)
       : new ReadDerc20(poolKey.currency0, this.drift);
   }
 
-  async getInsufficientProceeds(): Promise<boolean> {
+  public async getState(): Promise<FunctionReturn<DopplerABI, 'state'>> {
+    return this.doppler.read('state');
+  }
+
+  public async getInsufficientProceeds(): Promise<boolean> {
     return this.doppler.read('insufficientProceeds');
   }
 
-  async getEarlyExit(): Promise<boolean> {
+  public async getEarlyExit(): Promise<boolean> {
     return this.doppler.read('earlyExit');
   }
 
-  // async getSwapEvents(): Promise<EventFilter<DopplerABI, 'DopplerSwap'>> {
-  //   return this.doppler.getEvents('DopplerSwap');
-  // }
+  public async getNumTokensToSell(): Promise<bigint> {
+    return this.doppler.read('numTokensToSell');
+  }
+
+  public async getMinimumProceeds(): Promise<bigint> {
+    return this.doppler.read('minimumProceeds');
+  }
+
+  public async getMaximumProceeds(): Promise<bigint> {
+    return this.doppler.read('maximumProceeds');
+  }
+
+  public async getStartingTime(): Promise<bigint> {
+    return this.doppler.read('startingTime');
+  }
+
+  public async getEndingTime(): Promise<bigint> {
+    return this.doppler.read('endingTime');
+  }
+
+  public async getStartingTick(): Promise<number> {
+    return this.doppler.read('startingTick');
+  }
+
+  public async getEndingTick(): Promise<number> {
+    return this.doppler.read('endingTick');
+  }
+
+  public async getEpochLength(): Promise<bigint> {
+    return this.doppler.read('epochLength');
+  }
+
+  public async getGamma(): Promise<number> {
+    return this.doppler.read('gamma');
+  }
+
+  public async getIsToken0(): Promise<boolean> {
+    return this.doppler.read('isToken0');
+  }
+
+  public async getNumPDSlugs(): Promise<bigint> {
+    return this.doppler.read('numPDSlugs');
+  }
 }

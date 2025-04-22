@@ -6,13 +6,12 @@ import {
   CHAINLINK_ETH_DECIMALS,
 } from "@app/utils/constants";
 import { pool, dailyVolume } from "ponder.schema";
-import { and, eq, lt, sql, or, not } from "drizzle-orm";
+import { and, eq, lt, sql, or, not } from "ponder";
 import { updateAsset } from "./entities/asset";
 import { updatePool } from "./entities/pool";
 import { fetchEthPrice } from "./oracle";
 import { computeDollarLiquidity } from "@app/utils/computeDollarLiquidity";
-import { insertAssetIfNotExists } from "@app/indexer/shared/entities/asset";
-import { update24HourPriceChange, updateDailyVolume } from "./timeseries";
+import { compute24HourPriceChange, updateDailyVolume } from "./timeseries";
 
 /**
  * Executes a comprehensive refresh job that handles both volume and metrics updates
@@ -92,7 +91,8 @@ export const executeScheduledJobs = async ({
     // Log performance metrics
     const duration = (Date.now() - startTime) / 1000; // in seconds
     console.log(
-      `[${network.name}] Refreshed ${stalePoolsWithVolume.length
+      `[${network.name}] Refreshed ${
+        stalePoolsWithVolume.length
       } pools in ${duration.toFixed(2)}s (${(
         duration / stalePoolsWithVolume.length
       ).toFixed(3)}s per pool)`
@@ -158,7 +158,7 @@ async function findStalePoolsWithVolume(
         )
       )
       .orderBy(sql`COALESCE(${pool.lastRefreshed}, ${pool.createdAt})`)
-      .limit(100);
+      .limit(50);
 
     console.log(`Found ${results.length} pools needing refresh`);
 
@@ -238,12 +238,12 @@ async function refreshPoolComprehensive({
     context,
   });
 
-  const asset = await insertAssetIfNotExists({ assetAddress: poolInfo.pool.asset as Address, timestamp: 0n, context });
-
-  const isMigrated = asset.migrated;
-
-  const assetBalance = poolInfo.pool.isToken0 ? poolInfo.pool.reserves0 : poolInfo.pool.reserves1;
-  const quoteBalance = poolInfo.pool.isToken0 ? poolInfo.pool.reserves1 : poolInfo.pool.reserves0;
+  const assetBalance = poolInfo.pool.isToken0
+    ? poolInfo.pool.reserves0
+    : poolInfo.pool.reserves1;
+  const quoteBalance = poolInfo.pool.isToken0
+    ? poolInfo.pool.reserves1
+    : poolInfo.pool.reserves0;
 
   const dollarLiquidity = await computeDollarLiquidity({
     assetBalance,
@@ -252,9 +252,8 @@ async function refreshPoolComprehensive({
     ethPrice,
   });
 
-  const priceChangeInfo = await update24HourPriceChange({
+  const priceChangeInfo = await compute24HourPriceChange({
     poolAddress,
-    assetAddress: asset.address,
     currentPrice: poolInfo.pool.price,
     currentTimestamp,
     ethPrice,
@@ -269,42 +268,39 @@ async function refreshPoolComprehensive({
     context,
   });
 
-  const poolUpdate: any = {
-    percentDayChange: priceChangeInfo,
-  };
+  const poolUpdate: any = {};
+  const assetUpdate: any = {};
 
   if (dollarLiquidity) {
     poolUpdate.dollarLiquidity = dollarLiquidity;
-  }
-
-  await updatePool({
-    poolAddress,
-    context,
-    update: poolUpdate,
-  });
-
-  const assetUpdate: any = {
-    percentDayChange: priceChangeInfo,
-  };
-
-  if (dollarLiquidity) {
     assetUpdate.liquidityUsd = dollarLiquidity;
   }
-  if (marketCap) {
-    assetUpdate.marketCapUsd = marketCap;
+
+  if (priceChangeInfo) {
+    poolUpdate.percentDayChange = priceChangeInfo;
     assetUpdate.percentDayChange = priceChangeInfo;
   }
 
-  await updateAsset({
-    assetAddress: poolInfo.pool.asset as Address,
-    context,
-    update: assetUpdate,
-  });
-  // } catch (error) {
-  //   console.error(`Failed to refresh pool ${poolAddress}: ${error}`);
-  // }
-}
+  if (marketCap) {
+    assetUpdate.marketCapUsd = marketCap;
+  }
 
+  if (Object.keys(poolUpdate).length > 0) {
+    await updatePool({
+      poolAddress,
+      context,
+      update: poolUpdate,
+    });
+  }
+
+  if (Object.keys(assetUpdate).length > 0) {
+    await updateAsset({
+      assetAddress: poolInfo.pool.asset as Address,
+      context,
+      update: assetUpdate,
+    });
+  }
+}
 
 /**
  * Computes the market cap for an asset

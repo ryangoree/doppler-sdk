@@ -33,18 +33,4 @@ export class ReadFactory {
       asset,
     });
   }
-
-  // async getCreateEvents(): Promise<EventFilter<AirlockABI, 'Create'>> {
-  //   return this.airlock.getEvents('Create');
-  // }
-
-  // async getMigrateEvents(): Promise<EventFilter<AirlockABI, 'Migrate'>> {
-  //   return this.airlock.getEvents('Migrate');
-  // }
-
-  // async getSetModuleStateEvents(): Promise<
-  //   EventFilter<AirlockABI, 'SetModuleState'>
-  // > {
-  //   return this.airlock.getEvents('SetModuleState');
-  // }
 }
