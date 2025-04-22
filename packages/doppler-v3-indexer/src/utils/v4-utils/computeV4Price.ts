@@ -8,7 +8,7 @@ import { PoolKey } from "@app/types/v4-types";
 import { configs } from "addresses";
 import { TickMath } from "@uniswap/v3-sdk";
 
-export const computeV4Price = async ({
+export const computeV4Price = ({
   isToken0,
   currentTick,
   baseTokenDecimals,

@@ -3,7 +3,12 @@ import { getAssetData } from "@app/utils/getAssetData";
 import { asset, pool } from "ponder.schema";
 import { getV4PoolData } from "@app/utils/v4-utils";
 import { insertTokenIfNotExists } from "./shared/entities/token";
-import { fetchEthPrice, updateMarketCap } from "./shared/oracle";
+import {
+  computeMarketCap,
+  computeMarketCap,
+  fetchEthPrice,
+  updateMarketCap,
+} from "./shared/oracle";
 import {
   insertPoolIfNotExists,
   insertPoolIfNotExistsV4,
@@ -34,7 +39,7 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
     isDerc20: false,
   });
 
-  await insertTokenIfNotExists({
+  const baseToken = await insertTokenIfNotExists({
     tokenAddress: assetId,
     creatorAddress,
     timestamp: event.block.timestamp,
@@ -56,13 +61,24 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
     context,
   });
 
+  const price = poolEntity.price;
+  const totalSupply = baseToken.totalSupply;
+
+  let marketCapUsd;
+  if (ethPrice) {
+    marketCapUsd = await computeMarketCap({
+      price,
+      ethPrice,
+      totalSupply,
+    });
+  }
+
   await insertAssetIfNotExists({
     assetAddress: assetId,
     timestamp: event.block.timestamp,
     context,
+    marketCapUsd,
   });
-
-  console.log(assetId);
 
   if (ethPrice) {
     await insertOrUpdateBuckets({

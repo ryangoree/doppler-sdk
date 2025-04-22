@@ -6,6 +6,7 @@ import { Address, zeroAddress } from "viem";
 import { Context } from "ponder:registry";
 import { fetchEthPrice } from "../oracle";
 import { getReservesV4 } from "@app/utils/v4-utils/getV4PoolData";
+import { computeV4Price } from "@app/utils/v4-utils/computeV4Price";
 
 export const insertPoolIfNotExists = async ({
   poolAddress,
@@ -158,30 +159,46 @@ export const insertPoolIfNotExistsV4 = async ({
     context,
   });
 
-  const assetAddr = poolKey.currency1.toLowerCase() as `0x${string}`;
-  const numeraireAddr = poolKey.currency0.toLowerCase() as `0x${string}`;
+  const assetAddr = poolConfig.isToken0 ? poolKey.currency0 : poolKey.currency1;
+  const numeraireAddr = poolConfig.isToken0
+    ? poolKey.currency1
+    : poolKey.currency0;
+
+  const ethPrice = await fetchEthPrice(timestamp, context);
+
+  let dollarLiquidity;
+  if (ethPrice) {
+    dollarLiquidity = await computeDollarLiquidity({
+      assetBalance: token0Reserve,
+      quoteBalance: token1Reserve,
+      price,
+      ethPrice,
+    });
+  }
 
   return await db.insert(pool).values({
     ...poolData,
     ...slot0Data,
     address,
+    chainId: BigInt(network.chainId),
+    tick: slot0Data.tick,
+    sqrtPrice: slot0Data.sqrtPrice,
     liquidity: liquidity,
     createdAt: timestamp,
     asset: assetAddr,
     baseToken: assetAddr,
     quoteToken: numeraireAddr,
     price,
-    type: "v4",
-    chainId: BigInt(network.chainId),
     fee,
-    dollarLiquidity: 0n,
+    type: "v4",
+    dollarLiquidity: dollarLiquidity ?? 0n,
     dailyVolume: address,
-    graduationThreshold: 0n,
-    graduationBalance: 0n,
-    totalFee0: 0n,
-    totalFee1: 0n,
     volumeUsd: 0n,
     percentDayChange: 0,
+    totalFee0: 0n,
+    totalFee1: 0n,
+    graduationThreshold: 0n,
+    graduationBalance: 0n,
     isToken0: poolConfig.isToken0,
     reserves0: token0Reserve,
     reserves1: token1Reserve,
