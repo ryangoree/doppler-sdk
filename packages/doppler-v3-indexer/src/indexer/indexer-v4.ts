@@ -5,7 +5,6 @@ import { getV4PoolData } from "@app/utils/v4-utils";
 import { insertTokenIfNotExists } from "./shared/entities/token";
 import {
   computeMarketCap,
-  computeMarketCap,
   fetchEthPrice,
   updateMarketCap,
 } from "./shared/oracle";
