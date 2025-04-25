@@ -5,7 +5,7 @@ import { pool } from "ponder:schema";
 import { Address, zeroAddress } from "viem";
 import { Context } from "ponder:registry";
 import { fetchEthPrice } from "../oracle";
-import { getReservesV4 } from "@app/utils/v4-utils/getV4PoolData";
+import { getReservesV4, V4PoolData } from "@app/utils/v4-utils/getV4PoolData";
 import { computeV4Price } from "@app/utils/v4-utils/computeV4Price";
 import { getZoraPoolData, PoolState } from "@app/utils/v3-utils/getV3PoolData";
 
@@ -219,10 +219,12 @@ export const insertZoraPoolIfNotExists = async ({
 export const insertPoolIfNotExistsV4 = async ({
   poolAddress,
   timestamp,
+  poolData,
   context,
 }: {
   poolAddress: Address;
   timestamp: bigint;
+  poolData?: V4PoolData;
   context: Context;
 }): Promise<typeof pool.$inferSelect> => {
   const { db, network } = context;
@@ -237,10 +239,12 @@ export const insertPoolIfNotExistsV4 = async ({
     return existingPool;
   }
 
-  const poolData = await getV4PoolData({
-    hook: address,
-    context,
-  });
+  if (!poolData) {
+    poolData = await getV4PoolData({
+      hook: address,
+      context,
+    });
+  }
 
   const { poolKey, slot0Data, liquidity, price, poolConfig } = poolData;
   const { fee } = poolKey;
@@ -293,5 +297,6 @@ export const insertPoolIfNotExistsV4 = async ({
     isToken0: poolConfig.isToken0,
     reserves0: token0Reserve,
     reserves1: token1Reserve,
+    poolKey: JSON.stringify(poolKey),
   });
 };

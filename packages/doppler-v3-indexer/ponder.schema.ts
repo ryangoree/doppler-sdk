@@ -211,6 +211,7 @@ export const poolV4 = onchainTable(
     lastSwapTimestamp: t.bigint(),
     reserves0: t.bigint().notNull().default(0n),
     reserves1: t.bigint().notNull().default(0n),
+    poolKey: t.jsonb().notNull().default("{}"),
   }),
   (table) => ({
     pk: primaryKey({
@@ -251,6 +252,7 @@ export const pool = onchainTable(
     lastSwapTimestamp: t.bigint(),
     reserves0: t.bigint().notNull().default(0n),
     reserves1: t.bigint().notNull().default(0n),
+    unitPriceUsd: t.bigint().notNull().default(0n),
   }),
   (table) => ({
     pk: primaryKey({
@@ -297,6 +299,11 @@ export const userAsset = onchainTable(
     chainIdIdx: index().on(table.chainId),
   })
 );
+
+export const v4PoolCheckpoints = onchainTable("v4_pool_checkpoints", (t) => ({
+  chainId: t.integer().notNull().primaryKey(),
+  checkpoints: t.jsonb().notNull().default("{}"),
+}));
 
 /* RELATIONS */
 
