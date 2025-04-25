@@ -1,12 +1,10 @@
 import { SqrtPriceMath, TickMath } from "@uniswap/v3-sdk";
 import JSBI from "jsbi";
-import { Context } from "ponder:registry";
-import { Address } from "viem";
 
 const MIN_TICK = -887222;
 const MAX_TICK = 887272;
 
-const getAmount0Delta = ({
+export const getAmount0Delta = ({
   tickLower,
   tickUpper,
   liquidity,
@@ -30,7 +28,7 @@ const getAmount0Delta = ({
   return BigInt(amount0Delta.toString());
 };
 
-const getAmount1Delta = ({
+export const getAmount1Delta = ({
   tickLower,
   tickUpper,
   liquidity,
