@@ -1,6 +1,6 @@
 import { WAD, CHAINLINK_ETH_DECIMALS } from "../utils/constants";
 
-export const computeDollarLiquidity = async ({
+export const computeDollarLiquidity = ({
   assetBalance,
   quoteBalance,
   price,

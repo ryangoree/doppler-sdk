@@ -1,4 +1,4 @@
-import { Address } from "viem";
+import { Address, zeroAddress } from "viem";
 import { hourBucketUsd, dailyVolume } from "ponder.schema";
 import { Context } from "ponder:registry";
 import {
@@ -132,18 +132,18 @@ export const compute24HourPriceChange = async ({
 };
 
 export const insertOrUpdateDailyVolume = async ({
+  poolAddress,
   tokenIn,
   tokenOut,
-  poolAddress,
   amountIn,
   amountOut,
   timestamp,
   ethPrice,
   context,
 }: {
+  poolAddress: Address;
   tokenIn: Address;
   tokenOut: Address;
-  poolAddress: Address;
   amountIn: bigint;
   amountOut: bigint;
   timestamp: bigint;
@@ -158,14 +158,16 @@ export const insertOrUpdateDailyVolume = async ({
     tokenIn.toLowerCase() ===
     (configs[network.name].shared.weth.toLowerCase() as `0x${string}`);
 
-  if (isTokenInWeth) {
+  const isTokenInEth = tokenIn.toLowerCase() === zeroAddress;
+
+  if (isTokenInWeth || isTokenInEth) {
     volumeUsd = (amountIn * ethPrice) / CHAINLINK_ETH_DECIMALS;
   } else {
     const uintAmountOut = amountOut > 0n ? amountOut : -amountOut;
     volumeUsd = (uintAmountOut * ethPrice) / CHAINLINK_ETH_DECIMALS;
   }
 
-  const assetAddress = isTokenInWeth ? tokenOut : tokenIn;
+  const assetAddress = isTokenInWeth || isTokenInEth ? tokenOut : tokenIn;
 
   let computedVolumeUsd;
   const volume = await db

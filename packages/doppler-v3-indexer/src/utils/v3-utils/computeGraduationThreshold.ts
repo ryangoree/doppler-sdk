@@ -6,7 +6,7 @@ import { Address } from "viem";
 const MIN_TICK = -887222;
 const MAX_TICK = 887272;
 
-export const getAmount0Delta = ({
+const getAmount0Delta = ({
   tickLower,
   tickUpper,
   liquidity,
@@ -30,7 +30,7 @@ export const getAmount0Delta = ({
   return BigInt(amount0Delta.toString());
 };
 
-export const getAmount1Delta = ({
+const getAmount1Delta = ({
   tickLower,
   tickUpper,
   liquidity,
@@ -60,8 +60,6 @@ export const computeGraduationThresholdDelta = ({
   liquidity,
   isToken0,
 }: {
-  poolAddress: Address;
-  context: Context;
   tickLower: number;
   tickUpper: number;
   liquidity: bigint;

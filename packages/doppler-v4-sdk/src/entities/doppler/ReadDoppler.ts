@@ -4,7 +4,6 @@ import {
   Drift,
   createDrift,
   FunctionReturn,
-  EventFilter,
 } from '@delvtech/drift';
 import { Address } from 'abitype';
 import { dopplerAbi, stateViewAbi } from '@/abis';

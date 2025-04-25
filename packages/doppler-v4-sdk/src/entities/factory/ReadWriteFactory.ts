@@ -14,21 +14,18 @@ import {
   Hex,
   keccak256,
   parseEther,
-  zeroAddress,
 } from 'viem';
 import { ReadFactory, AirlockABI } from './ReadFactory';
 import { CreateParams } from './types';
 import { DERC20Bytecode, DopplerBytecode } from '@/abis';
-import { DAY_SECONDS, DEFAULT_PD_SLUGS, WAD, WAD_STRING } from '@/constants';
-import { Price, Token } from '@uniswap/sdk-core';
-import { encodeSqrtRatioX96, TickMath, tickToPrice } from '@uniswap/v3-sdk';
+import { DAY_SECONDS, DEFAULT_PD_SLUGS, WAD_STRING } from '@/constants';
+import { encodeSqrtRatioX96, TickMath } from '@uniswap/v3-sdk';
 import { DopplerData, TokenFactoryData } from './types';
 import {
   DopplerPreDeploymentConfig,
   DopplerV4Addresses,
   PriceRange,
 } from '@/types';
-import { sortsBefore } from '@uniswap/v4-sdk';
 
 const DEFAULT_INITIAL_VOTING_DELAY = 7200;
 const DEFAULT_INITIAL_VOTING_PERIOD = 50400;
@@ -37,11 +34,11 @@ const DEFAULT_INITIAL_PROPOSAL_THRESHOLD = BigInt(0);
 const FLAG_MASK = BigInt(0x3fff);
 const flags = BigInt(
   (1 << 13) | // BEFORE_INITIALIZE_FLAG
-    (1 << 12) | // AFTER_INITIALIZE_FLAG
-    (1 << 11) | // BEFORE_ADD_LIQUIDITY_FLAG
-    (1 << 7) | // BEFORE_SWAP_FLAG
-    (1 << 6) | // AFTER_SWAP_FLAG
-    (1 << 5) // BEFORE_DONATE_FLAG
+  (1 << 12) | // AFTER_INITIALIZE_FLAG
+  (1 << 11) | // BEFORE_ADD_LIQUIDITY_FLAG
+  (1 << 7) | // BEFORE_SWAP_FLAG
+  (1 << 6) | // AFTER_SWAP_FLAG
+  (1 << 5) // BEFORE_DONATE_FLAG
 );
 
 export class ReadWriteFactory extends ReadFactory {

@@ -7,11 +7,9 @@ export const user = onchainTable(
     address: t.hex().primaryKey(),
     createdAt: t.bigint().notNull(),
     lastSeenAt: t.bigint().notNull(),
-    chainId: t.bigint().notNull(),
   }),
   (table) => ({
     addressIdx: index().on(table.address),
-    chainIdIdx: index().on(table.chainId),
   })
 );
 

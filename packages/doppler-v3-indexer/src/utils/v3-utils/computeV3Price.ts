@@ -1,6 +1,6 @@
 import { Q192 } from "@app/utils/constants";
 
-export const computeV3Price = async ({
+export const computeV3Price = ({
   sqrtPriceX96,
   isToken0,
   decimals,

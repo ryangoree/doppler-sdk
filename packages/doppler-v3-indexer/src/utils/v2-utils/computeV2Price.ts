@@ -1,6 +1,6 @@
 import { WAD } from "../constants";
 
-export const computeV2Price = async ({
+export const computeV2Price = ({
   assetBalance,
   quoteBalance,
 }: {

@@ -30,6 +30,7 @@ export default createConfig({
       max: 100,
     },
   },
+  ordering: "multichain",
   networks: {
     mainnet: {
       chainId: 1,

@@ -7,16 +7,19 @@ import { Context } from "ponder:registry";
 import { fetchEthPrice } from "../oracle";
 import { getReservesV4 } from "@app/utils/v4-utils/getV4PoolData";
 import { computeV4Price } from "@app/utils/v4-utils/computeV4Price";
+import { getZoraPoolData, PoolState } from "@app/utils/v3-utils/getV3PoolData";
 
 export const insertPoolIfNotExists = async ({
   poolAddress,
   timestamp,
   context,
+  ethPrice,
   isZora = false,
 }: {
   poolAddress: Address;
   timestamp: bigint;
   context: Context;
+  ethPrice: bigint;
   isZora?: boolean;
 }): Promise<typeof pool.$inferSelect> => {
   const { db, network } = context;
@@ -47,8 +50,6 @@ export const insertPoolIfNotExists = async ({
     token0,
     poolState,
   } = poolData;
-
-  const ethPrice = await fetchEthPrice(timestamp, context);
 
   const isToken0 = token0.toLowerCase() === poolState.asset.toLowerCase();
 

@@ -9,7 +9,7 @@ import { DERC20ABI } from "@app/abis";
 export const fetchEthPrice = async (
   timestamp: bigint,
   context: Context
-): Promise<bigint | null> => {
+): Promise<bigint> => {
   const { db } = context;
 
   let roundedTimestamp = BigInt(Math.floor(Number(timestamp) / 300) * 300);

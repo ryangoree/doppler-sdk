@@ -6,62 +6,60 @@ import { insertAssetIfNotExists } from "./asset";
 import { computeV2Price } from "@app/utils/v2-utils/computeV2Price";
 import { fetchEthPrice } from "../oracle";
 import { CHAINLINK_ETH_DECIMALS } from "@app/utils/constants";
+import { insertPoolIfNotExists } from "./pool";
 
 export const insertV2PoolIfNotExists = async ({
   assetAddress,
-  poolAddress,
   timestamp,
   context,
 }: {
   assetAddress: Address;
-  poolAddress: Address;
   timestamp: bigint;
   context: Context;
 }): Promise<typeof v2Pool.$inferSelect> => {
   const { db, network } = context;
 
-  const assetAddr = assetAddress.toLowerCase() as `0x${string}`;
-  const poolAddr = poolAddress.toLowerCase() as `0x${string}`;
+  const ethPrice = await fetchEthPrice(timestamp, context);
 
-  const asset = await insertAssetIfNotExists({
-    assetAddress,
+  const { poolAddress, migrationPool, numeraire } =
+    await insertAssetIfNotExists({
+      assetAddress,
+      timestamp,
+      context,
+    });
+
+  const { baseToken } = await insertPoolIfNotExists({
+    poolAddress,
     timestamp,
     context,
+    ethPrice,
   });
 
-  const migrationPoolAddr = asset.migrationPool.toLowerCase() as `0x${string}`;
-  const numeraireAddr = asset.numeraire.toLowerCase() as `0x${string}`;
+  const isToken0 = baseToken === assetAddress;
 
-  const pairData = await getPairData({
+  const assetId = assetAddress.toLowerCase() as `0x${string}`;
+  const numeraireId = numeraire.toLowerCase() as `0x${string}`;
+
+  const poolAddr = poolAddress.toLowerCase() as `0x${string}`;
+  const migrationPoolAddr = migrationPool.toLowerCase() as `0x${string}`;
+
+  const { reserve0, reserve1 } = await getPairData({
     address: migrationPoolAddr,
     context,
   });
 
-  if (!pairData) {
-    throw new Error("Pair data not found");
-  }
+  const price = computeV2Price({
+    assetBalance: reserve0,
+    quoteBalance: reserve1,
+  });
 
-  const { reserve0, reserve1, token0, token1 } = pairData;
-  const isToken0 = token0.toLowerCase() === assetAddress.toLowerCase();
-
-  const [price, ethPrice] = await Promise.all([
-    computeV2Price({
-      assetBalance: isToken0 ? reserve0 : reserve1,
-      quoteBalance: isToken0 ? reserve1 : reserve0,
-    }),
-    fetchEthPrice(timestamp, context),
-  ]);
-
-  let dollarPrice = 0n;
-  if (ethPrice) {
-    dollarPrice = (price * ethPrice) / CHAINLINK_ETH_DECIMALS;
-  }
+  const dollarPrice = (price * ethPrice) / CHAINLINK_ETH_DECIMALS;
 
   return await db.insert(v2Pool).values({
     address: migrationPoolAddr,
     chainId: BigInt(network.chainId),
-    baseToken: assetAddr,
-    quoteToken: numeraireAddr,
+    baseToken: assetId,
+    quoteToken: numeraireId,
     reserveBaseToken: isToken0 ? reserve0 : reserve1,
     reserveQuoteToken: isToken0 ? reserve1 : reserve0,
     price: dollarPrice,
