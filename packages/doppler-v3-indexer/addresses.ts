@@ -17,15 +17,6 @@ export const CHAIN_IDS = {
   base: 8453,
 } as const;
 
-export const CHAIN_ID_TO_NETWORK = {
-  [CHAIN_IDS.unichainSepolia]: "unichainSepolia",
-  [CHAIN_IDS.unichain]: "unichain",
-  [CHAIN_IDS.mainnet]: "mainnet",
-  [CHAIN_IDS.baseSepolia]: "baseSepolia",
-  [CHAIN_IDS.ink]: "ink",
-  [CHAIN_IDS.base]: "base",
-};
-
 const mainnetStartBlock = 21782000;
 
 const unichainSepoliaStartBlock = 11932039;
