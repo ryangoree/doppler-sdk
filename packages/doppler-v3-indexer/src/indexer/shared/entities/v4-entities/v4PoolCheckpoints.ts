@@ -192,11 +192,21 @@ export const refreshV4PoolCheckpoints = async ({
       console.log("timestamp", timestamp);
       console.log("checkpoint", checkpoint);
 
-      const { sqrtPriceX96, tick } = await getLatestSqrtPrice({
-        isToken0: checkpoint.isToken0,
-        poolKey: checkpoint.poolKey,
-        context,
-      });
+      let sqrtPriceX96: bigint;
+      let tick: number;
+      try {
+        const result = await getLatestSqrtPrice({
+          isToken0: checkpoint.isToken0,
+          poolKey: checkpoint.poolKey,
+          context,
+        });
+
+        sqrtPriceX96 = result.sqrtPriceX96;
+        tick = result.tick;
+      } catch (error) {
+        console.error("Error getting latest sqrt price", error);
+        return null;
+      }
 
       return {
         poolAddress,
