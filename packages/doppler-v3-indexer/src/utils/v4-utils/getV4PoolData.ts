@@ -1,7 +1,11 @@
 import { Address, Hex, numberToHex, zeroAddress } from "viem";
 import { Context } from "ponder:registry";
-import { DERC20ABI, DopplerABI, StateViewABI } from "@app/abis";
-import { configs } from "addresses";
+import {
+  DERC20ABI,
+  DopplerABI,
+  DopplerLensQuoterABI,
+  StateViewABI,
+} from "@app/abis";
 import { PoolKey } from "@app/types/v4-types";
 import { getPoolId } from "./getPoolId";
 import { computeV4Price } from "./computeV4Price";
@@ -10,6 +14,7 @@ import {
   getAmount0Delta,
   getAmount1Delta,
 } from "../v3-utils/computeGraduationThreshold";
+import { configs } from "addresses";
 
 export interface V4PoolConfig {
   numTokensToSell: bigint;
@@ -45,6 +50,13 @@ export interface V4PoolData {
   liquidity: bigint;
   price: bigint;
   poolConfig: V4PoolConfig;
+}
+
+interface QuoteExactSingleParams {
+  poolKey: PoolKey;
+  zeroForOne: boolean;
+  exactAmount: bigint;
+  hookData: Hex;
 }
 
 export const getV4PoolData = async ({
@@ -402,4 +414,36 @@ export const getReservesV4 = async ({
     );
 
   return reserves;
+};
+
+export const getLatestSqrtPrice = async ({
+  isToken0,
+  poolKey,
+  context,
+}: {
+  isToken0: boolean;
+  poolKey: PoolKey;
+  context: Context;
+}): Promise<{ sqrtPriceX96: bigint; tick: number }> => {
+  const { client, network } = context;
+  const lensQuoter = configs[network.name].v4.dopplerLens;
+
+  const input: QuoteExactSingleParams = {
+    poolKey,
+    zeroForOne: !isToken0,
+    exactAmount: 1n,
+    hookData: "0x" as Hex,
+  };
+
+  const lensQuote = await client.simulateContract({
+    abi: DopplerLensQuoterABI,
+    address: lensQuoter,
+    functionName: "quoteDopplerLensData",
+    args: [input],
+  });
+
+  const sqrtPriceX96 = lensQuote.result[0];
+  const tick = lensQuote.result[1];
+
+  return { sqrtPriceX96, tick };
 };

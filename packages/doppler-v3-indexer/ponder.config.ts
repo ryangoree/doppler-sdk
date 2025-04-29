@@ -56,8 +56,13 @@ export default createConfig({
   blocks: {
     ChainlinkEthPriceFeed: {
       network: "mainnet",
-      startBlock: 22225000,
+      startBlock: 22375000,
       interval: (60 * 5) / 12, // every 5 minutes
+    },
+    BaseSepoliaV4PoolCheckpoints: {
+      network: "baseSepolia",
+      startBlock: baseSepolia.v4StartBlock,
+      interval: 1000, // every 1000 blocks
     },
     // MetricRefresherUnichain: {
     //   network: "unichain",

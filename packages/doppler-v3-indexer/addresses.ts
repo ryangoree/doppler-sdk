@@ -17,14 +17,14 @@ export const CHAIN_IDS = {
   base: 8453,
 } as const;
 
-const mainnetStartBlock = 21782000;
+const mainnetStartBlock = 22375000;
 
 const unichainSepoliaStartBlock = 11932039;
 
 const unichainStartBlock = 8536880;
 
 const baseSepoliaStartBlock = 22668126;
-const v4BaseSepoliaStartBlock = 24187305;
+const v4BaseSepoliaStartBlock = 25085273;
 
 const inkStartBlock = 9500879;
 
@@ -60,6 +60,7 @@ export type V4Addresses = {
   v4Initializer: Address;
   stateView: Address;
   poolManager: Address;
+  dopplerLens: Address;
 };
 
 export type V3Addresses = {
@@ -97,6 +98,7 @@ export const configs: IndexerConfigs = {
       dopplerDeployer: "0x8350cAd81149A9944c2fb4276955FaAA7D61e836" as Address,
       v4Initializer: "0x992375478626E67F4e639d3298EbCAaE51C3dF0b" as Address,
       stateView: "0xc199F1072a74D4e905ABa1A84d9a45E2546B6222" as Address,
+      dopplerLens: zeroAddress,
     },
     shared: {
       airlock: "0x651ab94B4777e2e4cdf96082d90C65bd947b73A4" as Address,
@@ -123,6 +125,7 @@ export const configs: IndexerConfigs = {
       dopplerDeployer: zeroAddress as Address,
       v4Initializer: zeroAddress as Address,
       stateView: zeroAddress as Address,
+      dopplerLens: zeroAddress,
     },
     shared: {
       airlock: zeroAddress as Address,
@@ -148,6 +151,7 @@ export const configs: IndexerConfigs = {
       dopplerDeployer: zeroAddress as Address,
       v4Initializer: zeroAddress as Address,
       stateView: zeroAddress as Address,
+      dopplerLens: zeroAddress,
     },
     shared: {
       airlock: "0x77EbfBAE15AD200758E9E2E61597c0B07d731254" as Address,
@@ -174,6 +178,7 @@ export const configs: IndexerConfigs = {
       dopplerDeployer: "0x6ddfED58D238Ca3195E49d8ac3d4cEa6386E5C33" as Address,
       v4Initializer: "0x49F3fBB2dFF7f3d03B622e3b2a6d3F2E6fdB2a5A" as Address,
       stateView: "0x571291b572ed32ce6751a2cb2486ebee8defb9b4" as Address,
+      dopplerLens: "0xF7Af3206ed41BD8639eFF5593BE830Ea89287Ac2" as Address,
     },
     shared: {
       airlock: "0xa24E35a5d71d02a59b41E7c93567626302da1958" as Address,
@@ -201,6 +206,7 @@ export const configs: IndexerConfigs = {
       dopplerDeployer: zeroAddress as Address,
       v4Initializer: zeroAddress as Address,
       stateView: zeroAddress as Address,
+      dopplerLens: zeroAddress,
     },
     shared: {
       airlock: "0x660eAaEdEBc968f8f3694354FA8EC0b4c5Ba8D12" as Address,
@@ -227,6 +233,7 @@ export const configs: IndexerConfigs = {
       dopplerDeployer: zeroAddress as Address,
       v4Initializer: zeroAddress as Address,
       stateView: zeroAddress as Address,
+      dopplerLens: zeroAddress,
     },
     shared: {
       airlock: "0x660eAaEdEBc968f8f3694354FA8EC0b4c5Ba8D12" as Address,
