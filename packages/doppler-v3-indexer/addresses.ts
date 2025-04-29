@@ -17,14 +17,14 @@ export const CHAIN_IDS = {
   base: 8453,
 } as const;
 
-const mainnetStartBlock = 21782000;
+const mainnetStartBlock = 22375000;
 
 const unichainSepoliaStartBlock = 11932039;
 
 const unichainStartBlock = 8536880;
 
 const baseSepoliaStartBlock = 22668126;
-const v4BaseSepoliaStartBlock = 24187305;
+const v4BaseSepoliaStartBlock = 25085273;
 
 const inkStartBlock = 9500879;
 
