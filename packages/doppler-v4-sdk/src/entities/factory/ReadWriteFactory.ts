@@ -34,11 +34,11 @@ const DEFAULT_INITIAL_PROPOSAL_THRESHOLD = BigInt(0);
 const FLAG_MASK = BigInt(0x3fff);
 const flags = BigInt(
   (1 << 13) | // BEFORE_INITIALIZE_FLAG
-  (1 << 12) | // AFTER_INITIALIZE_FLAG
-  (1 << 11) | // BEFORE_ADD_LIQUIDITY_FLAG
-  (1 << 7) | // BEFORE_SWAP_FLAG
-  (1 << 6) | // AFTER_SWAP_FLAG
-  (1 << 5) // BEFORE_DONATE_FLAG
+    (1 << 12) | // AFTER_INITIALIZE_FLAG
+    (1 << 11) | // BEFORE_ADD_LIQUIDITY_FLAG
+    (1 << 7) | // BEFORE_SWAP_FLAG
+    (1 << 6) | // AFTER_SWAP_FLAG
+    (1 << 5) // BEFORE_DONATE_FLAG
 );
 
 export class ReadWriteFactory extends ReadFactory {
@@ -304,7 +304,6 @@ export class ReadWriteFactory extends ReadFactory {
       params.numeraire !== '0x0000000000000000000000000000000000000000';
 
     const {
-      initialPrice,
       minimumProceeds,
       maximumProceeds,
       startingTime,
@@ -320,7 +319,6 @@ export class ReadWriteFactory extends ReadFactory {
 
     const poolInitializerData = encodeAbiParameters(
       [
-        { type: 'uint160' },
         { type: 'uint256' },
         { type: 'uint256' },
         { type: 'uint256' },
@@ -335,7 +333,6 @@ export class ReadWriteFactory extends ReadFactory {
         { type: 'int24' },
       ],
       [
-        initialPrice,
         minimumProceeds,
         maximumProceeds,
         startingTime,
