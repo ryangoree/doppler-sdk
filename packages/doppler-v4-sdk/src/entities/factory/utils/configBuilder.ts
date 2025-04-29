@@ -8,7 +8,14 @@ import {
 import { DopplerV4Addresses } from '@/types';
 import { Price, Token } from '@uniswap/sdk-core';
 import { encodeSqrtRatioX96, tickToPrice, TickMath } from '@uniswap/v3-sdk';
-import { encodeAbiParameters, parseEther, toHex, Address } from 'viem';
+import {
+  encodeAbiParameters,
+  parseEther,
+  toHex,
+  Address,
+  Hex,
+  zeroAddress,
+} from 'viem';
 import { ETH_ADDRESS } from '@/constants';
 import { MineV4Params, mine } from '@/entities/factory';
 import { sortsBefore } from '@uniswap/v4-sdk';
@@ -25,7 +32,11 @@ import { CreateParams, TokenFactoryData, DopplerData } from '../types';
 export function buildConfig(
   params: DopplerPreDeploymentConfig,
   addresses: DopplerV4Addresses
-): CreateParams {
+): {
+  createParams: CreateParams;
+  hook: Address;
+  token: Address;
+} {
   validateBasicParams(params);
 
   const { startTick, endTick } = computeTicks(
@@ -74,12 +85,7 @@ export function buildConfig(
     tokenURI: params.tokenURI,
   };
 
-  const initialPrice = BigInt(
-    TickMath.getSqrtRatioAtTick(startTick).toString()
-  );
-
   const dopplerParams: DopplerData = {
-    initialPrice,
     minimumProceeds: params.minProceeds,
     maximumProceeds: params.maxProceeds,
     startingTime: BigInt(startTime),
@@ -125,20 +131,22 @@ export function buildConfig(
     ]
   );
 
-  const createArgs: CreateParams = {
-    initialSupply: params.totalSupply,
-    numTokensToSell: params.numTokensToSell,
-    numeraire: ETH_ADDRESS,
-    tokenFactory,
-    tokenFactoryData,
-    governanceFactory: addresses.governanceFactory,
-    governanceFactoryData,
-    poolInitializer: v4Initializer,
-    poolInitializerData,
-    liquidityMigrator: migrator,
-    liquidityMigratorData: toHex(''),
-    integrator: '0xcD3365F82eDD9750C2Fb287309eD7539cBFB51a9' as Address,
-    salt,
+  const createArgs = {
+    createParams: {
+      initialSupply: params.totalSupply,
+      numTokensToSell: params.numTokensToSell,
+      numeraire: zeroAddress,
+      tokenFactory,
+      tokenFactoryData,
+      governanceFactory: addresses.governanceFactory,
+      governanceFactoryData,
+      poolInitializer: v4Initializer,
+      poolInitializerData,
+      liquidityMigrator: migrator,
+      liquidityMigratorData: toHex(''),
+      integrator: '0xcD3365F82eDD9750C2Fb287309eD7539cBFB51a9' as Address,
+      salt,
+    },
     hook,
     token,
   };

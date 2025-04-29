@@ -163,7 +163,11 @@ export class ReadWriteFactory extends ReadFactory {
   public buildConfig(
     params: DopplerPreDeploymentConfig,
     addresses: DopplerV4Addresses
-  ): CreateParams {
+  ): {
+    createParams: CreateParams;
+    hook: Hex;
+    token: Hex;
+  } {
     this.validateBasicParams(params);
 
     const { startTick, endTick } = this.computeTicks(
@@ -213,12 +217,7 @@ export class ReadWriteFactory extends ReadFactory {
       tokenURI: params.tokenURI,
     };
 
-    const initialPrice = BigInt(
-      TickMath.getSqrtRatioAtTick(startTick).toString()
-    );
-
     const dopplerParams: DopplerData = {
-      initialPrice,
       minimumProceeds: params.minProceeds,
       maximumProceeds: params.maxProceeds,
       startingTime: BigInt(startTime),
@@ -264,20 +263,22 @@ export class ReadWriteFactory extends ReadFactory {
     );
 
     return {
-      initialSupply: params.totalSupply,
-      numTokensToSell: params.numTokensToSell,
-      numeraire:
-        params.numeraire ?? '0x0000000000000000000000000000000000000000',
-      tokenFactory,
-      tokenFactoryData,
-      governanceFactory: governanceFactory,
-      governanceFactoryData,
-      poolInitializer: v4Initializer,
-      poolInitializerData,
-      liquidityMigrator: migrator,
-      liquidityMigratorData: '0x',
-      integrator: params.integrator,
-      salt,
+      createParams: {
+        initialSupply: params.totalSupply,
+        numTokensToSell: params.numTokensToSell,
+        numeraire:
+          params.numeraire ?? '0x0000000000000000000000000000000000000000',
+        tokenFactory,
+        tokenFactoryData,
+        governanceFactory: governanceFactory,
+        governanceFactoryData,
+        poolInitializer: v4Initializer,
+        poolInitializerData,
+        liquidityMigrator: migrator,
+        liquidityMigratorData: '0x',
+        integrator: params.integrator,
+        salt,
+      },
       hook,
       token,
     };
