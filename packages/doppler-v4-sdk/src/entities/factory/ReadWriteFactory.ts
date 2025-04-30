@@ -315,7 +315,6 @@ export class ReadWriteFactory extends ReadFactory {
       gamma,
       numPDSlugs,
       fee,
-      tickSpacing,
     } = params.poolInitializerData;
 
     const poolInitializerData = encodeAbiParameters(
@@ -331,7 +330,6 @@ export class ReadWriteFactory extends ReadFactory {
         { type: 'bool' },
         { type: 'uint256' },
         { type: 'uint24' },
-        { type: 'int24' },
       ],
       [
         minimumProceeds,
@@ -345,7 +343,6 @@ export class ReadWriteFactory extends ReadFactory {
         isToken0,
         numPDSlugs,
         fee,
-        tickSpacing,
       ]
     );
 
