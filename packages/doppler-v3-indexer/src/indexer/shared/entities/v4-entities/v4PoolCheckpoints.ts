@@ -174,6 +174,8 @@ export const refreshV4PoolCheckpoints = async ({
       poolsToRefresh.push(poolAddress as Address);
     }
 
+    checkpoint.lastUpdated = timestamp;
+
     updatedCheckpoints[poolAddress as Address] = checkpoint;
   }
 
@@ -220,27 +222,34 @@ export const refreshV4PoolCheckpoints = async ({
   );
 
   for (const update of updates) {
-    const { poolAddress, sqrtPriceX96, tick, totalSupply, asset } = update;
+    if (!update) {
+      continue;
+    }
+
+    const { poolAddress, sqrtPriceX96, tick, totalSupply, asset, isToken0 } =
+      update;
 
     const price = computeV4Price({
       currentTick: tick,
-      isToken0: update.isToken0,
+      isToken0,
       baseTokenDecimals: 18,
     });
 
     const unitPrice = computeDollarPrice({
       sqrtPriceX96,
-      totalSupply: parseEther(update.totalSupply),
+      totalSupply: BigInt(totalSupply),
       ethPrice,
-      isToken0: update.isToken0,
+      isToken0,
       decimals: 18,
     });
 
     const marketCap = computeMarketCap({
-      price: unitPrice,
+      price,
       ethPrice,
-      totalSupply: parseEther(update.totalSupply),
+      totalSupply: BigInt(totalSupply),
     });
+
+    console.log("marketCap", marketCap);
 
     await Promise.all([
       updatePool({
@@ -248,7 +257,7 @@ export const refreshV4PoolCheckpoints = async ({
         context,
         update: {
           unitPriceUsd: unitPrice,
-          price: price,
+          price,
         },
       }),
       updateAsset({
