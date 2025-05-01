@@ -3,11 +3,12 @@ import { v4PoolCheckpoints } from "ponder:schema";
 import { Address, parseEther } from "viem";
 import { getLatestSqrtPrice } from "@app/utils/v4-utils/getV4PoolData";
 import { PoolKey } from "@app/types/v4-types";
-import { computeV4Price } from "@app/utils/v4-utils/computeV4Price";
+import { computeV4PriceFromSqrtPriceX96 } from "@app/utils/v4-utils/computeV4Price";
 import { computeDollarPrice } from "@app/utils/computePrice";
 import { computeMarketCap, fetchEthPrice } from "../../oracle";
 import { updateAsset, updatePool } from "..";
 import { replaceBigInts } from "ponder";
+import { pool, asset } from "ponder:schema";
 
 interface V4PoolCheckpoint {
   [poolAddress: Address]: Checkpoint;
@@ -226,14 +227,40 @@ export const refreshV4PoolCheckpoints = async ({
       continue;
     }
 
-    const { poolAddress, sqrtPriceX96, tick, totalSupply, asset, isToken0 } =
-      update;
+    const {
+      poolAddress,
+      sqrtPriceX96,
+      tick,
+      totalSupply,
+      asset: assetAddress,
+      isToken0,
+    } = update;
 
-    const price = computeV4Price({
-      currentTick: tick,
+    const poolEntity = await db.find(pool, {
+      address: poolAddress,
+      chainId: BigInt(chainId),
+    });
+
+    const assetEntity = await db.find(asset, {
+      address: assetAddress,
+    });
+
+    console.log("next tick", tick);
+    console.log("current tick", poolEntity?.tick);
+
+    if (!poolEntity) {
+      console.error("Pool not found");
+      continue;
+    }
+
+    const price = computeV4PriceFromSqrtPriceX96({
+      sqrtPriceX96,
       isToken0,
       baseTokenDecimals: 18,
     });
+
+    console.log("next price", price);
+    console.log("current price", poolEntity.price);
 
     const unitPrice = computeDollarPrice({
       sqrtPriceX96,
@@ -249,7 +276,8 @@ export const refreshV4PoolCheckpoints = async ({
       totalSupply: BigInt(totalSupply),
     });
 
-    console.log("marketCap", marketCap);
+    console.log("prev marketcap", assetEntity?.marketCapUsd);
+    console.log("next marketcap", marketCap);
 
     await Promise.all([
       updatePool({
@@ -261,7 +289,7 @@ export const refreshV4PoolCheckpoints = async ({
         },
       }),
       updateAsset({
-        assetAddress: asset,
+        assetAddress,
         context,
         update: {
           marketCapUsd: marketCap,

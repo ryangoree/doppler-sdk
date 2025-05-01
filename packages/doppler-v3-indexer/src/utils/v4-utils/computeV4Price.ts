@@ -29,3 +29,22 @@ export const computeV4Price = ({
 
   return price;
 };
+
+export const computeV4PriceFromSqrtPriceX96 = ({
+  isToken0,
+  sqrtPriceX96,
+  baseTokenDecimals,
+}: {
+  isToken0: boolean;
+  sqrtPriceX96: bigint;
+  baseTokenDecimals: number;
+}) => {
+  const ratioX192 = sqrtPriceX96 * sqrtPriceX96;
+  const baseTokenDecimalScale = 10 ** baseTokenDecimals;
+
+  const price = isToken0
+    ? (ratioX192 * BigInt(baseTokenDecimalScale)) / Q192
+    : (Q192 * BigInt(baseTokenDecimalScale)) / ratioX192;
+
+  return price;
+};
