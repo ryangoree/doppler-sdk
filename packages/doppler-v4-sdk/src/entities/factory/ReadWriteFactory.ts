@@ -70,8 +70,16 @@ export class ReadWriteFactory extends ReadFactory {
     if (params.numTokensToSell <= 0) {
       throw new Error('Number of tokens to sell must be positive');
     }
-    if (params.priceRange.startPrice <= params.priceRange.endPrice) {
+    if (
+      params.priceRange &&
+      params.priceRange.startPrice <= params.priceRange.endPrice
+    ) {
       throw new Error('Invalid price range');
+    }
+    if (params.tickRange) {
+      if (params.tickRange.startTick <= params.tickRange.endTick) {
+        throw new Error('Invalid tick range');
+      }
     }
     if (params.duration <= 0) {
       throw new Error('Duration must be positive');
@@ -170,10 +178,26 @@ export class ReadWriteFactory extends ReadFactory {
   } {
     this.validateBasicParams(params);
 
-    const { startTick, endTick } = this.computeTicks(
-      params.priceRange,
-      params.tickSpacing
-    );
+    if (!params.priceRange && !params.tickRange) {
+      throw new Error('Price range or tick range must be provided');
+    }
+
+    let startTick;
+    let endTick;
+    if (params.priceRange) {
+      const ticks = this.computeTicks(params.priceRange, params.tickSpacing);
+      startTick = ticks.startTick;
+      endTick = ticks.endTick;
+    }
+
+    if (params.tickRange) {
+      startTick = params.tickRange.startTick;
+      endTick = params.tickRange.endTick;
+    }
+
+    if (!startTick || !endTick) {
+      throw new Error('Start tick or end tick not found');
+    }
 
     const gamma = this.computeOptimalGamma(
       startTick,
