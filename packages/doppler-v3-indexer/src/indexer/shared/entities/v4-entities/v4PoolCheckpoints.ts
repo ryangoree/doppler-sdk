@@ -7,7 +7,6 @@ import { computeV4PriceFromSqrtPriceX96 } from "@app/utils/v4-utils/computeV4Pri
 import { computeDollarPrice } from "@app/utils/computePrice";
 import { computeMarketCap, fetchEthPrice } from "../../oracle";
 import { updateAsset, updatePool } from "..";
-import { replaceBigInts } from "ponder";
 import { pool, asset } from "ponder:schema";
 
 interface V4PoolCheckpoint {
@@ -165,17 +164,19 @@ export const refreshV4PoolCheckpoints = async ({
     }
 
     // calculate current epoch and last updated epoch
-    const currentEpoch =
-      (timestamp - checkpoint.startingTime) / checkpoint.epochLength;
-    const lastUpdatedEpoch =
+    const currentEpoch = Math.floor(
+      (timestamp - checkpoint.startingTime) / checkpoint.epochLength
+    );
+    const lastUpdatedEpoch = Math.floor(
       (checkpoint.lastUpdated - checkpoint.startingTime) /
-      checkpoint.epochLength;
+        checkpoint.epochLength
+    );
 
     if (currentEpoch > lastUpdatedEpoch) {
+      console.log("====epoch updated for pool====", poolAddress);
+      checkpoint.lastUpdated = timestamp;
       poolsToRefresh.push(poolAddress as Address);
     }
-
-    checkpoint.lastUpdated = timestamp;
 
     updatedCheckpoints[poolAddress as Address] = checkpoint;
   }
@@ -245,9 +246,6 @@ export const refreshV4PoolCheckpoints = async ({
       address: assetAddress,
     });
 
-    console.log("next tick", tick);
-    console.log("current tick", poolEntity?.tick);
-
     if (!poolEntity) {
       console.error("Pool not found");
       continue;
@@ -261,6 +259,11 @@ export const refreshV4PoolCheckpoints = async ({
 
     console.log("next price", price);
     console.log("current price", poolEntity.price);
+    console.log("price change", price - poolEntity.price);
+
+    console.log("current sqrtPriceX96", poolEntity.sqrtPrice);
+    console.log("next sqrtPriceX96", sqrtPriceX96);
+    console.log("sqrtPriceX96 change", sqrtPriceX96 - poolEntity.sqrtPrice);
 
     const unitPrice = computeDollarPrice({
       sqrtPriceX96,
@@ -286,6 +289,8 @@ export const refreshV4PoolCheckpoints = async ({
         update: {
           unitPriceUsd: unitPrice,
           price,
+          tick,
+          sqrtPrice: sqrtPriceX96,
         },
       }),
       updateAsset({
