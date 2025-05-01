@@ -39,6 +39,10 @@ export function buildConfig(
 } {
   validateBasicParams(params);
 
+  if (!params.priceRange) {
+    throw new Error('Price range  must be provided');
+  }
+
   const { startTick, endTick } = computeTicks(
     params.priceRange,
     params.tickSpacing
@@ -223,11 +227,16 @@ function validateBasicParams(params: DopplerPreDeploymentConfig) {
   }
 
   // Validate price range
-  if (params.priceRange.startPrice === 0 || params.priceRange.endPrice === 0) {
-    throw new Error('Prices must be positive');
-  }
-  if (params.priceRange.startPrice === params.priceRange.endPrice) {
-    throw new Error('Start and end prices must be different');
+  if (params.priceRange) {
+    if (
+      params.priceRange.startPrice === 0 ||
+      params.priceRange.endPrice === 0
+    ) {
+      throw new Error('Prices must be positive');
+    }
+    if (params.priceRange.startPrice === params.priceRange.endPrice) {
+      throw new Error('Start and end prices must be different');
+    }
   }
 }
 
