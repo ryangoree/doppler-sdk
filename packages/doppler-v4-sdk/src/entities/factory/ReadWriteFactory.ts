@@ -77,7 +77,7 @@ export class ReadWriteFactory extends ReadFactory {
       throw new Error('Invalid price range');
     }
     if (params.tickRange) {
-      if (params.tickRange.startTick <= params.tickRange.endTick) {
+      if (params.tickRange.startTick >= params.tickRange.endTick) {
         throw new Error('Invalid tick range');
       }
     }
