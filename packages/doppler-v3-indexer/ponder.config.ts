@@ -62,7 +62,7 @@ export default createConfig({
     BaseSepoliaV4PoolCheckpoints: {
       network: "baseSepolia",
       startBlock: baseSepolia.v4StartBlock,
-      interval: 100, // every 100 blocks
+      interval: 50, // every 50 blocks
     },
     // MetricRefresherUnichain: {
     //   network: "unichain",
