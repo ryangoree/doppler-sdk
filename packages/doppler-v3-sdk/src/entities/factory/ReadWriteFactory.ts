@@ -13,21 +13,21 @@ import { BundlerAbi } from "../../abis";
 import { Address, encodeAbiParameters, Hex, parseEther } from "viem";
 
 // Constants for default configuration values
-const ONE_YEAR_IN_SECONDS = 365 * 24 * 60 * 60;
-const DEFAULT_START_TICK = 167000;
-const DEFAULT_END_TICK = 195000;
-const DEFAULT_NUM_POSITIONS = 15;
-const DEFAULT_FEE = 10_000; // 1% fee tier
-const DEFAULT_VESTING_DURATION = BigInt(ONE_YEAR_IN_SECONDS);
-const DEFAULT_INITIAL_SUPPLY_WAD = parseEther("1000000000");
-const DEFAULT_NUM_TOKENS_TO_SELL_WAD = parseEther("900000000");
-const DEFAULT_YEARLY_MINT_RATE_WAD = parseEther("0.02");
-const DEFAULT_PRE_MINT_WAD = parseEther("9000000"); // 0.9% of the total supply
-const DEFAULT_MAX_SHARE_TO_BE_SOLD = parseEther("0.35");
+export const ONE_YEAR_IN_SECONDS = 365 * 24 * 60 * 60;
+export const DEFAULT_START_TICK = 175000;
+export const DEFAULT_END_TICK = 225000;
+export const DEFAULT_NUM_POSITIONS = 15;
+export const DEFAULT_FEE = 10_000; // 1% fee tier
+export const DEFAULT_VESTING_DURATION = BigInt(ONE_YEAR_IN_SECONDS);
+export const DEFAULT_INITIAL_SUPPLY_WAD = parseEther("1000000000");
+export const DEFAULT_NUM_TOKENS_TO_SELL_WAD = parseEther("900000000");
+export const DEFAULT_YEARLY_MINT_RATE_WAD = parseEther("0.02");
+export const DEFAULT_PRE_MINT_WAD = parseEther("9000000"); // 0.9% of the total supply
+export const DEFAULT_MAX_SHARE_TO_BE_SOLD = parseEther("0.35");
 
-const DEFAULT_INITIAL_VOTING_DELAY = 7200;
-const DEFAULT_INITIAL_VOTING_PERIOD = 50400;
-const DEFAULT_INITIAL_PROPOSAL_THRESHOLD = BigInt(0);
+export const DEFAULT_INITIAL_VOTING_DELAY = 7200;
+export const DEFAULT_INITIAL_VOTING_PERIOD = 50400;
+export const DEFAULT_INITIAL_PROPOSAL_THRESHOLD = BigInt(0);
 
 /**
  * Parameters required for creating a new Doppler V3 pool
