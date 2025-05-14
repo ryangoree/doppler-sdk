@@ -177,7 +177,7 @@ export const configs: IndexerConfigs = {
       poolManager: "0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408" as Address,
       dopplerDeployer: "0xe6946cFa2816BfA083512a9B9b623adAe3062f43" as Address,
       v4Initializer: "0x9b60411Aee66a13eF803f2215EF27D5F9a9052C8" as Address,
-      dopplerLens: "0xF7Af3206ed41BD8639eFF5593BE830Ea89287Ac2" as Address,
+      dopplerLens: "0x0B3bBeDAe266E9e63Ba0DA4dd44B88702C1A7174" as Address,
       stateView: "0x571291b572ed32ce6751a2cb2486ebee8defb9b4" as Address,
     },
     shared: {
