@@ -302,20 +302,22 @@ export class ReadWriteFactory extends ReadFactory {
     );
 
     return {
-      initialSupply: params.totalSupply,
-      numTokensToSell: params.numTokensToSell,
-      numeraire:
-        params.numeraire ?? '0x0000000000000000000000000000000000000000',
-      tokenFactory,
-      tokenFactoryData,
-      governanceFactory: governanceFactory,
-      governanceFactoryData,
-      poolInitializer: v4Initializer,
-      poolInitializerData,
-      liquidityMigrator: migrator,
-      liquidityMigratorData: params.liquidityMigratorData ?? '0x',
-      integrator: params.integrator,
-      salt,
+      createParams: {
+        initialSupply: params.totalSupply,
+        numTokensToSell: params.numTokensToSell,
+        numeraire:
+          params.numeraire ?? '0x0000000000000000000000000000000000000000',
+        tokenFactory,
+        tokenFactoryData,
+        governanceFactory: governanceFactory,
+        governanceFactoryData,
+        poolInitializer: v4Initializer,
+        poolInitializerData,
+        liquidityMigrator: migrator,
+        liquidityMigratorData: params.liquidityMigratorData ?? '0x',
+        integrator: params.integrator,
+        salt,
+      },
       hook,
       token,
     };
