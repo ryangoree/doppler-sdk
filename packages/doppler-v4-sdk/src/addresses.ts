@@ -20,7 +20,7 @@ export const DOPPLER_V4_ADDRESSES: { [chainId: number]: DopplerV4Addresses } = {
     poolManager: '0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408' as Address,
     airlock: '0x881c18352182E1C918DBfc54539e744Dc90274a8' as Address,
     tokenFactory: '0xBdd732390Dbb0E8D755D1002211E967EF8b8B326' as Address,
-    dopplerDeployer: '0xEA32848cEe430D91aBa9d7d0F235502995a52B13' as Address,
+    dopplerDeployer: '0x3BEF7AE36503228891081e357bDB49B8F7627A4f' as Address,
     governanceFactory: '0x61e307223Cb5444B72Ea42992Da88B895589d0F3' as Address,
     v4Initializer: '0x20a7DB1f189B5592F756Bf41AD1E7165bD62963C' as Address,
     migrator: '0xBD1B28D7E61733A8983d924c704B1A09d897a870' as Address,

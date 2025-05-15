@@ -8,6 +8,7 @@ import { computeDollarPrice } from "@app/utils/computePrice";
 import { computeMarketCap, fetchEthPrice } from "../../oracle";
 import { updateAsset, updatePool } from "..";
 import { pool, asset } from "ponder:schema";
+import { computeDollarLiquidity } from "@app/utils/computeDollarLiquidity";
 
 interface V4PoolCheckpoint {
   [poolAddress: Address]: Checkpoint;
@@ -193,11 +194,10 @@ export const refreshV4PoolCheckpoints = async ({
         throw new Error("Checkpoint not found");
       }
 
-      console.log("timestamp", timestamp);
-      console.log("checkpoint", checkpoint);
-
       let sqrtPriceX96: bigint;
       let tick: number;
+      let amount0: bigint;
+      let amount1: bigint;
       try {
         const result = await getLatestSqrtPrice({
           isToken0: checkpoint.isToken0,
@@ -207,6 +207,8 @@ export const refreshV4PoolCheckpoints = async ({
 
         sqrtPriceX96 = result.sqrtPriceX96;
         tick = result.tick;
+        amount0 = result.amount0;
+        amount1 = result.amount1;
       } catch (error) {
         console.error("Error getting latest sqrt price", error);
         return null;
@@ -219,6 +221,8 @@ export const refreshV4PoolCheckpoints = async ({
         tick,
         totalSupply: checkpoint.totalSupply,
         asset: checkpoint.asset,
+        amount0,
+        amount1,
       };
     })
   );
@@ -235,6 +239,8 @@ export const refreshV4PoolCheckpoints = async ({
       totalSupply,
       asset: assetAddress,
       isToken0,
+      amount0,
+      amount1,
     } = update;
 
     const poolEntity = await db.find(pool, {
@@ -257,14 +263,6 @@ export const refreshV4PoolCheckpoints = async ({
       baseTokenDecimals: 18,
     });
 
-    console.log("next price", price);
-    console.log("current price", poolEntity.price);
-    console.log("price change", price - poolEntity.price);
-
-    console.log("current sqrtPriceX96", poolEntity.sqrtPrice);
-    console.log("next sqrtPriceX96", sqrtPriceX96);
-    console.log("sqrtPriceX96 change", sqrtPriceX96 - poolEntity.sqrtPrice);
-
     const unitPrice = computeDollarPrice({
       sqrtPriceX96,
       totalSupply: BigInt(totalSupply),
@@ -279,8 +277,12 @@ export const refreshV4PoolCheckpoints = async ({
       totalSupply: BigInt(totalSupply),
     });
 
-    console.log("prev marketcap", assetEntity?.marketCapUsd);
-    console.log("next marketcap", marketCap);
+    const liquidityUsd = computeDollarLiquidity({
+      assetBalance: isToken0 ? amount0 : amount1,
+      quoteBalance: isToken0 ? amount1 : amount0,
+      price,
+      ethPrice,
+    });
 
     await Promise.all([
       updatePool({
@@ -291,6 +293,7 @@ export const refreshV4PoolCheckpoints = async ({
           price,
           tick,
           sqrtPrice: sqrtPriceX96,
+          dollarLiquidity: liquidityUsd,
         },
       }),
       updateAsset({
@@ -298,6 +301,7 @@ export const refreshV4PoolCheckpoints = async ({
         context,
         update: {
           marketCapUsd: marketCap,
+          liquidityUsd,
         },
       }),
     ]);

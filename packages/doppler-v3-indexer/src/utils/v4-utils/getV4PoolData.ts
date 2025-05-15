@@ -424,7 +424,12 @@ export const getLatestSqrtPrice = async ({
   isToken0: boolean;
   poolKey: PoolKey;
   context: Context;
-}): Promise<{ sqrtPriceX96: bigint; tick: number }> => {
+}): Promise<{
+  sqrtPriceX96: bigint;
+  tick: number;
+  amount0: bigint;
+  amount1: bigint;
+}> => {
   const { client, network } = context;
   const lensQuoter = configs[network.name].v4.dopplerLens;
 
@@ -442,8 +447,10 @@ export const getLatestSqrtPrice = async ({
     args: [input],
   });
 
-  const sqrtPriceX96 = lensQuote.result[0];
-  const tick = lensQuote.result[1];
+  const sqrtPriceX96 = lensQuote.result.sqrtPriceX96;
+  const tick = lensQuote.result.tick;
+  const amount0 = lensQuote.result.amount0;
+  const amount1 = lensQuote.result.amount1;
 
-  return { sqrtPriceX96, tick };
+  return { sqrtPriceX96, tick, amount0, amount1 };
 };

@@ -17,14 +17,14 @@ export const CHAIN_IDS = {
   base: 8453,
 } as const;
 
-const mainnetStartBlock = 22480000;
+const mainnetStartBlock = 22489000;
 
 const unichainSepoliaStartBlock = 11932039;
 
 const unichainStartBlock = 8536880;
 
 const baseSepoliaStartBlock = 22668126;
-const v4BaseSepoliaStartBlock = 25697641;
+const v4BaseSepoliaStartBlock = 25778986;
 
 const inkStartBlock = 9500879;
 
@@ -171,22 +171,22 @@ export const configs: IndexerConfigs = {
       factory: "0x7Ae58f10f7849cA6F5fB71b7f45CB416c9204b1e" as Address,
     },
     v3: {
-      v3Initializer: "0x70d20cd48791E527036491dc464C8Dc58351Dd93" as Address,
+      v3Initializer: "0xaC486466F94617be0DefF59B743Ab7F2CE7a2398" as Address,
     },
     v4: {
       poolManager: "0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408" as Address,
-      dopplerDeployer: "0xe6946cFa2816BfA083512a9B9b623adAe3062f43" as Address,
-      v4Initializer: "0x8eEE9cc0445bED987E4C5b0329A298892F441B94" as Address,
-      dopplerLens: "0x0B3bBeDAe266E9e63Ba0DA4dd44B88702C1A7174" as Address,
+      dopplerDeployer: "0xEA32848cEe430D91aBa9d7d0F235502995a52B13" as Address,
+      v4Initializer: "0x20a7DB1f189B5592F756Bf41AD1E7165bD62963C" as Address,
+      dopplerLens: "0xCa643f13B0f96bF6Ae72923985d1439489bF7fcB" as Address,
       stateView: "0x571291b572ed32ce6751a2cb2486ebee8defb9b4" as Address,
     },
     shared: {
-      airlock: "0xbbe45B9FE9A63a891767f0669cCA6b83c1d987C6" as Address,
-      tokenFactory: "0x468430e672103207e510EAC2A38b9c3BeD86103e" as Address,
+      airlock: "0x881c18352182E1C918DBfc54539e744Dc90274a8" as Address,
+      tokenFactory: "0xBdd732390Dbb0E8D755D1002211E967EF8b8B326" as Address,
       universalRouter: "0x95273d871c8156636e114b63797d78D7E1720d81" as Address,
       governanceFactory:
-        "0xf868B7fcDfb7f2F4EC0731A36C377865EAce29Ea" as Address,
-      migrator: "0x92e0E12f150c0c48f3F0C5b96F6a031f46BA7944" as Address,
+        "0x61e307223Cb5444B72Ea42992Da88B895589d0F3" as Address,
+      migrator: "0xBD1B28D7E61733A8983d924c704B1A09d897a870" as Address,
       weth: "0x4200000000000000000000000000000000000006" as Address,
     },
     oracle: oracleAddresses,

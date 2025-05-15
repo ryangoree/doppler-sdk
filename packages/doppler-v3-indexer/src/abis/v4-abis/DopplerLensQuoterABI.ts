@@ -90,8 +90,17 @@ export const DopplerLensQuoterABI = [
       },
     ],
     outputs: [
-      { name: "sqrtPriceX96", type: "uint160", internalType: "uint160" },
-      { name: "tick", type: "int24", internalType: "int24" },
+      {
+        name: "returnData",
+        type: "tuple",
+        internalType: "struct DopplerLensReturnData",
+        components: [
+          { name: "sqrtPriceX96", type: "uint160", internalType: "uint160" },
+          { name: "amount0", type: "uint256", internalType: "uint256" },
+          { name: "amount1", type: "uint256", internalType: "uint256" },
+          { name: "tick", type: "int24", internalType: "int24" },
+        ],
+      },
     ],
     stateMutability: "nonpayable",
   },
@@ -115,7 +124,17 @@ export const DopplerLensQuoterABI = [
     type: "error",
     name: "DopplerLensData",
     inputs: [
-      { name: "sqrtPriceX96", type: "uint160", internalType: "uint160" },
+      {
+        name: "returnData",
+        type: "tuple",
+        internalType: "struct DopplerLensReturnData",
+        components: [
+          { name: "sqrtPriceX96", type: "uint160", internalType: "uint160" },
+          { name: "amount0", type: "uint256", internalType: "uint256" },
+          { name: "amount1", type: "uint256", internalType: "uint256" },
+          { name: "tick", type: "int24", internalType: "int24" },
+        ],
+      },
     ],
   },
   {
