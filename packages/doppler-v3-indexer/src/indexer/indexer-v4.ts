@@ -67,14 +67,11 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
   const price = poolEntity.price;
   const totalSupply = baseToken.totalSupply;
 
-  let marketCapUsd;
-  if (ethPrice) {
-    marketCapUsd = await computeMarketCap({
-      price,
-      ethPrice,
-      totalSupply,
-    });
-  }
+  const marketCapUsd = await computeMarketCap({
+    price,
+    ethPrice,
+    totalSupply,
+  });
 
   await insertAssetIfNotExists({
     assetAddress: assetId,
@@ -161,10 +158,16 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
   });
 
   const dollarLiquidity = computeDollarLiquidity({
-    assetBalance: token0Reserve,
-    quoteBalance: token1Reserve,
+    assetBalance: isToken0 ? token0Reserve : token1Reserve,
+    quoteBalance: isToken0 ? token1Reserve : token0Reserve,
     price,
     ethPrice,
+  });
+
+  const marketCap = computeMarketCap({
+    price,
+    ethPrice,
+    totalSupply,
   });
 
   Promise.all([
@@ -173,6 +176,7 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
       context,
       update: {
         liquidityUsd: dollarLiquidity,
+        marketCapUsd: marketCap,
       },
     }),
     updatePool({
@@ -182,6 +186,7 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
         liquidity: v4PoolData.liquidity,
         dollarLiquidity: dollarLiquidity,
         unitPriceUsd: unitPrice,
+        marketCapUsd: marketCap,
       },
     }),
     updateMarketCap({
