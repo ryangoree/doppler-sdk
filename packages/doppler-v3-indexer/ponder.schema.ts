@@ -300,10 +300,19 @@ export const userAsset = onchainTable(
   })
 );
 
-export const v4PoolCheckpoints = onchainTable("v4_pool_checkpoints", (t) => ({
+export const v4CheckpointBlob = onchainTable("v4_checkpoint_blob", (t) => ({
   chainId: t.integer().notNull().primaryKey(),
   checkpoints: t.jsonb().notNull().default("{}"),
 }));
+
+export const v4PoolPriceHistory = onchainTable(
+  "v4_pool_price_history",
+  (t) => ({
+    pool: t.hex().notNull().primaryKey(),
+    chainId: t.bigint().notNull(),
+    history: t.jsonb().notNull().default("{}"),
+  })
+);
 
 /* RELATIONS */
 

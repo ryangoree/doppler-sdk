@@ -15,10 +15,14 @@ import { insertV4ConfigIfNotExists } from "./shared/entities/v4-entities/v4Confi
 import { getReservesV4 } from "@app/utils/v4-utils/getV4PoolData";
 import { computeV4Price } from "@app/utils/v4-utils/computeV4Price";
 import {
-  addV4PoolCheckpoint,
-  insertV4PoolCheckpointsIfNotExist,
-} from "./shared/entities/v4-entities/v4PoolCheckpoints";
+  addCheckpoint,
+  insertCheckpointBlobIfNotExist,
+} from "./shared/entities/v4-entities/v4CheckpointBlob";
 import { computeDollarPrice } from "@app/utils/computePrice";
+import {
+  addAndUpdateV4PoolPriceHistory,
+  insertV4PoolPriceHistoryIfNotExists,
+} from "./shared/entities/v4-entities/v4PoolPriceHistory";
 
 ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
   const { poolOrHook, asset: assetId, numeraire } = event.args;
@@ -55,7 +59,12 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
     context,
   });
 
-  await insertV4PoolCheckpointsIfNotExist({
+  await insertCheckpointBlobIfNotExist({
+    context,
+  });
+
+  await insertV4PoolPriceHistoryIfNotExists({
+    pool: poolOrHook,
     context,
   });
 
@@ -101,7 +110,7 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
     });
   }
 
-  await addV4PoolCheckpoint({
+  await addCheckpoint({
     poolAddress: poolOrHook,
     asset: assetId,
     totalSupply,
@@ -186,13 +195,18 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
         liquidity: v4PoolData.liquidity,
         dollarLiquidity: dollarLiquidity,
         unitPriceUsd: unitPrice,
-        marketCapUsd: marketCap,
       },
     }),
     updateMarketCap({
       assetAddress: baseToken,
       price,
       ethPrice,
+      context,
+    }),
+    addAndUpdateV4PoolPriceHistory({
+      pool: address,
+      timestamp: Number(event.block.timestamp),
+      marketCap,
       context,
     }),
   ]);

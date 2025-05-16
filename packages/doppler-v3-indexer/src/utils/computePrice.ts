@@ -22,7 +22,8 @@ export const computeDollarPrice = ({
     : (Q192 * BigInt(baseTokenDecimalScale)) / ratioX192;
 
   const dollarPrice = (price * ethPrice) / CHAINLINK_ETH_DECIMALS;
-  const unitPrice = (dollarPrice * WAD) / totalSupply;
+  const scaledDollarPrice = dollarPrice * BigInt(10) ** BigInt(10);
+  const unitPrice = (scaledDollarPrice * WAD) / totalSupply;
 
   return unitPrice;
 };

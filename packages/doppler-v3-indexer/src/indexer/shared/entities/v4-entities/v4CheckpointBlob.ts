@@ -1,5 +1,5 @@
 import { Context } from "ponder:registry";
-import { v4PoolCheckpoints } from "ponder:schema";
+import { v4CheckpointBlob } from "ponder:schema";
 import { Address, parseEther } from "viem";
 import { getLatestSqrtPrice } from "@app/utils/v4-utils/getV4PoolData";
 import { PoolKey } from "@app/types/v4-types";
@@ -7,9 +7,9 @@ import { computeV4PriceFromSqrtPriceX96 } from "@app/utils/v4-utils/computeV4Pri
 import { computeDollarPrice } from "@app/utils/computePrice";
 import { computeMarketCap, fetchEthPrice } from "../../oracle";
 import { updateAsset, updatePool } from "..";
-import { pool, asset } from "ponder:schema";
+import { pool } from "ponder:schema";
 import { computeDollarLiquidity } from "@app/utils/computeDollarLiquidity";
-
+import { addAndUpdateV4PoolPriceHistory } from "./v4PoolPriceHistory";
 interface V4PoolCheckpoint {
   [poolAddress: Address]: Checkpoint;
 }
@@ -25,7 +25,7 @@ interface Checkpoint {
   lastUpdated: string;
 }
 
-export const insertV4PoolCheckpointsIfNotExist = async ({
+export const insertCheckpointBlobIfNotExist = async ({
   context,
 }: {
   context: Context;
@@ -33,7 +33,7 @@ export const insertV4PoolCheckpointsIfNotExist = async ({
   const { db, network } = context;
   const chainId = network.chainId;
 
-  const existingConfig = await db.find(v4PoolCheckpoints, {
+  const existingConfig = await db.find(v4CheckpointBlob, {
     chainId,
   });
 
@@ -41,24 +41,24 @@ export const insertV4PoolCheckpointsIfNotExist = async ({
     return existingConfig;
   }
 
-  return await db.insert(v4PoolCheckpoints).values({
+  return await db.insert(v4CheckpointBlob).values({
     chainId,
-    checkpoints: {},
+    blob: {},
   });
 };
 
-export const updateV4PoolCheckpoints = async ({
+export const updateCheckpointBlob = async ({
   context,
   update,
 }: {
   context: Context;
-  update?: Partial<typeof v4PoolCheckpoints.$inferInsert>;
+  update?: Partial<typeof v4CheckpointBlob.$inferInsert>;
 }) => {
   const { db, network } = context;
   const chainId = network.chainId;
 
   await db
-    .update(v4PoolCheckpoints, {
+    .update(v4CheckpointBlob, {
       chainId,
     })
     .set({
@@ -66,7 +66,7 @@ export const updateV4PoolCheckpoints = async ({
     });
 };
 
-export const addV4PoolCheckpoint = async ({
+export const addCheckpoint = async ({
   poolAddress,
   asset,
   totalSupply,
@@ -101,7 +101,7 @@ export const addV4PoolCheckpoint = async ({
     lastUpdated: startingTime.toString(),
   };
 
-  const existingData = await db.find(v4PoolCheckpoints, {
+  const existingData = await db.find(v4CheckpointBlob, {
     chainId,
   });
 
@@ -116,7 +116,7 @@ export const addV4PoolCheckpoint = async ({
   };
 
   await db
-    .update(v4PoolCheckpoints, {
+    .update(v4CheckpointBlob, {
       chainId,
     })
     .set({
@@ -127,7 +127,7 @@ export const addV4PoolCheckpoint = async ({
     });
 };
 
-export const refreshV4PoolCheckpoints = async ({
+export const refreshCheckpointBlob = async ({
   context,
   timestamp,
 }: {
@@ -139,7 +139,7 @@ export const refreshV4PoolCheckpoints = async ({
 
   console.log(`Refreshing V4 pool checkpoints for chainId ${chainId}`);
 
-  const existingData = await db.find(v4PoolCheckpoints, {
+  const existingData = await db.find(v4CheckpointBlob, {
     chainId,
   });
 
@@ -248,10 +248,6 @@ export const refreshV4PoolCheckpoints = async ({
       chainId: BigInt(chainId),
     });
 
-    const assetEntity = await db.find(asset, {
-      address: assetAddress,
-    });
-
     if (!poolEntity) {
       console.error("Pool not found");
       continue;
@@ -304,11 +300,17 @@ export const refreshV4PoolCheckpoints = async ({
           liquidityUsd,
         },
       }),
+      addAndUpdateV4PoolPriceHistory({
+        pool: poolAddress,
+        timestamp,
+        marketCap,
+        context,
+      }),
     ]);
   }
 
   await db
-    .update(v4PoolCheckpoints, {
+    .update(v4CheckpointBlob, {
       chainId,
     })
     .set({

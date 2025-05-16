@@ -3,7 +3,7 @@ import { executeScheduledJobs } from "./shared/scheduledJobs";
 import { configs } from "addresses";
 import { ChainlinkOracleABI } from "@app/abis/ChainlinkOracleABI";
 import { ethPrice } from "ponder.schema";
-import { refreshV4PoolCheckpoints } from "./shared/entities/v4-entities/v4PoolCheckpoints";
+import { refreshCheckpointBlob } from "./shared/entities/v4-entities/v4CheckpointBlob";
 
 /**
  * Block handlers that run periodically to ensure volume data and metrics are up-to-date
@@ -127,7 +127,7 @@ ponder.on("ChainlinkEthPriceFeed:block", async ({ event, context }) => {
 });
 
 ponder.on("BaseSepoliaV4PoolCheckpoints:block", async ({ event, context }) => {
-  await refreshV4PoolCheckpoints({
+  await refreshCheckpointBlob({
     context,
     timestamp: Number(event.block.timestamp),
   });
