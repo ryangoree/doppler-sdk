@@ -84,7 +84,7 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
     totalSupply,
   });
 
-  Promise.all([
+  await Promise.all([
     insertAssetIfNotExists({
       assetAddress: assetAddress,
       timestamp,
@@ -123,11 +123,9 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
 });
 
 ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
-  const address = event.log.address;
+  const address = event.log.address.toLowerCase() as `0x${string}`;
   const { currentTick, totalProceeds, totalTokensSold } = event.args;
   const timestamp = event.block.timestamp;
-
-  const poolAddress = address.toLowerCase() as `0x${string}`;
 
   console.log("UniswapV4Pool:Swap");
 
@@ -138,7 +136,7 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
     totalProceeds: totalProceedsPrev,
     totalTokensSold: totalTokensSoldPrev,
   } = await insertPoolIfNotExistsV4({
-    poolAddress,
+    poolAddress: address,
     timestamp,
     context,
   });
@@ -198,7 +196,7 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
     totalSupply,
   });
 
-  Promise.all([
+  await Promise.all([
     updateAsset({
       assetAddress: baseToken,
       context,
