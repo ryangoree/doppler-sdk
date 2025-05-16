@@ -18,7 +18,6 @@ import {
   addCheckpoint,
   insertCheckpointBlobIfNotExist,
 } from "./shared/entities/v4-entities/v4CheckpointBlob";
-import { computeDollarPrice } from "@app/utils/computePrice";
 import {
   addAndUpdateV4PoolPriceHistory,
   insertV4PoolPriceHistoryIfNotExists,
@@ -26,117 +25,144 @@ import {
 
 ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
   const { poolOrHook, asset: assetId, numeraire } = event.args;
+  const { block } = event;
+  const timestamp = block.timestamp;
+
+  const poolAddress = poolOrHook.toLowerCase() as `0x${string}`;
+  const assetAddress = assetId.toLowerCase() as `0x${string}`;
+  const numeraireAddress = numeraire.toLowerCase() as `0x${string}`;
 
   const creatorAddress = event.transaction.from;
 
-  await insertTokenIfNotExists({
-    tokenAddress: numeraire,
-    creatorAddress,
-    timestamp: event.block.timestamp,
-    context,
-    isDerc20: false,
-  });
-
-  const baseToken = await insertTokenIfNotExists({
-    tokenAddress: assetId,
-    creatorAddress,
-    timestamp: event.block.timestamp,
-    context,
-    isDerc20: true,
-    poolAddress: poolOrHook,
-  });
-
-  const ethPrice = await fetchEthPrice(event.block.timestamp, context);
-
-  const v4PoolData = await getV4PoolData({
-    hook: poolOrHook,
-    context,
-  });
-
-  const poolEntity = await insertPoolIfNotExistsV4({
-    poolAddress: poolOrHook,
-    timestamp: event.block.timestamp,
-    context,
-  });
-
-  await insertCheckpointBlobIfNotExist({
-    context,
-  });
-
-  await insertV4PoolPriceHistoryIfNotExists({
-    pool: poolOrHook,
-    context,
-  });
-
-  const v4Config = await insertV4ConfigIfNotExists({
-    hookAddress: poolOrHook,
-    context,
-  });
+  await Promise.all([
+    insertTokenIfNotExists({
+      tokenAddress: numeraireAddress,
+      creatorAddress,
+      timestamp,
+      context,
+      isDerc20: false,
+    }),
+    insertCheckpointBlobIfNotExist({
+      context,
+    }),
+    insertV4PoolPriceHistoryIfNotExists({
+      pool: poolAddress,
+      context,
+    }),
+  ]);
+  const [baseToken, ethPrice, v4PoolData, poolEntity, v4Config] =
+    await Promise.all([
+      insertTokenIfNotExists({
+        tokenAddress: assetAddress,
+        creatorAddress,
+        timestamp,
+        context,
+        isDerc20: true,
+        poolAddress: poolAddress,
+      }),
+      fetchEthPrice(timestamp, context),
+      getV4PoolData({
+        hook: poolAddress,
+        context,
+      }),
+      insertPoolIfNotExistsV4({
+        poolAddress,
+        timestamp,
+        context,
+      }),
+      insertV4ConfigIfNotExists({
+        hookAddress: poolAddress,
+        context,
+      }),
+    ]);
 
   const price = poolEntity.price;
   const totalSupply = baseToken.totalSupply;
-
-  const marketCapUsd = await computeMarketCap({
+  const marketCapUsd = computeMarketCap({
     price,
     ethPrice,
     totalSupply,
   });
 
-  await insertAssetIfNotExists({
-    assetAddress: assetId,
-    timestamp: event.block.timestamp,
-    context,
-    marketCapUsd,
-  });
-
-  if (ethPrice) {
-    await insertOrUpdateBuckets({
-      poolAddress: poolOrHook,
+  Promise.all([
+    insertAssetIfNotExists({
+      assetAddress: assetAddress,
+      timestamp,
+      context,
+      marketCapUsd,
+    }),
+    insertOrUpdateBuckets({
+      poolAddress: poolAddress,
       price: poolEntity.price,
-      timestamp: event.block.timestamp,
+      timestamp,
       ethPrice,
       context,
-    });
-
-    await insertOrUpdateDailyVolume({
-      poolAddress: poolOrHook,
+    }),
+    insertOrUpdateDailyVolume({
+      poolAddress: poolAddress,
       amountIn: 0n,
       amountOut: 0n,
-      timestamp: event.block.timestamp,
+      timestamp,
       context,
-      tokenIn: assetId,
-      tokenOut: numeraire,
+      tokenIn: assetAddress,
+      tokenOut: numeraireAddress,
       ethPrice,
-    });
-  }
-
-  await addCheckpoint({
-    poolAddress: poolOrHook,
-    asset: assetId,
-    totalSupply,
-    startingTime: v4Config.startingTime,
-    endingTime: v4Config.endingTime,
-    epochLength: v4Config.epochLength,
-    isToken0: v4Config.isToken0,
-    poolKey: v4PoolData.poolKey,
-    context,
-  });
+    }),
+    addCheckpoint({
+      poolAddress: poolAddress,
+      asset: assetAddress,
+      totalSupply,
+      startingTime: v4Config.startingTime,
+      endingTime: v4Config.endingTime,
+      epochLength: v4Config.epochLength,
+      isToken0: v4Config.isToken0,
+      poolKey: v4PoolData.poolKey,
+      context,
+    }),
+  ]);
 });
 
 ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
   const address = event.log.address;
   const { currentTick, totalProceeds, totalTokensSold } = event.args;
+  const timestamp = event.block.timestamp;
 
-  const { isToken0, baseToken } = await insertPoolIfNotExistsV4({
-    poolAddress: address,
-    timestamp: event.block.timestamp,
+  const poolAddress = address.toLowerCase() as `0x${string}`;
+
+  console.log("UniswapV4Pool:Swap");
+
+  const {
+    isToken0,
+    baseToken,
+    quoteToken,
+    totalProceeds: totalProceedsPrev,
+    totalTokensSold: totalTokensSoldPrev,
+  } = await insertPoolIfNotExistsV4({
+    poolAddress,
+    timestamp,
     context,
   });
+
+  let amountIn = 0n;
+  let amountOut = 0n;
+  let tokenIn = baseToken;
+  let tokenOut = baseToken;
+  if (totalProceeds > totalProceedsPrev) {
+    amountIn = totalProceeds - totalProceedsPrev;
+    amountOut = totalTokensSoldPrev - totalTokensSold;
+    tokenIn = quoteToken;
+    tokenOut = baseToken;
+  } else {
+    amountIn = totalTokensSoldPrev - totalTokensSold;
+    amountOut = totalProceedsPrev - totalProceeds;
+    tokenIn = baseToken;
+    tokenOut = quoteToken;
+  }
 
   const { totalSupply } = await insertTokenIfNotExists({
     tokenAddress: baseToken,
     creatorAddress: event.transaction.from,
-    timestamp: event.block.timestamp,
+    timestamp,
     context,
   });
 
@@ -146,25 +172,18 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
     baseTokenDecimals: 18,
   });
 
-  const v4PoolData = await getV4PoolData({
-    hook: address,
-    context,
-  });
-
-  const ethPrice = await fetchEthPrice(event.block.timestamp, context);
-
-  const { token0Reserve, token1Reserve } = await getReservesV4({
-    hook: address,
-    context,
-  });
-
-  const unitPrice = await computeDollarPrice({
-    sqrtPriceX96: v4PoolData.slot0Data.sqrtPrice,
-    totalSupply: totalSupply,
-    ethPrice,
-    isToken0: isToken0,
-    decimals: 18,
-  });
+  const [v4PoolData, ethPrice, reserves] = await Promise.all([
+    getV4PoolData({
+      hook: address,
+      context,
+    }),
+    fetchEthPrice(event.block.timestamp, context),
+    getReservesV4({
+      hook: address,
+      context,
+    }),
+  ]);
+  const { token0Reserve, token1Reserve } = reserves;
 
   const dollarLiquidity = computeDollarLiquidity({
     assetBalance: isToken0 ? token0Reserve : token1Reserve,
@@ -194,7 +213,8 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
       update: {
         liquidity: v4PoolData.liquidity,
         dollarLiquidity: dollarLiquidity,
-        unitPriceUsd: unitPrice,
+        totalProceeds,
+        totalTokensSold,
       },
     }),
     updateMarketCap({
@@ -207,6 +227,29 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
       pool: address,
       timestamp: Number(event.block.timestamp),
       marketCap,
+      context,
+    }),
+    insertOrUpdateBuckets({
+      poolAddress: address,
+      price,
+      timestamp,
+      ethPrice,
+      context,
+    }),
+    insertOrUpdateDailyVolume({
+      poolAddress: address,
+      amountIn,
+      amountOut,
+      timestamp,
+      context,
+      tokenIn,
+      tokenOut,
+      ethPrice,
+    }),
+    updateMarketCap({
+      assetAddress: baseToken,
+      price,
+      ethPrice,
       context,
     }),
   ]);

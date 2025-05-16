@@ -79,11 +79,11 @@ export default createConfig({
     //   startBlock: base.startBlock,
     //   interval: 1000, // every 1000 blocks
     // },
-    // MetricRefresherBaseSepolia: {
-    //   network: "baseSepolia",
-    //   startBlock: baseSepolia.startBlock,
-    //   interval: 1000, // every 1000 blocks
-    // },
+    MetricRefresherBaseSepolia: {
+      network: "baseSepolia",
+      startBlock: baseSepolia.startBlock,
+      interval: 1000, // every 1000 blocks
+    },
   },
   contracts: {
     Airlock: {
@@ -315,10 +315,6 @@ export default createConfig({
     PoolManager: {
       abi: PoolManagerABI,
       network: {
-        // unichain: {
-        //   startBlock: unichain.startBlock,
-        //   address: unichain.v4.poolManager,
-        // },
         baseSepolia: {
           startBlock: baseSepolia.v4StartBlock,
           address: baseSepolia.v4.poolManager,
@@ -328,14 +324,6 @@ export default createConfig({
     UniswapV4Pool: {
       abi: DopplerABI,
       network: {
-        // unichain: {
-        //   startBlock: unichain.startBlock,
-        //   address: factory({
-        //     address: unichain.v4.v4Initializer,
-        //     event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
-        //     parameter: "poolOrHook",
-        //   }),
-        // },
         baseSepolia: {
           startBlock: baseSepolia.v4StartBlock,
           address: factory({

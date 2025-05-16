@@ -137,14 +137,11 @@ export const refreshCheckpointBlob = async ({
   const { db, network } = context;
   const chainId = network.chainId;
 
-  console.log(`Refreshing V4 pool checkpoints for chainId ${chainId}`);
-
   const existingData = await db.find(v4CheckpointBlob, {
     chainId,
   });
 
   if (!existingData) {
-    console.log("V4 pool checkpoints not found");
     return;
   }
 
@@ -174,15 +171,12 @@ export const refreshCheckpointBlob = async ({
     );
 
     if (currentEpoch > lastUpdatedEpoch) {
-      console.log("====epoch updated for pool====", poolAddress);
       checkpoint.lastUpdated = timestamp;
       poolsToRefresh.push(poolAddress as Address);
     }
 
     updatedCheckpoints[poolAddress as Address] = checkpoint;
   }
-
-  console.log(`Found ${poolsToRefresh.length} pools to refresh`);
 
   const ethPrice = await fetchEthPrice(BigInt(timestamp), context);
 
@@ -285,7 +279,6 @@ export const refreshCheckpointBlob = async ({
         poolAddress,
         context,
         update: {
-          unitPriceUsd: unitPrice,
           price,
           tick,
           sqrtPrice: sqrtPriceX96,
