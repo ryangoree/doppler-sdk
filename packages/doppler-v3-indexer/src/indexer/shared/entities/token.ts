@@ -108,9 +108,7 @@ export const insertTokenIfNotExists = async ({
         }
         const cid = tokenURI.replace("ipfs://", "");
         const url = `https://${process.env.PINATA_GATEWAY_URL}/ipfs/${cid}?pinataGatewayToken=${process.env.PINATA_GATEWAY_KEY}`;
-        console.log(url);
         const response = await fetch(url);
-        console.log(response);
         tokenUriData = await response.json();
 
         if (

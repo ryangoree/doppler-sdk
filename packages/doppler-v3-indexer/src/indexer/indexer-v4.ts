@@ -127,8 +127,6 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
   const { currentTick, totalProceeds, totalTokensSold } = event.args;
   const timestamp = event.block.timestamp;
 
-  console.log("UniswapV4Pool:Swap");
-
   const {
     isToken0,
     baseToken,
