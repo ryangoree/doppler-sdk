@@ -54,22 +54,6 @@ ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
 
   const price = computeV2Price({ assetBalance, quoteBalance });
 
-  const priceChange = await compute24HourPriceChange({
-    poolAddress: address,
-    currentPrice: price,
-    ethPrice,
-    currentTimestamp: timestamp,
-    createdAt,
-    context,
-  });
-
-  const liquidityUsd = await computeDollarLiquidity({
-    assetBalance,
-    quoteBalance,
-    price,
-    ethPrice,
-  });
-
   const { totalSupply } = await insertTokenIfNotExists({
     tokenAddress: baseToken,
     creatorAddress: address,
@@ -82,6 +66,19 @@ ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
     price,
     ethPrice,
     totalSupply,
+  });
+
+  const priceChange = await compute24HourPriceChange({
+    poolAddress: address,
+    marketCapUsd,
+    context,
+  });
+
+  const liquidityUsd = computeDollarLiquidity({
+    assetBalance,
+    quoteBalance,
+    price,
+    ethPrice,
   });
 
   await Promise.all([
@@ -165,22 +162,6 @@ ponder.on("UniswapV2PairUnichain:Swap", async ({ event, context }) => {
 
   const price = computeV2Price({ assetBalance, quoteBalance });
 
-  const priceChange = await compute24HourPriceChange({
-    poolAddress: address,
-    currentPrice: price,
-    ethPrice,
-    currentTimestamp: timestamp,
-    createdAt,
-    context,
-  });
-
-  const liquidityUsd = await computeDollarLiquidity({
-    assetBalance,
-    quoteBalance,
-    price,
-    ethPrice,
-  });
-
   const { totalSupply } = await insertTokenIfNotExists({
     tokenAddress: baseToken,
     creatorAddress: address,
@@ -193,6 +174,19 @@ ponder.on("UniswapV2PairUnichain:Swap", async ({ event, context }) => {
     price,
     ethPrice,
     totalSupply,
+  });
+
+  const priceChange = await compute24HourPriceChange({
+    poolAddress: address,
+    marketCapUsd,
+    context,
+  });
+
+  const liquidityUsd = await computeDollarLiquidity({
+    assetBalance,
+    quoteBalance,
+    price,
+    ethPrice,
   });
 
   await Promise.all([

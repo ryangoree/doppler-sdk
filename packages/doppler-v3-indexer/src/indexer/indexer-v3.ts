@@ -300,7 +300,6 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
     reserves0,
     reserves1,
     fee,
-    createdAt,
     totalFee0,
     totalFee1,
     graduationBalance,
@@ -360,19 +359,16 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
     poolAddress: address,
   });
 
-  const priceChangeInfo = await compute24HourPriceChange({
-    poolAddress: address,
-    currentPrice: price,
-    ethPrice,
-    currentTimestamp: timestamp,
-    createdAt,
-    context,
-  });
-
   const marketCapUsd = computeMarketCap({
     price,
     ethPrice,
     totalSupply,
+  });
+
+  const priceChangeInfo = await compute24HourPriceChange({
+    poolAddress: address,
+    marketCapUsd,
+    context,
   });
 
   await Promise.all([

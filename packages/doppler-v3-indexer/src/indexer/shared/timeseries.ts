@@ -1,4 +1,4 @@
-import { Address, zeroAddress } from "viem";
+import { Address, formatEther, zeroAddress } from "viem";
 import { hourBucketUsd, dailyVolume } from "ponder.schema";
 import { Context } from "ponder:registry";
 import {
@@ -91,49 +91,46 @@ const insertOrUpdateHourBucketUsd = async ({
 
 export const compute24HourPriceChange = async ({
   poolAddress,
-  currentPrice,
-  currentTimestamp,
-  ethPrice,
-  createdAt,
+  marketCapUsd,
   context,
 }: {
   poolAddress: Address;
-  currentPrice: bigint;
-  currentTimestamp: bigint;
-  ethPrice: bigint;
-  createdAt: bigint;
+  marketCapUsd: bigint;
   context: Context;
 }) => {
   const { db, network } = context;
 
-  const usdPrice = (currentPrice * ethPrice) / CHAINLINK_ETH_DECIMALS;
-  const dayHasElapsed = currentTimestamp - createdAt > BigInt(secondsInDay);
-  const timestampFrom = dayHasElapsed
-    ? Math.floor(Number(createdAt) / secondsInHour) * secondsInHour
-    : Math.floor(
-        Number(currentTimestamp - BigInt(secondsInDay)) / secondsInHour
-      ) * secondsInHour;
-
-  const priceFrom = await db.find(hourBucketUsd, {
+  const dailyVolumeEntity = await db.find(dailyVolume, {
     pool: poolAddress.toLowerCase() as `0x${string}`,
-    hourId: timestampFrom,
-    chainId: BigInt(network.chainId),
   });
 
-  if (!priceFrom) {
+  if (!dailyVolumeEntity) {
     return 0;
   }
 
-  // Calculate the price change percentage
-  let priceChangePercent =
-    (Number(usdPrice - priceFrom.open) / Number(priceFrom.open)) * 100;
+  const checkpoints = dailyVolumeEntity.checkpoints as Record<
+    string,
+    DayMetrics
+  >;
 
-  // Ensure we're not sending null values to the database
-  if (isNaN(priceChangePercent) || !isFinite(priceChangePercent)) {
-    priceChangePercent = 0;
-  }
+  const oldestCheckpointTime =
+    Object.keys(checkpoints).length > 0
+      ? BigInt(Math.min(...Object.keys(checkpoints).map(Number)))
+      : undefined;
 
-  return priceChangePercent;
+  const oldestMarketCapUsd = oldestCheckpointTime
+    ? BigInt(checkpoints[oldestCheckpointTime!.toString()]?.marketCapUsd || "0")
+    : 0n;
+
+  const priceChangePercent =
+    oldestMarketCapUsd === 0n
+      ? 0
+      : formatEther(
+          ((BigInt(marketCapUsd) - BigInt(oldestMarketCapUsd)) * BigInt(1e18)) /
+            BigInt(oldestMarketCapUsd)
+        );
+
+  return Number(priceChangePercent);
 };
 
 export const insertOrUpdateDailyVolume = async ({
