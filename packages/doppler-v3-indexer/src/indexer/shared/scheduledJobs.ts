@@ -176,18 +176,21 @@ export const refreshActivePoolsBlob = async ({
         });
       }
 
-      const oldestPrice = BigInt(
-        volumeCheckpoints[oldestCheckpointTime!.toString()] || "0"
-      );
-      const newestPrice = BigInt(
-        volumeCheckpoints[newestCheckpointTime!.toString()] || "0"
-      );
+      const oldestPrice = oldestCheckpointTime
+        ? BigInt(volumeCheckpoints[oldestCheckpointTime!.toString()] || "0")
+        : 0n;
 
-      const percentDayChange = formatEther(
-        ((BigInt(newestPrice) - BigInt(oldestPrice)) * BigInt(1e18)) /
-          BigInt(oldestPrice)
-      );
-      console.log(percentDayChange);
+      const newestPrice = newestCheckpointTime
+        ? BigInt(volumeCheckpoints[newestCheckpointTime!.toString()] || "0")
+        : 0n;
+
+      const percentDayChange =
+        oldestPrice === 0n
+          ? 0
+          : formatEther(
+              ((BigInt(newestPrice) - BigInt(oldestPrice)) * BigInt(1e18)) /
+                BigInt(oldestPrice)
+            );
 
       poolsToUpdate.push({
         [poolAddress]: Number(newestCheckpointTime),
