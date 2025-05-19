@@ -175,13 +175,6 @@ export const refreshActivePoolsBlob = async ({
         });
       }
 
-      const oldestMarketCapUsd = oldestCheckpointTime
-        ? BigInt(
-            volumeCheckpoints[oldestCheckpointTime!.toString()]?.marketCapUsd ||
-              "0"
-          )
-        : 0n;
-
       const newestMarketCapUsd = newestCheckpointTime
         ? BigInt(
             volumeCheckpoints[newestCheckpointTime!.toString()]?.marketCapUsd ||

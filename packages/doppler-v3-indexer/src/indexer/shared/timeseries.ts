@@ -123,7 +123,7 @@ export const compute24HourPriceChange = async ({
     : 0n;
 
   const priceChangePercent =
-    oldestMarketCapUsd === 0n
+    oldestMarketCapUsd === 0n || marketCapUsd === 0n
       ? 0
       : Number(
           formatEther(
