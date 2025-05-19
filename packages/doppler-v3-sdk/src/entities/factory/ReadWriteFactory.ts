@@ -25,8 +25,8 @@ export const DEFAULT_YEARLY_MINT_RATE_WAD = parseEther("0.02");
 export const DEFAULT_PRE_MINT_WAD = parseEther("9000000"); // 0.9% of the total supply
 export const DEFAULT_MAX_SHARE_TO_BE_SOLD = parseEther("0.35");
 
-export const DEFAULT_INITIAL_VOTING_DELAY = 7200;
-export const DEFAULT_INITIAL_VOTING_PERIOD = 50400;
+export const DEFAULT_INITIAL_VOTING_DELAY = 172800;
+export const DEFAULT_INITIAL_VOTING_PERIOD = 1209600;
 export const DEFAULT_INITIAL_PROPOSAL_THRESHOLD = BigInt(0);
 
 /**
