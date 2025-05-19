@@ -1,6 +1,6 @@
 import { Context } from "ponder:registry";
 import { activePoolsBlob, dailyVolume } from "ponder:schema";
-import { Address } from "viem";
+import { Address, formatEther } from "viem";
 import {
   updateAsset,
   updatePool,
@@ -156,6 +156,11 @@ export const refreshActivePoolsBlob = async ({
           ? BigInt(Math.min(...Object.keys(updatedCheckpoints).map(Number)))
           : undefined;
 
+      const newestCheckpointTime =
+        Object.keys(updatedCheckpoints).length > 0
+          ? BigInt(Math.max(...Object.keys(updatedCheckpoints).map(Number)))
+          : undefined;
+
       const totalVolumeUsd = oldestCheckpointTime
         ? Object.values(updatedCheckpoints).reduce(
             (acc, vol) => acc + BigInt(vol),
@@ -170,6 +175,23 @@ export const refreshActivePoolsBlob = async ({
           [poolAddress]: Number(oldestCheckpointTime),
         });
       }
+
+      const oldestPrice = BigInt(
+        volumeCheckpoints[oldestCheckpointTime!.toString()] || "0"
+      );
+      const newestPrice = BigInt(
+        volumeCheckpoints[newestCheckpointTime!.toString()] || "0"
+      );
+
+      const percentDayChange = formatEther(
+        ((BigInt(newestPrice) - BigInt(oldestPrice)) * BigInt(1e18)) /
+          BigInt(oldestPrice)
+      );
+      console.log(percentDayChange);
+
+      poolsToUpdate.push({
+        [poolAddress]: Number(newestCheckpointTime),
+      });
 
       const volumeEntityUpdate = {
         poolAddress,
@@ -198,6 +220,7 @@ export const refreshActivePoolsBlob = async ({
         context,
         update: {
           volumeUsd: totalVolumeUsd,
+          percentDayChange: Number(percentDayChange),
         },
       });
       await updateToken({
@@ -212,6 +235,7 @@ export const refreshActivePoolsBlob = async ({
         context,
         update: {
           dayVolumeUsd: totalVolumeUsd,
+          percentDayChange: Number(percentDayChange),
         },
       });
     })
