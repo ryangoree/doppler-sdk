@@ -8,7 +8,7 @@ import {
 } from "@app/indexer/shared/entities";
 import { pool } from "ponder:schema";
 import { secondsInDay } from "@app/utils/constants";
-import { updateDailyVolume } from "./timeseries";
+import { compute24HourPriceChange, updateDailyVolume } from "./timeseries";
 import { DayMetrics } from "./timeseries";
 interface ActivePools {
   [poolAddress: Address]: number;
@@ -189,14 +189,11 @@ export const refreshActivePoolsBlob = async ({
           )
         : 0n;
 
-      const percentDayChange =
-        oldestMarketCapUsd === 0n
-          ? 0
-          : formatEther(
-              ((BigInt(newestMarketCapUsd) - BigInt(oldestMarketCapUsd)) *
-                BigInt(1e18)) /
-                BigInt(oldestMarketCapUsd)
-            );
+      const percentDayChange = await compute24HourPriceChange({
+        poolAddress,
+        marketCapUsd: newestMarketCapUsd,
+        context,
+      });
 
       if (newestCheckpointTime) {
         poolsToUpdate.push({

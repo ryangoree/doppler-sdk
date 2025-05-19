@@ -177,7 +177,7 @@ ponder.on("UniswapV2PairUnichain:Swap", async ({ event, context }) => {
   });
 
   const priceChange = await compute24HourPriceChange({
-    poolAddress: address,
+    poolAddress: parentPool,
     marketCapUsd,
     context,
   });
@@ -218,6 +218,8 @@ ponder.on("UniswapV2PairUnichain:Swap", async ({ event, context }) => {
       context,
       update: {
         liquidityUsd: liquidityUsd,
+        percentDayChange: priceChange,
+        marketCapUsd,
       },
     }),
     updatePool({
