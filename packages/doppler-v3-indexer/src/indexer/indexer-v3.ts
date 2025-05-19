@@ -143,6 +143,12 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
     isToken0,
   });
 
+  await insertAssetIfNotExists({
+    assetAddress: baseToken,
+    timestamp,
+    context,
+  });
+
   await updateAsset({
     assetAddress: baseToken,
     context,
