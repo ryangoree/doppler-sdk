@@ -98,7 +98,7 @@ export const compute24HourPriceChange = async ({
   marketCapUsd: bigint;
   context: Context;
 }) => {
-  const { db, network } = context;
+  const { db } = context;
 
   const dailyVolumeEntity = await db.find(dailyVolume, {
     pool: poolAddress.toLowerCase() as `0x${string}`,
@@ -125,10 +125,13 @@ export const compute24HourPriceChange = async ({
   const priceChangePercent =
     oldestMarketCapUsd === 0n
       ? 0
-      : formatEther(
-          ((BigInt(marketCapUsd) - BigInt(oldestMarketCapUsd)) * BigInt(1e18)) /
-            BigInt(oldestMarketCapUsd)
-        );
+      : Number(
+          formatEther(
+            ((BigInt(marketCapUsd) - BigInt(oldestMarketCapUsd)) *
+              BigInt(1e18)) /
+              BigInt(oldestMarketCapUsd)
+          )
+        ) * 100;
 
   return Number(priceChangePercent);
 };
