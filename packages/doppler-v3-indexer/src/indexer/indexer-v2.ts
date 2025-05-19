@@ -83,6 +83,11 @@ ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
   });
 
   await Promise.all([
+    tryAddActivePool({
+      poolAddress: parentPool,
+      lastSwapTimestamp: Number(timestamp),
+      context,
+    }),
     insertOrUpdateBuckets({
       poolAddress: parentPool,
       price,

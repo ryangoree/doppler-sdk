@@ -4,7 +4,6 @@ import { Address, parseEther } from "viem";
 import { getLatestSqrtPrice } from "@app/utils/v4-utils/getV4PoolData";
 import { PoolKey } from "@app/types/v4-types";
 import { computeV4PriceFromSqrtPriceX96 } from "@app/utils/v4-utils/computeV4Price";
-import { computeDollarPrice } from "@app/utils/computePrice";
 import { computeMarketCap, fetchEthPrice } from "../../oracle";
 import { updateAsset, updatePool } from "..";
 import { pool } from "ponder:schema";
@@ -252,14 +251,6 @@ export const refreshCheckpointBlob = async ({
       sqrtPriceX96,
       isToken0,
       baseTokenDecimals: 18,
-    });
-
-    const unitPrice = computeDollarPrice({
-      sqrtPriceX96,
-      totalSupply: BigInt(totalSupply),
-      ethPrice,
-      isToken0,
-      decimals: 18,
     });
 
     const marketCapUsd = computeMarketCap({
