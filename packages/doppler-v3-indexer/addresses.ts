@@ -17,7 +17,7 @@ export const CHAIN_IDS = {
   base: 8453,
 } as const;
 
-const mainnetStartBlock = 22489000;
+const mainnetStartBlock = 21781000;
 
 const unichainSepoliaStartBlock = 11932039;
 

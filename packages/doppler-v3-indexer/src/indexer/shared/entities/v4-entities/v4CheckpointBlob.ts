@@ -10,6 +10,7 @@ import { updateAsset, updatePool } from "..";
 import { pool } from "ponder:schema";
 import { computeDollarLiquidity } from "@app/utils/computeDollarLiquidity";
 import { addAndUpdateV4PoolPriceHistory } from "./v4PoolPriceHistory";
+
 interface V4PoolCheckpoint {
   [poolAddress: Address]: Checkpoint;
 }

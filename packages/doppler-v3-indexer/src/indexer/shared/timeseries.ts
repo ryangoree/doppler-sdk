@@ -208,9 +208,6 @@ export const insertOrUpdateDailyVolume = async ({
       return {
         volumeUsd: totalVolumeUsd,
         checkpoints: updatedCheckpoints,
-        lastUpdated: timestamp,
-        earliestCheckpoint: oldestCheckpointTime,
-        inactive: totalVolumeUsd === 0n,
       };
     });
 
@@ -245,80 +242,21 @@ export const insertOrUpdateDailyVolume = async ({
 
 export const updateDailyVolume = async ({
   poolAddress,
-  asset,
   volumeData,
-  timestamp,
   context,
 }: {
   poolAddress: Address;
-  asset: Address;
   volumeData: {
     volumeUsd: bigint;
     checkpoints: Record<string, string>;
-    lastUpdated: bigint;
   };
-  timestamp: bigint;
   context: Context;
 }) => {
   const { db } = context;
 
-  try {
-    let checkpoints = volumeData.checkpoints as Record<string, string>;
-
-    const updatedCheckpoints = Object.fromEntries(
-      Object.entries(checkpoints).filter(
-        ([ts]) => BigInt(ts) >= timestamp - BigInt(secondsInDay)
-      )
-    );
-
-    const oldestCheckpointTime =
-      Object.keys(updatedCheckpoints).length > 0
-        ? BigInt(Math.min(...Object.keys(updatedCheckpoints).map(Number)))
-        : timestamp;
-
-    const totalVolumeUsd = Object.values(updatedCheckpoints).reduce(
-      (acc, vol) => acc + BigInt(vol),
-      BigInt(0)
-    );
-
-    console.log("totalVolumeUsd", totalVolumeUsd);
-
-    await db
-      .update(dailyVolume, {
-        pool: poolAddress.toLowerCase() as `0x${string}`,
-      })
-      .set({
-        volumeUsd: totalVolumeUsd,
-        checkpoints: updatedCheckpoints,
-        lastUpdated: timestamp,
-        earliestCheckpoint: oldestCheckpointTime,
-        inactive: totalVolumeUsd === 0n,
-      });
-
-    await updatePool({
-      poolAddress,
-      context,
-      update: {
-        volumeUsd: totalVolumeUsd,
-        lastRefreshed: timestamp, // Mark as recently updated to prevent redundant refresh
-        lastSwapTimestamp: timestamp, // Track when the pool was last swapped on
-      },
-    });
-    await updateToken({
-      tokenAddress: asset,
-      context,
-      update: {
-        volumeUsd: totalVolumeUsd,
-      },
-    });
-    await updateAsset({
-      assetAddress: asset,
-      context,
-      update: {
-        dayVolumeUsd: totalVolumeUsd,
-      },
-    });
-  } catch (e) {
-    console.error("error updating daily volume", e);
-  }
+  await db
+    .update(dailyVolume, {
+      pool: poolAddress,
+    })
+    .set({ ...volumeData });
 };

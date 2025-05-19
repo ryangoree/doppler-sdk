@@ -122,8 +122,6 @@ export const dailyVolume = onchainTable("daily_volume", (t) => ({
   chainId: t.bigint().notNull(),
   checkpoints: t.jsonb().notNull().default("{}"),
   lastUpdated: t.bigint().notNull(),
-  earliestCheckpoint: t.bigint().notNull(),
-  inactive: t.boolean().notNull().default(true), // indicates if the pool has checkpoints
 }));
 
 export const position = onchainTable(
@@ -255,6 +253,11 @@ export const userAsset = onchainTable(
 export const v4CheckpointBlob = onchainTable("v4_checkpoint_blob", (t) => ({
   chainId: t.integer().notNull().primaryKey(),
   checkpoints: t.jsonb().notNull().default("{}"),
+}));
+
+export const activePoolsBlob = onchainTable("active_pools_blob", (t) => ({
+  chainId: t.bigint().notNull().primaryKey(),
+  activePools: t.jsonb().notNull().default("{}"),
 }));
 
 export const v4PoolPriceHistory = onchainTable(

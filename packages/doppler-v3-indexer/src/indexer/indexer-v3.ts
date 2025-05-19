@@ -16,6 +16,10 @@ import { computeDollarLiquidity } from "@app/utils/computeDollarLiquidity";
 import { insertOrUpdateBuckets } from "./shared/timeseries";
 import { getV3PoolReserves } from "@app/utils/v3-utils/getV3PoolData";
 import { fetchEthPrice, updateMarketCap } from "./shared/oracle";
+import {
+  insertActivePoolsBlobIfNotExists,
+  tryAddActivePool,
+} from "./shared/scheduledJobs";
 
 ponder.on("UniswapV3Initializer:Create", async ({ event, context }) => {
   const { poolOrHook, asset, numeraire } = event.args;
@@ -36,6 +40,9 @@ ponder.on("UniswapV3Initializer:Create", async ({ event, context }) => {
   });
 
   await Promise.all([
+    insertActivePoolsBlobIfNotExists({
+      context,
+    }),
     insertTokenIfNotExists({
       tokenAddress: numeraireId,
       creatorAddress: creatorId,
@@ -139,6 +146,8 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
       graduationThreshold: graduationThreshold + graduationThresholdDelta,
       liquidity: liquidity + amount,
       dollarLiquidity: liquidityUsd,
+      reserves0: reserve0,
+      reserves1: reserve1,
     },
   });
 
@@ -340,6 +349,11 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
   });
 
   await Promise.all([
+    tryAddActivePool({
+      poolAddress: address,
+      lastSwapTimestamp: Number(timestamp),
+      context,
+    }),
     insertOrUpdateBuckets({
       poolAddress: address,
       price,
