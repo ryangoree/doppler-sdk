@@ -31,11 +31,11 @@ export const addAndUpdateV4PoolPriceHistory = async ({
   pool,
   context,
   timestamp,
-  marketCap,
+  marketCapUsd,
 }: {
   pool: Address;
   timestamp: number;
-  marketCap: bigint;
+  marketCapUsd: bigint;
   context: Context;
 }) => {
   const { db } = context;
@@ -50,7 +50,7 @@ export const addAndUpdateV4PoolPriceHistory = async ({
 
   const history = existingHistory?.history ?? {};
 
-  const marketCapString = marketCap.toString();
+  const marketCapString = marketCapUsd.toString();
 
   const oneDayAgo = timestamp - 24 * 60 * 60 * 1000;
   const filteredHistory = Object.fromEntries(
@@ -69,7 +69,7 @@ export const addAndUpdateV4PoolPriceHistory = async ({
   const dayChangeUsd =
     !earliestMarketCap || earliestMarketCap === 0n
       ? 0
-      : ((Number(formatEther(BigInt(marketCap))) -
+      : ((Number(formatEther(BigInt(marketCapUsd))) -
           Number(formatEther(BigInt(earliestMarketCap)))) /
           Number(formatEther(BigInt(earliestMarketCap)))) *
         100;

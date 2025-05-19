@@ -11,6 +11,11 @@ import { updatePool } from "./entities/pool";
 import { updateToken } from "./entities/token";
 import { updateAsset } from "./entities/asset";
 
+export interface DayMetrics {
+  volumeUsd: bigint;
+  marketCapUsd: bigint;
+}
+
 export const insertOrUpdateBuckets = async ({
   poolAddress,
   price,
@@ -139,6 +144,7 @@ export const insertOrUpdateDailyVolume = async ({
   amountOut,
   timestamp,
   ethPrice,
+  marketCapUsd,
   context,
 }: {
   poolAddress: Address;
@@ -148,12 +154,12 @@ export const insertOrUpdateDailyVolume = async ({
   amountOut: bigint;
   timestamp: bigint;
   ethPrice: bigint;
+  marketCapUsd: bigint;
   context: Context;
 }) => {
   const { db, network } = context;
 
   let volumeUsd;
-
   const isTokenInWeth =
     tokenIn.toLowerCase() ===
     (configs[network.name].shared.weth.toLowerCase() as `0x${string}`);
@@ -183,8 +189,11 @@ export const insertOrUpdateDailyVolume = async ({
     })
     .onConflictDoUpdate((row) => {
       const checkpoints = {
-        ...(row.checkpoints as Record<string, string>),
-        [timestamp.toString()]: volumeUsd.toString(),
+        ...(row.checkpoints as Record<string, DayMetrics>),
+        [timestamp.toString()]: {
+          volumeUsd: volumeUsd.toString(),
+          marketCapUsd: marketCapUsd.toString(),
+        },
       };
 
       const updatedCheckpoints = Object.fromEntries(
@@ -193,13 +202,8 @@ export const insertOrUpdateDailyVolume = async ({
         )
       );
 
-      const oldestCheckpointTime =
-        Object.keys(updatedCheckpoints).length > 0
-          ? BigInt(Math.min(...Object.keys(updatedCheckpoints).map(Number)))
-          : timestamp;
-
       const totalVolumeUsd = Object.values(updatedCheckpoints).reduce(
-        (acc, vol) => acc + BigInt(vol),
+        (acc, vol) => acc + BigInt(vol.volumeUsd),
         BigInt(0)
       );
 
@@ -208,6 +212,7 @@ export const insertOrUpdateDailyVolume = async ({
       return {
         volumeUsd: totalVolumeUsd,
         checkpoints: updatedCheckpoints,
+        lastUpdated: timestamp,
       };
     });
 
@@ -248,7 +253,7 @@ export const updateDailyVolume = async ({
   poolAddress: Address;
   volumeData: {
     volumeUsd: bigint;
-    checkpoints: Record<string, string>;
+    checkpoints: Record<string, DayMetrics>;
   };
   context: Context;
 }) => {

@@ -17,7 +17,7 @@ export const insertTokenIfNotExists = async ({
   context: Context;
   isDerc20?: boolean;
   poolAddress?: Address;
-}) => {
+}): Promise<typeof token.$inferSelect> => {
   const { db, network } = context;
 
   let multiCallAddress = {};
@@ -104,7 +104,7 @@ export const insertTokenIfNotExists = async ({
           !tokenURI.startsWith("http://") &&
           !tokenURI.startsWith("https://")
         ) {
-          return;
+          console.error(`Invalid tokenURI for token ${address}: ${tokenURI}`);
         }
         const cid = tokenURI.replace("ipfs://", "");
         const url = `https://${process.env.PINATA_GATEWAY_URL}/ipfs/${cid}?pinataGatewayToken=${process.env.PINATA_GATEWAY_KEY}`;

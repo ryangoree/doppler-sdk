@@ -9,7 +9,7 @@ import {
 import { pool } from "ponder:schema";
 import { secondsInDay } from "@app/utils/constants";
 import { updateDailyVolume } from "./timeseries";
-
+import { DayMetrics } from "./timeseries";
 interface ActivePools {
   [poolAddress: Address]: number;
 }
@@ -143,7 +143,7 @@ export const refreshActivePoolsBlob = async ({
       }
       const { checkpoints } = volumeEntity;
 
-      const volumeCheckpoints = checkpoints as Record<string, string>;
+      const volumeCheckpoints = checkpoints as Record<string, DayMetrics>;
 
       const updatedCheckpoints = Object.fromEntries(
         Object.entries(volumeCheckpoints).filter(
@@ -162,10 +162,9 @@ export const refreshActivePoolsBlob = async ({
           : undefined;
 
       const totalVolumeUsd = oldestCheckpointTime
-        ? Object.values(updatedCheckpoints).reduce(
-            (acc, vol) => acc + BigInt(vol),
-            BigInt(0)
-          )
+        ? Object.values(updatedCheckpoints).reduce((acc, vol) => {
+            return acc + BigInt(vol.volumeUsd);
+          }, BigInt(0))
         : 0n;
 
       if (!oldestCheckpointTime) {
@@ -176,20 +175,27 @@ export const refreshActivePoolsBlob = async ({
         });
       }
 
-      const oldestPrice = oldestCheckpointTime
-        ? BigInt(volumeCheckpoints[oldestCheckpointTime!.toString()] || "0")
+      const oldestMarketCapUsd = oldestCheckpointTime
+        ? BigInt(
+            volumeCheckpoints[oldestCheckpointTime!.toString()]?.marketCapUsd ||
+              "0"
+          )
         : 0n;
 
-      const newestPrice = newestCheckpointTime
-        ? BigInt(volumeCheckpoints[newestCheckpointTime!.toString()] || "0")
+      const newestMarketCapUsd = newestCheckpointTime
+        ? BigInt(
+            volumeCheckpoints[newestCheckpointTime!.toString()]?.marketCapUsd ||
+              "0"
+          )
         : 0n;
 
       const percentDayChange =
-        oldestPrice === 0n
+        oldestMarketCapUsd === 0n
           ? 0
           : formatEther(
-              ((BigInt(newestPrice) - BigInt(oldestPrice)) * BigInt(1e18)) /
-                BigInt(oldestPrice)
+              ((BigInt(newestMarketCapUsd) - BigInt(oldestMarketCapUsd)) *
+                BigInt(1e18)) /
+                BigInt(oldestMarketCapUsd)
             );
 
       poolsToUpdate.push({
@@ -226,6 +232,7 @@ export const refreshActivePoolsBlob = async ({
           percentDayChange: Number(percentDayChange),
         },
       });
+
       await updateToken({
         tokenAddress: poolEntity.asset,
         context,
@@ -233,6 +240,7 @@ export const refreshActivePoolsBlob = async ({
           volumeUsd: totalVolumeUsd,
         },
       });
+
       await updateAsset({
         assetAddress: poolEntity.asset,
         context,

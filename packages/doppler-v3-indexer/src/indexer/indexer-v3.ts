@@ -15,7 +15,11 @@ import { insertAssetIfNotExists, updateAsset } from "./shared/entities/asset";
 import { computeDollarLiquidity } from "@app/utils/computeDollarLiquidity";
 import { insertOrUpdateBuckets } from "./shared/timeseries";
 import { getV3PoolReserves } from "@app/utils/v3-utils/getV3PoolData";
-import { fetchEthPrice, updateMarketCap } from "./shared/oracle";
+import {
+  computeMarketCap,
+  fetchEthPrice,
+  updateMarketCap,
+} from "./shared/oracle";
 import {
   insertActivePoolsBlobIfNotExists,
   tryAddActivePool,
@@ -39,7 +43,7 @@ ponder.on("UniswapV3Initializer:Create", async ({ event, context }) => {
     ethPrice,
   });
 
-  await Promise.all([
+  const [, , assetEntity, , ,] = await Promise.all([
     insertActivePoolsBlobIfNotExists({
       context,
     }),
@@ -70,17 +74,25 @@ ponder.on("UniswapV3Initializer:Create", async ({ event, context }) => {
       ethPrice,
       context,
     }),
-    insertOrUpdateDailyVolume({
-      poolAddress: poolOrHookId,
-      amountIn: 0n,
-      amountOut: 0n,
-      timestamp,
-      context,
-      tokenIn: assetId,
-      tokenOut: numeraireId,
-      ethPrice,
-    }),
   ]);
+
+  const { totalSupply } = assetEntity;
+
+  await insertOrUpdateDailyVolume({
+    poolAddress: poolOrHookId,
+    amountIn: 0n,
+    amountOut: 0n,
+    timestamp,
+    context,
+    tokenIn: assetId,
+    tokenOut: numeraireId,
+    ethPrice,
+    marketCapUsd: computeMarketCap({
+      price,
+      ethPrice,
+      totalSupply,
+    }),
+  });
 });
 
 ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
@@ -339,6 +351,15 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
     ethPrice,
   });
 
+  const { totalSupply } = await insertTokenIfNotExists({
+    tokenAddress: baseToken,
+    creatorAddress: address,
+    timestamp,
+    context,
+    isDerc20: true,
+    poolAddress: address,
+  });
+
   const priceChangeInfo = await compute24HourPriceChange({
     poolAddress: address,
     currentPrice: price,
@@ -346,6 +367,12 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
     currentTimestamp: timestamp,
     createdAt,
     context,
+  });
+
+  const marketCapUsd = computeMarketCap({
+    price,
+    ethPrice,
+    totalSupply,
   });
 
   await Promise.all([
@@ -370,6 +397,7 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
       tokenIn,
       tokenOut,
       ethPrice,
+      marketCapUsd,
     }),
     updateMarketCap({
       assetAddress: baseToken,

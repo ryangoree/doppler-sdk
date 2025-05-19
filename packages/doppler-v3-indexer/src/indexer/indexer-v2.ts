@@ -1,5 +1,5 @@
 import { ponder } from "ponder:registry";
-import { v2Pool } from "ponder.schema";
+import { token, v2Pool } from "ponder.schema";
 import {
   insertOrUpdateBuckets,
   insertOrUpdateDailyVolume,
@@ -8,9 +8,10 @@ import {
 import { computeV2Price } from "@app/utils/v2-utils/computeV2Price";
 import { getPairData } from "@app/utils/v2-utils/getPairData";
 import { computeDollarLiquidity } from "@app/utils/computeDollarLiquidity";
-import { fetchEthPrice } from "./shared/oracle";
+import { computeMarketCap, fetchEthPrice } from "./shared/oracle";
 import {
   insertPoolIfNotExists,
+  insertTokenIfNotExists,
   updateAsset,
   updatePool,
   updateV2Pool,
@@ -69,6 +70,20 @@ ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
     ethPrice,
   });
 
+  const { totalSupply } = await insertTokenIfNotExists({
+    tokenAddress: baseToken,
+    creatorAddress: address,
+    timestamp,
+    context,
+    isDerc20: true,
+  });
+
+  const marketCapUsd = computeMarketCap({
+    price,
+    ethPrice,
+    totalSupply,
+  });
+
   await Promise.all([
     insertOrUpdateBuckets({
       poolAddress: parentPool,
@@ -86,6 +101,7 @@ ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
       tokenIn,
       tokenOut,
       ethPrice,
+      marketCapUsd,
     }),
     updateV2Pool({
       poolAddress: address,
@@ -165,6 +181,20 @@ ponder.on("UniswapV2PairUnichain:Swap", async ({ event, context }) => {
     ethPrice,
   });
 
+  const { totalSupply } = await insertTokenIfNotExists({
+    tokenAddress: baseToken,
+    creatorAddress: address,
+    timestamp,
+    context,
+    isDerc20: true,
+  });
+
+  const marketCapUsd = computeMarketCap({
+    price,
+    ethPrice,
+    totalSupply,
+  });
+
   await Promise.all([
     insertOrUpdateBuckets({
       poolAddress: parentPool,
@@ -182,6 +212,7 @@ ponder.on("UniswapV2PairUnichain:Swap", async ({ event, context }) => {
       tokenIn,
       tokenOut,
       ethPrice,
+      marketCapUsd,
     }),
     updateV2Pool({
       poolAddress: address,

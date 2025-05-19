@@ -262,7 +262,7 @@ export const refreshCheckpointBlob = async ({
       decimals: 18,
     });
 
-    const marketCap = computeMarketCap({
+    const marketCapUsd = computeMarketCap({
       price,
       ethPrice,
       totalSupply: BigInt(totalSupply),
@@ -290,14 +290,14 @@ export const refreshCheckpointBlob = async ({
         assetAddress,
         context,
         update: {
-          marketCapUsd: marketCap,
+          marketCapUsd,
           liquidityUsd,
         },
       }),
       addAndUpdateV4PoolPriceHistory({
         pool: poolAddress,
         timestamp,
-        marketCap,
+        marketCapUsd,
         context,
       }),
     ]);

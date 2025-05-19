@@ -107,6 +107,7 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
       tokenIn: assetAddress,
       tokenOut: numeraireAddress,
       ethPrice,
+      marketCapUsd,
     }),
     addCheckpoint({
       poolAddress: poolAddress,
@@ -188,7 +189,7 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
     ethPrice,
   });
 
-  const marketCap = computeMarketCap({
+  const marketCapUsd = computeMarketCap({
     price,
     ethPrice,
     totalSupply,
@@ -200,7 +201,7 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
       context,
       update: {
         liquidityUsd: dollarLiquidity,
-        marketCapUsd: marketCap,
+        marketCapUsd,
       },
     }),
     updatePool({
@@ -222,7 +223,7 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
     addAndUpdateV4PoolPriceHistory({
       pool: address,
       timestamp: Number(event.block.timestamp),
-      marketCap,
+      marketCapUsd,
       context,
     }),
     insertOrUpdateBuckets({
@@ -241,6 +242,7 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
       tokenIn,
       tokenOut,
       ethPrice,
+      marketCapUsd,
     }),
     updateMarketCap({
       assetAddress: baseToken,

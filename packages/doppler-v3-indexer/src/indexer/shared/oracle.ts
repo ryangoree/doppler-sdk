@@ -47,8 +47,11 @@ export const updateMarketCap = async ({
     functionName: "totalSupply",
   });
 
-  const marketCap = (price * totalSupply) / BigInt(10 ** 18);
-  const marketCapUsd = (marketCap * ethPrice) / CHAINLINK_ETH_DECIMALS;
+  const marketCapUsd = computeMarketCap({
+    price,
+    ethPrice,
+    totalSupply,
+  });
 
   await updateAsset({
     assetAddress,
