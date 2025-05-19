@@ -17,6 +17,7 @@ import {
   updateV2Pool,
 } from "./shared/entities";
 import { CHAINLINK_ETH_DECIMALS } from "@app/utils/constants";
+import { tryAddActivePool } from "./shared/scheduledJobs";
 
 ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
   const { db } = context;
@@ -190,6 +191,11 @@ ponder.on("UniswapV2PairUnichain:Swap", async ({ event, context }) => {
   });
 
   await Promise.all([
+    tryAddActivePool({
+      poolAddress: parentPool,
+      lastSwapTimestamp: Number(timestamp),
+      context,
+    }),
     insertOrUpdateBuckets({
       poolAddress: parentPool,
       price,
