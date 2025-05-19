@@ -303,21 +303,18 @@ export class ReadWriteFactory extends ReadFactory {
   }
 
   /**
-   * Generate a random salt using cryptographic random values
+   * Generate a random salt
    * @param account User address to incorporate into salt
    * @returns Hex string of generated salt
    */
   private generateRandomSalt = (account: Address) => {
     const array = new Uint8Array(32);
 
-    // Cross-platform random generation
-    if (typeof window !== "undefined" && window.crypto) {
-      window.crypto.getRandomValues(array);
-    } else {
-      array.set(require("crypto").randomBytes(32));
+    // Sequential byte generation
+    for (let i = 0; i < 32; i++) {
+      array[i] = i;
     }
 
-    // Incorporate user address into salt
     if (account) {
       const addressBytes = account.slice(2).padStart(40, "0");
       for (let i = 0; i < 20; i++) {
