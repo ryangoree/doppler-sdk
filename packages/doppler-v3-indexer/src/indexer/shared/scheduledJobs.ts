@@ -36,7 +36,7 @@ export const insertActivePoolsBlobIfNotExists = async ({
   });
 };
 
-export const updateCheckpointBlob = async ({
+export const updateActivePoolsBlob = async ({
   context,
   update,
 }: {
@@ -198,9 +198,11 @@ export const refreshActivePoolsBlob = async ({
                 BigInt(oldestMarketCapUsd)
             );
 
-      poolsToUpdate.push({
-        [poolAddress]: Number(newestCheckpointTime),
-      });
+      if (newestCheckpointTime) {
+        poolsToUpdate.push({
+          [poolAddress]: Number(newestCheckpointTime),
+        });
+      }
 
       const volumeEntityUpdate = {
         poolAddress,
@@ -263,7 +265,7 @@ export const refreshActivePoolsBlob = async ({
     });
   });
 
-  await updateCheckpointBlob({
+  await updateActivePoolsBlob({
     context,
     update: {
       activePools: blob,
