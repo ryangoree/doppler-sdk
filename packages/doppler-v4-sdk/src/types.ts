@@ -97,6 +97,7 @@ export interface DopplerPreDeploymentConfig {
   priceRange?: PriceRange;
   tickRange?: TickRange;
   tickSpacing: number;
+  gamma?: number; // allow gamma to be passed directly instead of computed
   fee: number; // In bips
 
   // Sale parameters
