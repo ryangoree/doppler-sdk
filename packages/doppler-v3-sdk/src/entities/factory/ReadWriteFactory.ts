@@ -2,8 +2,7 @@ import {
   ReadWriteContract,
   ReadWriteAdapter,
   Drift,
-  ContractWriteOptions,
-  OnMinedParam,
+  TransactionOptions,
   createDrift,
   FunctionReturn,
   FunctionArgs,
@@ -522,7 +521,7 @@ export class ReadWriteFactory extends ReadFactory {
    */
   public async create(
     params: CreateParams,
-    options?: ContractWriteOptions & OnMinedParam
+    options?: TransactionOptions
   ): Promise<Hex> {
     return this.airlock.write("create", { createData: params }, options);
   }
@@ -562,7 +561,7 @@ export class ReadWriteFactory extends ReadFactory {
     createData: CreateParams,
     commands: FunctionArgs<BundlerABI, "bundle">["commands"],
     inputs: FunctionArgs<BundlerABI, "bundle">["inputs"],
-    options?: ContractWriteOptions & OnMinedParam
+    options?: TransactionOptions
   ): Promise<Hex> {
     return this.bundler.write(
       "bundle",
