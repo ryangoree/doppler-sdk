@@ -43,7 +43,7 @@ export const insertCheckpointBlobIfNotExist = async ({
 
   return await db.insert(v4CheckpointBlob).values({
     chainId,
-    blob: {},
+    checkpoints: {},
   });
 };
 
@@ -109,6 +109,17 @@ export const addCheckpoint = async ({
     throw new Error("V4 pool checkpoints not found");
   }
 
+  // Ensure existingCheckpoints is an object, not the string "{}"
+  let existingCheckpoints: V4PoolCheckpoint = {};
+  if (
+    typeof existingData.checkpoints === "string" &&
+    existingData.checkpoints === "{}"
+  ) {
+    existingCheckpoints = {};
+  } else if (existingData.checkpoints) {
+    existingCheckpoints = existingData.checkpoints as V4PoolCheckpoint;
+  }
+
   const data: V4PoolCheckpoint = {
     [poolAddress]: {
       ...checkpointWithoutBigInts,
@@ -121,7 +132,7 @@ export const addCheckpoint = async ({
     })
     .set({
       checkpoints: {
-        ...(existingData.checkpoints as V4PoolCheckpoint),
+        ...existingCheckpoints, // Use the safely parsed/initialized object
         ...data,
       },
     });
@@ -145,7 +156,17 @@ export const refreshCheckpointBlob = async ({
     return;
   }
 
-  const checkpoints = existingData.checkpoints as V4PoolCheckpoint;
+  // Ensure checkpoints is an object, not the string "{}"
+  let checkpoints: V4PoolCheckpoint = {};
+  if (
+    typeof existingData.checkpoints === "string" &&
+    existingData.checkpoints === "{}"
+  ) {
+    checkpoints = {};
+  } else if (existingData.checkpoints) {
+    checkpoints = existingData.checkpoints as V4PoolCheckpoint;
+  }
+
   const poolsToRefresh: Address[] = [];
   const updatedCheckpoints: V4PoolCheckpoint = {};
 

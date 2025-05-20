@@ -32,7 +32,7 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
   const assetAddress = assetId.toLowerCase() as `0x${string}`;
   const numeraireAddress = numeraire.toLowerCase() as `0x${string}`;
 
-  const creatorAddress = event.transaction.from;
+  const creatorAddress = event.transaction.from.toLowerCase() as `0x${string}`;
 
   await Promise.all([
     insertTokenIfNotExists({
