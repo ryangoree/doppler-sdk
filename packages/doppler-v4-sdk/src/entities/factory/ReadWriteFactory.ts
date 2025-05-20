@@ -186,13 +186,15 @@ export class ReadWriteFactory extends ReadFactory {
       params.tickSpacing
     );
 
-    const gamma = this.computeOptimalGamma(
-      startTick,
-      endTick,
-      params.duration,
-      params.epochLength,
-      params.tickSpacing
-    );
+    const gamma =
+      params.gamma ??
+      this.computeOptimalGamma(
+        startTick,
+        endTick,
+        params.duration,
+        params.epochLength,
+        params.tickSpacing
+      );
 
     const startTime = params.blockTimestamp + 30;
     const endTime = params.blockTimestamp + params.duration * DAY_SECONDS + 30;

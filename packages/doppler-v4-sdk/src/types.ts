@@ -91,6 +91,7 @@ export interface DopplerPreDeploymentConfig {
   numeraire?: Address; // defaults to native if unset
   priceRange: PriceRange;
   tickSpacing: number;
+  gamma?: number; // allow gamma to be passed directly instead of computed
   fee: number; // In bips
 
   // Sale parameters
