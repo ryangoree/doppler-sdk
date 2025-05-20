@@ -120,6 +120,15 @@ export const insertTokenIfNotExists = async ({
           if (tokenUriData.image.startsWith("ipfs://")) {
             image = tokenUriData.image;
           }
+        } else if (
+          tokenUriData &&
+          typeof tokenUriData === "object" &&
+          "image_hash" in tokenUriData &&
+          typeof tokenUriData.image_hash === "string"
+        ) {
+          if (tokenUriData.image_hash.startsWith("ipfs://")) {
+            image = tokenUriData.image_hash;
+          }
         }
       } catch (error) {
         console.error(
