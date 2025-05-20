@@ -186,6 +186,19 @@ export default createConfig({
         },
       },
     },
+    V4DERC20: {
+      abi: DERC20ABI,
+      network: {
+        baseSepolia: {
+          startBlock: baseSepolia.v4StartBlock,
+          address: factory({
+            address: baseSepolia.v4.v4Initializer,
+            event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
+            parameter: "asset",
+          }),
+        },
+      },
+    },
     UniswapV3Pool: {
       abi: UniswapV3PoolABI,
       network: {
