@@ -6,19 +6,16 @@ import {
   WAD_STRING,
 } from '@/constants';
 import { DopplerV4Addresses } from '@/types';
-import { Price, Token } from '@uniswap/sdk-core';
-import { encodeSqrtRatioX96, tickToPrice, TickMath } from '@uniswap/v3-sdk';
+import { encodeSqrtRatioX96, TickMath } from '@uniswap/v3-sdk';
 import {
   encodeAbiParameters,
   parseEther,
   toHex,
   Address,
-  Hex,
   zeroAddress,
 } from 'viem';
 import { ETH_ADDRESS } from '@/constants';
 import { MineV4Params, mine } from '@/entities/factory';
-import { sortsBefore } from '@uniswap/v4-sdk';
 import {
   DEFAULT_INITIAL_VOTING_DELAY,
   DEFAULT_INITIAL_VOTING_PERIOD,
@@ -239,36 +236,3 @@ function validateBasicParams(params: DopplerPreDeploymentConfig) {
     }
   }
 }
-
-export function priceToClosestTick(price: Price<Token, Token>): number {
-  const sorted = sortsBefore(price.baseCurrency, price.quoteCurrency);
-
-  const sqrtRatioX96 = sorted
-    ? encodeSqrtRatioX96(price.numerator, price.denominator)
-    : encodeSqrtRatioX96(price.denominator, price.numerator);
-
-  let tick = TickMath.getTickAtSqrtRatio(sqrtRatioX96);
-  const nextTickPrice = tickToPrice(
-    price.baseCurrency,
-    price.quoteCurrency,
-    tick + 1
-  );
-  if (sorted) {
-    if (!price.lessThan(nextTickPrice)) {
-      tick++;
-    }
-  } else {
-    if (!price.greaterThan(nextTickPrice)) {
-      tick++;
-    }
-  }
-  return tick;
-}
-
-// // Helper to suggest optimal epoch length based on duration
-// function suggestEpochLength(durationDays: number): number {
-//   if (durationDays > 30) return 2 * 60 * 60; // 2 hours
-//   if (durationDays > 7) return 1 * 60 * 60; // 1 hour
-//   if (durationDays > 1) return 1 * 60 * 30; // 30 minutes
-//   return 1 * 60 * 20; // 20 minutes
-// }
