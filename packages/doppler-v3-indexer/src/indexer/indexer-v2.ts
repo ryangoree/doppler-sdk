@@ -147,13 +147,12 @@ ponder.on("UniswapV2PairUnichain:Swap", async ({ event, context }) => {
 
   const ethPrice = await fetchEthPrice(timestamp, context);
 
-  const { isToken0, baseToken, quoteToken, createdAt } =
-    await insertPoolIfNotExists({
-      poolAddress: parentPool,
-      timestamp,
-      context,
-      ethPrice,
-    });
+  const { isToken0, baseToken, quoteToken } = await insertPoolIfNotExists({
+    poolAddress: parentPool,
+    timestamp,
+    context,
+    ethPrice,
+  });
 
   const amountIn = amount0In > 0 ? amount0In : amount1In;
   const amountOut = amount0Out > 0 ? amount0Out : amount1Out;

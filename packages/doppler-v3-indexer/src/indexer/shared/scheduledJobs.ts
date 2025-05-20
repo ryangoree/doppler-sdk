@@ -81,7 +81,7 @@ export const tryAddActivePool = async ({
     [poolAddress]: lastSwapTimestamp,
   };
 
-  if (activePools[poolAddress]) {
+  if (typeof activePools[poolAddress] === "number") {
     return;
   }
 
