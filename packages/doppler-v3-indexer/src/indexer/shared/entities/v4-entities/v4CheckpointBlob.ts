@@ -296,6 +296,7 @@ export const refreshCheckpointBlob = async ({
           tick,
           sqrtPrice: sqrtPriceX96,
           dollarLiquidity: liquidityUsd,
+          marketCapUsd,
         },
       }),
       updateAsset({
