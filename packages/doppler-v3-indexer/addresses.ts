@@ -24,7 +24,7 @@ const unichainSepoliaStartBlock = 11932039;
 const unichainStartBlock = 8536880;
 
 const baseSepoliaStartBlock = 22668126;
-const v4BaseSepoliaStartBlock = 25778986;
+const v4BaseSepoliaStartBlock = 26008121;
 
 const inkStartBlock = 9500879;
 
@@ -171,22 +171,22 @@ export const configs: IndexerConfigs = {
       factory: "0x7Ae58f10f7849cA6F5fB71b7f45CB416c9204b1e" as Address,
     },
     v3: {
-      v3Initializer: "0xaC486466F94617be0DefF59B743Ab7F2CE7a2398" as Address,
+      v3Initializer: "0x9581Fd5De3ECe5675136b4f9091BEA1beD0Fc27C" as Address,
     },
     v4: {
       poolManager: "0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408" as Address,
-      dopplerDeployer: "0xEA32848cEe430D91aBa9d7d0F235502995a52B13" as Address,
-      v4Initializer: "0x20a7DB1f189B5592F756Bf41AD1E7165bD62963C" as Address,
-      dopplerLens: "0xCa643f13B0f96bF6Ae72923985d1439489bF7fcB" as Address,
+      dopplerDeployer: "0xd531fD0E8612e820e624C1B7CB11326bCe2b6C8B" as Address,
+      v4Initializer: "0x7dC6ced696831EE721d8B400FBc633b1Fe8E63fC" as Address,
+      dopplerLens: "0xf926f5fC0bFB95D831C064C268F556B1394b476E" as Address,
       stateView: "0x571291b572ed32ce6751a2cb2486ebee8defb9b4" as Address,
     },
     shared: {
-      airlock: "0x881c18352182E1C918DBfc54539e744Dc90274a8" as Address,
-      tokenFactory: "0xBdd732390Dbb0E8D755D1002211E967EF8b8B326" as Address,
+      airlock: "0x5Be5B41Cf8Feeba9d8Bf08Fe957b8a5c68aaA155" as Address,
+      tokenFactory: "0x820DC6BC3e8Fa2d60771EfE78E8fC276FE760223" as Address,
       universalRouter: "0x95273d871c8156636e114b63797d78D7E1720d81" as Address,
       governanceFactory:
-        "0x61e307223Cb5444B72Ea42992Da88B895589d0F3" as Address,
-      migrator: "0xBD1B28D7E61733A8983d924c704B1A09d897a870" as Address,
+        "0x2Ef4369695CA568fB0CC76605C430149Ca297629" as Address,
+      migrator: "0x5069dbeBdc7ff55df3cBb2F9E82c4D8F64570589" as Address,
       weth: "0x4200000000000000000000000000000000000006" as Address,
     },
     oracle: oracleAddresses,
