@@ -64,6 +64,11 @@ export default createConfig({
       startBlock: baseSepolia.v4StartBlock,
       interval: 50, // every 50 blocks
     },
+    BaseV4PoolCheckpoints: {
+      network: "base",
+      startBlock: base.v4StartBlock,
+      interval: 50, // every 50 blocks
+    },
     MetricRefresherUnichain: {
       network: "unichain",
       startBlock: unichain.startBlock,
@@ -144,7 +149,7 @@ export default createConfig({
           address: baseSepolia.v4.v4Initializer,
         },
         base: {
-          startBlock: base.startBlock,
+          startBlock: base.v4StartBlock,
           address: base.v4.v4Initializer,
         },
       },
@@ -193,6 +198,14 @@ export default createConfig({
           startBlock: baseSepolia.v4StartBlock,
           address: factory({
             address: baseSepolia.v4.v4Initializer,
+            event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
+            parameter: "asset",
+          }),
+        },
+        base: {
+          startBlock: base.v4StartBlock,
+          address: factory({
+            address: base.v4.v4Initializer,
             event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
             parameter: "asset",
           }),
@@ -332,6 +345,10 @@ export default createConfig({
           startBlock: baseSepolia.v4StartBlock,
           address: baseSepolia.v4.poolManager,
         },
+        base: {
+          startBlock: base.v4StartBlock,
+          address: base.v4.poolManager,
+        },
       },
     },
     UniswapV4Pool: {
@@ -341,6 +358,14 @@ export default createConfig({
           startBlock: baseSepolia.v4StartBlock,
           address: factory({
             address: baseSepolia.v4.v4Initializer,
+            event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
+            parameter: "poolOrHook",
+          }),
+        },
+        base: {
+          startBlock: base.v4StartBlock,
+          address: factory({
+            address: base.v4.v4Initializer,
             event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
             parameter: "poolOrHook",
           }),

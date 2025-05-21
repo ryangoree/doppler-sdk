@@ -29,4 +29,17 @@ export const DOPPLER_V4_ADDRESSES: { [chainId: number]: DopplerV4Addresses } = {
     stateView: '0x571291b572ed32ce6751a2cb2486ebee8defb9b4' as Address,
     v4Quoter: '0x4a6513c898fe1b2d0e78d3b0e0a4a151589b1cba' as Address,
   },
+  8453: {
+    poolManager: '0x498581ff718922c3f8e6a244956af099b2652b2b' as Address,
+    dopplerDeployer: '0x8b4C7DB9121FC885689C0A50D5a1429F15AEc2a0' as Address,
+    v4Initializer: '0xC99b485499f78995C6F1640dbB1413c57f8BA684' as Address,
+    airlock: '0x660eAaEdEBc968f8f3694354FA8EC0b4c5Ba8D12' as Address,
+    tokenFactory: '0xFAafdE6a5b658684cC5eb0C5c2c755B00A246F45' as Address,
+    v3Initializer: '0xaA47D2977d622DBdFD33eeF6a8276727c52EB4e5' as Address,
+    governanceFactory: '0xb4deE32EB70A5E55f3D2d861F49Fb3D79f7a14d9' as Address,
+    migrator: '0x5F3bA43D44375286296Cb85F1EA2EBfa25dde731' as Address,
+    universalRouter: '0x6ff5693b99212da76ad316178a184ab56d299b43' as Address,
+    stateView: '0xa3c0c9b65bad0b08107aa264b0f3db444b867a71' as Address,
+    v4Quoter: '0x0d5e0f971ed27fbff6c2837bf31316121532048d' as Address,
+  },
 };

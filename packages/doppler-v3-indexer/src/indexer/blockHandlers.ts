@@ -112,3 +112,10 @@ ponder.on("BaseSepoliaV4PoolCheckpoints:block", async ({ event, context }) => {
     timestamp: Number(event.block.timestamp),
   });
 });
+
+ponder.on("BaseV4PoolCheckpoints:block", async ({ event, context }) => {
+  await refreshCheckpointBlob({
+    context,
+    timestamp: Number(event.block.timestamp),
+  });
+});

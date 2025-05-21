@@ -29,6 +29,7 @@ const v4BaseSepoliaStartBlock = 26008121;
 const inkStartBlock = 9500879;
 
 const baseStartBlock = 28415526;
+const v4BaseStartBlock = 30520980;
 
 export type IndexerConfigs = Record<Network, DopplerConfig>;
 
@@ -229,11 +230,11 @@ export const configs: IndexerConfigs = {
       v3Initializer: "0xaA47D2977d622DBdFD33eeF6a8276727c52EB4e5" as Address,
     },
     v4: {
-      poolManager: zeroAddress as Address,
-      dopplerDeployer: zeroAddress as Address,
-      v4Initializer: zeroAddress as Address,
-      stateView: zeroAddress as Address,
-      dopplerLens: zeroAddress,
+      poolManager: "0x498581ff718922c3f8e6a244956af099b2652b2b" as Address,
+      dopplerDeployer: "0x8b4C7DB9121FC885689C0A50D5a1429F15AEc2a0" as Address,
+      v4Initializer: "0xC99b485499f78995C6F1640dbB1413c57f8BA684" as Address,
+      stateView: "0xa3c0c9b65bad0b08107aa264b0f3db444b867a71" as Address,
+      dopplerLens: "0xCe3099B2F07029b086E5e92a1573C5f5A3071783" as Address,
     },
     shared: {
       airlock: "0x660eAaEdEBc968f8f3694354FA8EC0b4c5Ba8D12" as Address,
@@ -246,6 +247,7 @@ export const configs: IndexerConfigs = {
     },
     oracle: oracleAddresses,
     startBlock: baseStartBlock,
+    v4StartBlock: v4BaseStartBlock,
     oracleStartBlock: mainnetStartBlock,
   },
 };
