@@ -5,7 +5,7 @@ import { getLatestSqrtPrice } from "@app/utils/v4-utils/getV4PoolData";
 import { PoolKey } from "@app/types/v4-types";
 import { computeV4PriceFromSqrtPriceX96 } from "@app/utils/v4-utils/computeV4Price";
 import { computeMarketCap, fetchEthPrice } from "../../oracle";
-import { updateAsset, updatePool } from "..";
+import { insertAssetIfNotExists, updateAsset, updatePool } from "..";
 import { pool } from "ponder:schema";
 import { computeDollarLiquidity } from "@app/utils/computeDollarLiquidity";
 import { addAndUpdateV4PoolPriceHistory } from "./v4PoolPriceHistory";
@@ -225,6 +225,8 @@ export const refreshCheckpointBlob = async ({
         amount0 = result.amount0;
         amount1 = result.amount1;
       } catch (error) {
+        // remove it from the list of pools to refresh
+        delete checkpoints[poolAddress as Address];
         console.error("Error getting latest sqrt price", error);
         return null;
       }
