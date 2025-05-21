@@ -78,6 +78,12 @@ ponder.on("UniswapV3Initializer:Create", async ({ event, context }) => {
 
   const { totalSupply } = assetEntity;
 
+  const marketCapUsd = computeMarketCap({
+    price,
+    ethPrice,
+    totalSupply,
+  });
+
   await insertOrUpdateDailyVolume({
     poolAddress: poolOrHookId,
     amountIn: 0n,
@@ -87,11 +93,14 @@ ponder.on("UniswapV3Initializer:Create", async ({ event, context }) => {
     tokenIn: assetId,
     tokenOut: numeraireId,
     ethPrice,
-    marketCapUsd: computeMarketCap({
-      price,
-      ethPrice,
-      totalSupply,
-    }),
+    marketCapUsd,
+  });
+  await updatePool({
+    poolAddress: poolOrHookId,
+    context,
+    update: {
+      marketCapUsd,
+    },
   });
 });
 
@@ -418,6 +427,7 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
         graduationBalance: graduationBalance + quoteDelta,
         lastRefreshed: timestamp,
         lastSwapTimestamp: timestamp,
+        marketCapUsd,
         percentDayChange: priceChangeInfo,
       },
     }),

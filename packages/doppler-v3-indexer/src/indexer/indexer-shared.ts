@@ -6,6 +6,7 @@ import { insertV2PoolIfNotExists } from "./shared/entities/v2Pool";
 import { updateUserAsset } from "./shared/entities/userAsset";
 import { insertUserAssetIfNotExists } from "./shared/entities/userAsset";
 import { insertUserIfNotExists, updateUser } from "./shared/entities/user";
+import { updatePool } from "./shared/entities/pool";
 
 ponder.on("Airlock:Migrate", async ({ event, context }) => {
   const { timestamp } = event.block;
@@ -131,6 +132,14 @@ ponder.on("DERC20:Transfer", async ({ event, context }) => {
       holderCount: assetData.holderCount + holderCountDelta,
     },
   });
+
+  await updatePool({
+    poolAddress: assetData.poolAddress,
+    context,
+    update: {
+      holderCount: tokenData.holderCount + holderCountDelta,
+    },
+  });
 });
 
 ponder.on("V4DERC20:Transfer", async ({ event, context }) => {
@@ -235,6 +244,14 @@ ponder.on("V4DERC20:Transfer", async ({ event, context }) => {
     context,
     update: {
       holderCount: assetData.holderCount + holderCountDelta,
+    },
+  });
+
+  await updatePool({
+    poolAddress: assetData.poolAddress,
+    context,
+    update: {
+      holderCount: tokenData.holderCount + holderCountDelta,
     },
   });
 });

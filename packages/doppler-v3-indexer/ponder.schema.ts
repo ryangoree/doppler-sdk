@@ -203,6 +203,8 @@ export const pool = onchainTable(
     reserves1: t.bigint().notNull().default(0n),
     totalProceeds: t.bigint().notNull().default(0n),
     totalTokensSold: t.bigint().notNull().default(0n),
+    holderCount: t.integer().notNull().default(0),
+    marketCapUsd: t.bigint().notNull().default(0n),
   }),
   (table) => ({
     pk: primaryKey({

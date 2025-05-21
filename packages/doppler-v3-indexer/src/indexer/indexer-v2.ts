@@ -241,6 +241,7 @@ ponder.on("UniswapV2PairUnichain:Swap", async ({ event, context }) => {
         lastRefreshed: timestamp,
         lastSwapTimestamp: timestamp,
         percentDayChange: priceChange,
+        marketCapUsd,
       },
     }),
   ]);

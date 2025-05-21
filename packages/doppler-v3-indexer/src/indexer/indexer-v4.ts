@@ -109,6 +109,13 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
       ethPrice,
       marketCapUsd,
     }),
+    updatePool({
+      poolAddress: poolAddress,
+      context,
+      update: {
+        marketCapUsd,
+      },
+    }),
     addCheckpoint({
       poolAddress: poolAddress,
       asset: assetAddress,
@@ -212,6 +219,7 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
         dollarLiquidity: dollarLiquidity,
         totalProceeds,
         totalTokensSold,
+        marketCapUsd,
       },
     }),
     updateMarketCap({
