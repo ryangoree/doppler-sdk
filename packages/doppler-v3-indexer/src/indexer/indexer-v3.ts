@@ -170,7 +170,6 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
       reserves0: reserve0,
       reserves1: reserve1,
     },
-    event: "UniswapV3Pool:Mint",
   });
 
   await updateMarketCap({
@@ -283,7 +282,6 @@ ponder.on("UniswapV3Pool:Burn", async ({ event, context }) => {
         dollarLiquidity: liquidityUsd,
         graduationThreshold: graduationThreshold - graduationThresholdDelta,
       },
-      event: "UniswapV3Pool:Burn",
     }),
     updatePosition({
       poolAddress: address,
@@ -426,7 +424,6 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
         marketCapUsd,
         percentDayChange: priceChangeInfo,
       },
-      event: "UniswapV3Pool:Swap",
     }),
     updateAsset({
       assetAddress: baseToken,

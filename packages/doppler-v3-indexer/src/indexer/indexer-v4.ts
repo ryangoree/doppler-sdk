@@ -22,6 +22,7 @@ import {
   addAndUpdateV4PoolPriceHistory,
   insertV4PoolPriceHistoryIfNotExists,
 } from "./shared/entities/v4-entities/v4PoolPriceHistory";
+import { insertActivePoolsBlobIfNotExists } from "./shared/scheduledJobs";
 
 ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
   const { poolOrHook, asset: assetId, numeraire } = event.args;
@@ -34,7 +35,7 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
 
   const creatorAddress = event.transaction.from.toLowerCase() as `0x${string}`;
 
-  const [baseToken, , , , ,] = await Promise.all([
+  const [baseToken, , , , , ,] = await Promise.all([
     insertTokenIfNotExists({
       tokenAddress: assetAddress,
       creatorAddress,
@@ -55,6 +56,9 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
     }),
     insertV4PoolPriceHistoryIfNotExists({
       pool: poolAddress,
+      context,
+    }),
+    insertActivePoolsBlobIfNotExists({
       context,
     }),
   ]);
