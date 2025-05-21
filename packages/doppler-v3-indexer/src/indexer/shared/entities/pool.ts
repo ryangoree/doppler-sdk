@@ -4,9 +4,8 @@ import { computeDollarLiquidity } from "@app/utils/computeDollarLiquidity";
 import { pool } from "ponder:schema";
 import { Address, zeroAddress } from "viem";
 import { Context } from "ponder:registry";
-import { fetchEthPrice } from "../oracle";
+import { computeMarketCap, fetchEthPrice } from "../oracle";
 import { getReservesV4, V4PoolData } from "@app/utils/v4-utils/getV4PoolData";
-import { computeV4Price } from "@app/utils/v4-utils/computeV4Price";
 import { getZoraPoolData, PoolState } from "@app/utils/v3-utils/getV3PoolData";
 
 export const insertPoolIfNotExists = async ({
@@ -15,12 +14,14 @@ export const insertPoolIfNotExists = async ({
   context,
   ethPrice,
   isZora = false,
+  totalSupply,
 }: {
   poolAddress: Address;
   timestamp: bigint;
   context: Context;
   ethPrice: bigint;
   isZora?: boolean;
+  totalSupply?: bigint;
 }): Promise<typeof pool.$inferSelect> => {
   const { db, network } = context;
   const address = poolAddress.toLowerCase() as `0x${string}`;
@@ -66,6 +67,15 @@ export const insertPoolIfNotExists = async ({
     });
   }
 
+  let marketCapUsd;
+  if (totalSupply) {
+    marketCapUsd = computeMarketCap({
+      price,
+      ethPrice,
+      totalSupply,
+    });
+  }
+
   return await db.insert(pool).values({
     ...poolData,
     ...slot0Data,
@@ -88,6 +98,7 @@ export const insertPoolIfNotExists = async ({
     volumeUsd: 0n,
     percentDayChange: 0,
     isToken0,
+    marketCapUsd,
   });
 };
 
@@ -221,11 +232,13 @@ export const insertPoolIfNotExistsV4 = async ({
   timestamp,
   poolData,
   context,
+  totalSupply,
 }: {
   poolAddress: Address;
   timestamp: bigint;
   poolData?: V4PoolData;
   context: Context;
+  totalSupply?: bigint;
 }): Promise<typeof pool.$inferSelect> => {
   const { db, network } = context;
   const address = poolAddress.toLowerCase() as `0x${string}`;
@@ -271,6 +284,15 @@ export const insertPoolIfNotExistsV4 = async ({
     ethPrice,
   });
 
+  let marketCapUsd;
+  if (totalSupply) {
+    marketCapUsd = computeMarketCap({
+      price,
+      ethPrice,
+      totalSupply,
+    });
+  }
+
   return await db.insert(pool).values({
     ...poolData,
     ...slot0Data,
@@ -295,6 +317,7 @@ export const insertPoolIfNotExistsV4 = async ({
     graduationThreshold: 0n,
     graduationBalance: 0n,
     isToken0: poolConfig.isToken0,
+    marketCapUsd,
     reserves0: token0Reserve,
     reserves1: token1Reserve,
     poolKey: JSON.stringify(poolKey),

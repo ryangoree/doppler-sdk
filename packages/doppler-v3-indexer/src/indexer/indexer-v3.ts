@@ -36,6 +36,16 @@ ponder.on("UniswapV3Initializer:Create", async ({ event, context }) => {
 
   const ethPrice = await fetchEthPrice(event.block.timestamp, context);
 
+  const baseTokenEntity = await insertTokenIfNotExists({
+    tokenAddress: assetId,
+    creatorAddress: creatorId,
+    timestamp,
+    context,
+    isDerc20: true,
+  });
+
+  const { totalSupply } = baseTokenEntity;
+
   const { price } = await insertPoolIfNotExists({
     poolAddress: poolOrHookId,
     timestamp,
@@ -43,7 +53,13 @@ ponder.on("UniswapV3Initializer:Create", async ({ event, context }) => {
     ethPrice,
   });
 
-  const [, , assetEntity, , ,] = await Promise.all([
+  const marketCapUsd = computeMarketCap({
+    price,
+    ethPrice,
+    totalSupply,
+  });
+
+  await Promise.all([
     insertActivePoolsBlobIfNotExists({
       context,
     }),
@@ -53,14 +69,6 @@ ponder.on("UniswapV3Initializer:Create", async ({ event, context }) => {
       timestamp,
       context,
       isDerc20: false,
-    }),
-    insertTokenIfNotExists({
-      tokenAddress: assetId,
-      creatorAddress: creatorId,
-      timestamp,
-      context,
-      isDerc20: true,
-      poolAddress: poolOrHookId,
     }),
     insertAssetIfNotExists({
       assetAddress: assetId,
@@ -76,14 +84,6 @@ ponder.on("UniswapV3Initializer:Create", async ({ event, context }) => {
     }),
   ]);
 
-  const { totalSupply } = assetEntity;
-
-  const marketCapUsd = computeMarketCap({
-    price,
-    ethPrice,
-    totalSupply,
-  });
-
   await insertOrUpdateDailyVolume({
     poolAddress: poolOrHookId,
     amountIn: 0n,
@@ -94,13 +94,6 @@ ponder.on("UniswapV3Initializer:Create", async ({ event, context }) => {
     tokenOut: numeraireId,
     ethPrice,
     marketCapUsd,
-  });
-  await updatePool({
-    poolAddress: poolOrHookId,
-    context,
-    update: {
-      marketCapUsd,
-    },
   });
 });
 

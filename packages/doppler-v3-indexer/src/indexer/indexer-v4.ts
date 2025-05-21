@@ -34,7 +34,15 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
 
   const creatorAddress = event.transaction.from.toLowerCase() as `0x${string}`;
 
-  await Promise.all([
+  const [baseToken, , , , ,] = await Promise.all([
+    insertTokenIfNotExists({
+      tokenAddress: assetAddress,
+      creatorAddress,
+      timestamp,
+      context,
+      isDerc20: true,
+      poolAddress: poolAddress,
+    }),
     insertTokenIfNotExists({
       tokenAddress: numeraireAddress,
       creatorAddress,
@@ -50,34 +58,28 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
       context,
     }),
   ]);
-  const [baseToken, ethPrice, v4PoolData, poolEntity, v4Config] =
-    await Promise.all([
-      insertTokenIfNotExists({
-        tokenAddress: assetAddress,
-        creatorAddress,
-        timestamp,
-        context,
-        isDerc20: true,
-        poolAddress: poolAddress,
-      }),
-      fetchEthPrice(timestamp, context),
-      getV4PoolData({
-        hook: poolAddress,
-        context,
-      }),
-      insertPoolIfNotExistsV4({
-        poolAddress,
-        timestamp,
-        context,
-      }),
-      insertV4ConfigIfNotExists({
-        hookAddress: poolAddress,
-        context,
-      }),
-    ]);
+
+  const { totalSupply } = baseToken;
+
+  const [ethPrice, v4PoolData, poolEntity, v4Config] = await Promise.all([
+    fetchEthPrice(timestamp, context),
+    getV4PoolData({
+      hook: poolAddress,
+      context,
+    }),
+    insertPoolIfNotExistsV4({
+      poolAddress,
+      timestamp,
+      context,
+      totalSupply,
+    }),
+    insertV4ConfigIfNotExists({
+      hookAddress: poolAddress,
+      context,
+    }),
+  ]);
 
   const price = poolEntity.price;
-  const totalSupply = baseToken.totalSupply;
   const marketCapUsd = computeMarketCap({
     price,
     ethPrice,
@@ -108,13 +110,6 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
       tokenOut: numeraireAddress,
       ethPrice,
       marketCapUsd,
-    }),
-    updatePool({
-      poolAddress: poolAddress,
-      context,
-      update: {
-        marketCapUsd,
-      },
     }),
     addCheckpoint({
       poolAddress: poolAddress,
