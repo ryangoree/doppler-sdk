@@ -226,8 +226,10 @@ export const refreshCheckpointBlob = async ({
         amount1 = result.amount1;
       } catch (error) {
         // remove it from the list of pools to refresh
-        delete checkpoints[poolAddress as Address];
-        console.error("Error getting latest sqrt price", error);
+        delete updatedCheckpoints[poolAddress as Address];
+        console.warn(
+          `Error getting latest sqrt price, removing pool ${poolAddress} from refresh list`
+        );
         return null;
       }
 
@@ -300,6 +302,7 @@ export const refreshCheckpointBlob = async ({
           dollarLiquidity: liquidityUsd,
           marketCapUsd,
         },
+        event: "refreshCheckpointBlob",
       }),
       updateAsset({
         assetAddress,

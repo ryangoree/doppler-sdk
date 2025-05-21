@@ -155,6 +155,7 @@ ponder.on("V4DERC20:Transfer", async ({ event, context }) => {
   const { address } = event.log;
   const { timestamp } = event.block;
   const { from, to, value } = event.args;
+  const { db, network } = context;
 
   const creatorAddress = event.transaction.from;
 
@@ -256,11 +257,18 @@ ponder.on("V4DERC20:Transfer", async ({ event, context }) => {
     },
   });
 
-  await updatePool({
-    poolAddress: assetData.poolAddress,
-    context,
-    update: {
-      holderCount: tokenData.holderCount + holderCountDelta,
-    },
+  const poolEntity = await db.find(pool, {
+    address: assetData.poolAddress,
+    chainId: BigInt(network.chainId),
   });
+
+  if (poolEntity) {
+    await updatePool({
+      poolAddress: assetData.poolAddress,
+      context,
+      update: {
+        holderCount: tokenData.holderCount + holderCountDelta,
+      },
+    });
+  }
 });

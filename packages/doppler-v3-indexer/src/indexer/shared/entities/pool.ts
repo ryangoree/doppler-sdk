@@ -106,10 +106,12 @@ export const updatePool = async ({
   poolAddress,
   context,
   update,
+  event,
 }: {
   poolAddress: Address;
   context: Context;
   update?: Partial<typeof pool.$inferInsert>;
+  event?: string;
 }) => {
   const { db, network } = context;
   const address = poolAddress.toLowerCase() as `0x${string}`;
@@ -122,7 +124,7 @@ export const updatePool = async ({
 
   if (!existingPool) {
     console.warn(
-      `Pool ${address} not found in chain ${network.chainId}, skipping update`
+      `Pool ${address} not found in chain ${network.chainId} in event ${event}, skipping update`
     );
     return;
   }
