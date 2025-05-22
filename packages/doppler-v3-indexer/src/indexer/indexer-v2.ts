@@ -127,6 +127,7 @@ ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
         lastRefreshed: timestamp,
         lastSwapTimestamp: timestamp,
         percentDayChange: priceChange,
+        marketCapUsd,
       },
     }),
   ]);
