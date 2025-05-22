@@ -175,7 +175,6 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
 
   await updateMarketCap({
     assetAddress: baseToken,
-    poolAddress: address,
     price,
     ethPrice,
     context,
@@ -266,7 +265,6 @@ ponder.on("UniswapV3Pool:Burn", async ({ event, context }) => {
   await Promise.all([
     updateMarketCap({
       assetAddress: baseToken,
-      poolAddress: address,
       price,
       ethPrice,
       context,

@@ -31,13 +31,11 @@ export const fetchEthPrice = async (
 
 export const updateMarketCap = async ({
   assetAddress,
-  poolAddress,
   price,
   ethPrice,
   context,
 }: {
   assetAddress: Address;
-  poolAddress: Address;
   price: bigint;
   ethPrice: bigint;
   context: Context;
@@ -58,14 +56,6 @@ export const updateMarketCap = async ({
 
   await updateAsset({
     assetAddress,
-    context,
-    update: {
-      marketCapUsd,
-    },
-  });
-
-  await updatePool({
-    poolAddress,
     context,
     update: {
       marketCapUsd,

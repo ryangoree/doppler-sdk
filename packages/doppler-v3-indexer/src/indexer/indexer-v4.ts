@@ -251,11 +251,5 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
       ethPrice,
       marketCapUsd,
     }),
-    updateMarketCap({
-      assetAddress: baseToken,
-      price,
-      ethPrice,
-      context,
-    }),
   ]);
 });
