@@ -29,7 +29,7 @@ ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
   const v2PoolData = await db.find(v2Pool, { address });
   if (!v2PoolData) return;
 
-  const { parentPool } = v2PoolData;
+  const parentPool = v2PoolData.parentPool.toLowerCase() as `0x${string}`;
   const { reserve0, reserve1 } = await getPairData({ address, context });
 
   const ethPrice = await fetchEthPrice(timestamp, context);
