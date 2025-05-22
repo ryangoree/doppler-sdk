@@ -117,6 +117,7 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
     timestamp,
     context,
     ethPrice,
+    event: "UniswapV3Pool:Mint",
   });
 
   const token0 = isToken0 ? baseToken : quoteToken;
@@ -174,6 +175,7 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
 
   await updateMarketCap({
     assetAddress: baseToken,
+    poolAddress: address,
     price,
     ethPrice,
     context,
@@ -221,6 +223,7 @@ ponder.on("UniswapV3Pool:Burn", async ({ event, context }) => {
     timestamp,
     context,
     ethPrice,
+    event: "UniswapV3Pool:Burn",
   });
 
   const token0 = isToken0 ? baseToken : quoteToken;
@@ -263,6 +266,7 @@ ponder.on("UniswapV3Pool:Burn", async ({ event, context }) => {
   await Promise.all([
     updateMarketCap({
       assetAddress: baseToken,
+      poolAddress: address,
       price,
       ethPrice,
       context,
@@ -404,12 +408,6 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
       ethPrice,
       marketCapUsd,
     }),
-    updateMarketCap({
-      assetAddress: baseToken,
-      price,
-      ethPrice,
-      context,
-    }),
     updatePool({
       poolAddress: address,
       context,
@@ -431,6 +429,7 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
       update: {
         liquidityUsd: dollarLiquidity,
         percentDayChange: priceChangeInfo,
+        marketCapUsd,
       },
     }),
   ]);

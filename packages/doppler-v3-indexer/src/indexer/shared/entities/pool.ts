@@ -7,6 +7,7 @@ import { Context } from "ponder:registry";
 import { computeMarketCap, fetchEthPrice } from "../oracle";
 import { getReservesV4, V4PoolData } from "@app/utils/v4-utils/getV4PoolData";
 import { getZoraPoolData, PoolState } from "@app/utils/v3-utils/getV3PoolData";
+import { DERC20ABI } from "@app/abis";
 
 export const insertPoolIfNotExists = async ({
   poolAddress,
@@ -15,6 +16,7 @@ export const insertPoolIfNotExists = async ({
   ethPrice,
   isZora = false,
   totalSupply,
+  event,
 }: {
   poolAddress: Address;
   timestamp: bigint;
@@ -22,8 +24,9 @@ export const insertPoolIfNotExists = async ({
   ethPrice: bigint;
   isZora?: boolean;
   totalSupply?: bigint;
+  event?: string;
 }): Promise<typeof pool.$inferSelect> => {
-  const { db, network } = context;
+  const { db, network, client } = context;
   const address = poolAddress.toLowerCase() as `0x${string}`;
 
   const existingPool = await db.find(pool, {
@@ -67,14 +70,17 @@ export const insertPoolIfNotExists = async ({
     });
   }
 
-  let marketCapUsd;
-  if (totalSupply) {
-    marketCapUsd = computeMarketCap({
-      price,
-      ethPrice,
-      totalSupply,
-    });
-  }
+  const assetTotalSupply = await client.readContract({
+    address: assetAddr,
+    abi: DERC20ABI,
+    functionName: "totalSupply",
+  });
+
+  const marketCapUsd = computeMarketCap({
+    price,
+    ethPrice,
+    totalSupply: assetTotalSupply,
+  });
 
   return await db.insert(pool).values({
     ...poolData,
@@ -242,9 +248,8 @@ export const insertPoolIfNotExistsV4 = async ({
   context: Context;
   totalSupply?: bigint;
 }): Promise<typeof pool.$inferSelect> => {
-  const { db, network } = context;
+  const { db, network, client } = context;
   const address = poolAddress.toLowerCase() as `0x${string}`;
-
   const existingPool = await db.find(pool, {
     address,
     chainId: BigInt(network.chainId),
@@ -286,14 +291,16 @@ export const insertPoolIfNotExistsV4 = async ({
     ethPrice,
   });
 
-  let marketCapUsd;
-  if (totalSupply) {
-    marketCapUsd = computeMarketCap({
-      price,
-      ethPrice,
-      totalSupply,
-    });
-  }
+  const assetTotalSupply = await client.readContract({
+    address: assetAddr,
+    abi: DERC20ABI,
+    functionName: "totalSupply",
+  });
+  const marketCapUsd = computeMarketCap({
+    price,
+    ethPrice,
+    totalSupply: assetTotalSupply,
+  });
 
   return await db.insert(pool).values({
     ...poolData,

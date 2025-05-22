@@ -5,6 +5,7 @@ import { Address } from "viem";
 import { CHAINLINK_ETH_DECIMALS } from "@app/utils/constants";
 import { updateAsset } from "./entities/asset";
 import { DERC20ABI } from "@app/abis";
+import { updatePool } from "./entities/pool";
 
 export const fetchEthPrice = async (
   timestamp: bigint,
@@ -30,11 +31,13 @@ export const fetchEthPrice = async (
 
 export const updateMarketCap = async ({
   assetAddress,
+  poolAddress,
   price,
   ethPrice,
   context,
 }: {
   assetAddress: Address;
+  poolAddress: Address;
   price: bigint;
   ethPrice: bigint;
   context: Context;
@@ -55,6 +58,14 @@ export const updateMarketCap = async ({
 
   await updateAsset({
     assetAddress,
+    context,
+    update: {
+      marketCapUsd,
+    },
+  });
+
+  await updatePool({
+    poolAddress,
     context,
     update: {
       marketCapUsd,
