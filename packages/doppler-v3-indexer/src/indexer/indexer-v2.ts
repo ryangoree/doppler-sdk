@@ -116,6 +116,8 @@ ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
       context,
       update: {
         liquidityUsd: liquidityUsd,
+        percentDayChange: priceChange,
+        marketCapUsd,
       },
     }),
     updatePool({
