@@ -30,16 +30,16 @@ export const DOPPLER_V3_ADDRESSES: { [chainId: number]: DopplerV3Addresses } = {
   },
   // base sepolia
   84532: {
-    airlock: "0x5Be5B41Cf8Feeba9d8Bf08Fe957b8a5c68aaA155" as Address,
-    tokenFactory: "0x820DC6BC3e8Fa2d60771EfE78E8fC276FE760223" as Address,
+    airlock: '0xb1f44E39220EE3CEBE08c8Dba82D5255717B5224' as Address,
+    tokenFactory: '0x780E704F81C81B5daBC9354E89D0193ceE5512e8' as Address,
     v3Initializer: "0x9581Fd5De3ECe5675136b4f9091BEA1beD0Fc27C" as Address,
-    governanceFactory: "0x2Ef4369695CA568fB0CC76605C430149Ca297629" as Address,
-    liquidityMigrator: "0x5069dbeBdc7ff55df3cBb2F9E82c4D8F64570589" as Address,
+    governanceFactory: '0x8f83A25c4df85b947a2825aABD72AE398Ed39A8E' as Address,
+    liquidityMigrator: '0xF63Ef6B5b1b4dD5a0F64124F51fdcd9b57f856f9' as Address,
     universalRouter: "0x492E6456D9528771018DeB9E87ef7750EF184104" as Address,
     permit2: "0x000000000022D473030F116dDEE9F6B43aC78BA3" as Address,
     quoterV2: "0xC5290058841028F1614F3A6F0F5816cAd0df5E27" as Address,
     univ2Router02: "0x1689E7B1F10000AE47eBfE339a4f69dECd19F602" as Address,
-    bundler: "0x1Eed571D319d4c1f49C943E29A735b84432AD7c1" as Address,
+    bundler: "0x45e80987515D8f66428B865Cd6A1869118076281" as Address,
   },
   // ink
   57073: {
