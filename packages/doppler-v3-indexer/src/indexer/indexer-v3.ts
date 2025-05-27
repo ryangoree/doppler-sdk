@@ -434,7 +434,7 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
       },
     }),
     updateAsset({
-      assetAddress: asset.assetAddress,
+      assetAddress: asset.address,
       context,
       update: {
         liquidityUsd: dollarLiquidity,
