@@ -120,6 +120,12 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
     event: "UniswapV3Pool:Mint",
   });
 
+  await insertAssetIfNotExists({
+    assetAddress: baseToken,
+    timestamp,
+    context,
+  });
+
   const token0 = isToken0 ? baseToken : quoteToken;
   const token1 = isToken0 ? quoteToken : baseToken;
 
