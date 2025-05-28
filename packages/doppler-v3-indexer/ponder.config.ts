@@ -69,6 +69,16 @@ export default createConfig({
       startBlock: base.v4StartBlock,
       interval: 50, // every 50 blocks
     },
+    UnichainV4PoolCheckpoints: {
+      network: "unichain",
+      startBlock: unichain.v4StartBlock,
+      interval: 50, // every 50 blocks
+    },
+    InkV4PoolCheckpoints: {
+      network: "ink",
+      startBlock: ink.v4StartBlock,
+      interval: 50, // every 50 blocks
+    },
     MetricRefresherUnichain: {
       network: "unichain",
       startBlock: unichain.startBlock,
@@ -137,11 +147,11 @@ export default createConfig({
       abi: UniswapV4InitializerABI,
       network: {
         unichain: {
-          startBlock: unichain.startBlock,
+          startBlock: unichain.v4StartBlock,
           address: unichain.v4.v4Initializer,
         },
         ink: {
-          startBlock: ink.startBlock,
+          startBlock: ink.v4StartBlock,
           address: ink.v4.v4Initializer,
         },
         baseSepolia: {
@@ -206,6 +216,22 @@ export default createConfig({
           startBlock: base.v4StartBlock,
           address: factory({
             address: base.v4.v4Initializer,
+            event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
+            parameter: "asset",
+          }),
+        },
+        unichain: {
+          startBlock: unichain.v4StartBlock,
+          address: factory({
+            address: unichain.v4.v4Initializer,
+            event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
+            parameter: "asset",
+          }),
+        },
+        ink: {
+          startBlock: ink.v4StartBlock,
+          address: factory({
+            address: ink.v4.v4Initializer,
             event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
             parameter: "asset",
           }),
@@ -349,6 +375,14 @@ export default createConfig({
           startBlock: base.v4StartBlock,
           address: base.v4.poolManager,
         },
+        unichain: {
+          startBlock: unichain.v4StartBlock,
+          address: unichain.v4.poolManager,
+        },
+        ink: {
+          startBlock: ink.v4StartBlock,
+          address: ink.v4.poolManager,
+        },
       },
     },
     UniswapV4Pool: {
@@ -366,6 +400,22 @@ export default createConfig({
           startBlock: base.v4StartBlock,
           address: factory({
             address: base.v4.v4Initializer,
+            event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
+            parameter: "poolOrHook",
+          }),
+        },
+        unichain: {
+          startBlock: unichain.v4StartBlock,
+          address: factory({
+            address: unichain.v4.v4Initializer,
+            event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
+            parameter: "poolOrHook",
+          }),
+        },
+        ink: {
+          startBlock: ink.v4StartBlock,
+          address: factory({
+            address: ink.v4.v4Initializer,
             event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
             parameter: "poolOrHook",
           }),
