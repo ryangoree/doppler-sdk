@@ -18,9 +18,11 @@ import {
 } from "./shared/entities";
 import { CHAINLINK_ETH_DECIMALS } from "@app/utils/constants";
 import { tryAddActivePool } from "./shared/scheduledJobs";
+import { zeroAddress } from "viem";
+import { configs } from "@app/types";
 
 ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
-  const { db } = context;
+  const { db, network } = context;
   const { timestamp } = event.block;
   const { amount0In, amount1In, amount0Out, amount1Out } = event.args;
 
@@ -34,24 +36,30 @@ ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
 
   const ethPrice = await fetchEthPrice(timestamp, context);
 
-  const { isToken0, baseToken, quoteToken, createdAt } =
-    await insertPoolIfNotExists({
-      poolAddress: parentPool,
-      timestamp,
-      context,
-      ethPrice,
-    });
+  const { isToken0, baseToken, quoteToken } = await insertPoolIfNotExists({
+    poolAddress: parentPool,
+    timestamp,
+    context,
+    ethPrice,
+  });
+  let v2isToken0 = isToken0;
+  if (quoteToken.toLowerCase() == zeroAddress) {
+    const weth = configs[
+      network.name
+    ].shared.weth.toLowerCase() as `0x${string}`;
+    v2isToken0 = baseToken.toLowerCase() < weth.toLowerCase();
+  }
 
   const amountIn = amount0In > 0 ? amount0In : amount1In;
   const amountOut = amount0Out > 0 ? amount0Out : amount1Out;
-  const token0 = isToken0 ? baseToken : quoteToken;
-  const token1 = isToken0 ? quoteToken : baseToken;
+  const token0 = v2isToken0 ? baseToken : quoteToken;
+  const token1 = v2isToken0 ? quoteToken : baseToken;
 
   const tokenIn = amount0In > 0 ? token0 : token1;
   const tokenOut = amount0In > 0 ? token1 : token0;
 
-  const assetBalance = isToken0 ? reserve0 : reserve1;
-  const quoteBalance = isToken0 ? reserve1 : reserve0;
+  const assetBalance = v2isToken0 ? reserve0 : reserve1;
+  const quoteBalance = v2isToken0 ? reserve1 : reserve0;
 
   const price = computeV2Price({ assetBalance, quoteBalance });
 
