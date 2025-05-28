@@ -140,6 +140,7 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
     quoteToken,
     totalProceeds: totalProceedsPrev,
     totalTokensSold: totalTokensSoldPrev,
+    marketCapUsd: marketCapUsdPrev,
   } = await insertPoolIfNotExistsV4({
     poolAddress: address,
     timestamp,
@@ -195,11 +196,16 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
     ethPrice,
   });
 
-  const marketCapUsd = computeMarketCap({
-    price,
-    ethPrice,
-    totalSupply,
-  });
+  let marketCapUsd;
+  if (price == 340256786698763678858396856460488307819979090561464864775n) {
+    marketCapUsd = marketCapUsdPrev;
+  } else {
+    marketCapUsd = computeMarketCap({
+      price,
+      ethPrice,
+      totalSupply,
+    });
+  }
 
   await Promise.all([
     updateAsset({
