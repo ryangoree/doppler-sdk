@@ -74,6 +74,10 @@ export const addAndUpdateV4PoolPriceHistory = async ({
           Number(formatEther(BigInt(earliestMarketCap)))) *
         100;
 
+  if (dayChangeUsd > 1000000000) {
+    return;
+  }
+
   await Promise.all([
     updateV4PoolPriceHistory({
       pool,
