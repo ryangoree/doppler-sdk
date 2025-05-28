@@ -120,6 +120,12 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
     event: "UniswapV3Pool:Mint",
   });
 
+  await insertAssetIfNotExists({
+    assetAddress: baseToken,
+    timestamp,
+    context,
+  });
+
   const token0 = isToken0 ? baseToken : quoteToken;
   const token1 = isToken0 ? quoteToken : baseToken;
 
@@ -321,6 +327,12 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
     ethPrice,
   });
 
+  const asset = await insertAssetIfNotExists({
+    assetAddress: baseToken.toLowerCase() as `0x${string}`,
+    timestamp,
+    context,
+  });
+
   const price = computeV3Price({
     sqrtPriceX96,
     isToken0,
@@ -422,7 +434,7 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
       },
     }),
     updateAsset({
-      assetAddress: baseToken,
+      assetAddress: asset.address,
       context,
       update: {
         liquidityUsd: dollarLiquidity,
