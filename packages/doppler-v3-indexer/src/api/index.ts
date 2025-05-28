@@ -33,11 +33,7 @@ app.get("/search/:query", async (c) => {
       .where(
         and(
           inArray(token.chainId, chainIds || []),
-          or(
-            ilike(token.name, `%${query}%`),
-            ilike(token.symbol, `%${query}%`),
-            ilike(token.address, `%${query}%`)
-          )
+          or(ilike(token.name, `%${query}%`), ilike(token.symbol, `%${query}%`))
         )
       )
       .orderBy(desc(token.holderCount))
