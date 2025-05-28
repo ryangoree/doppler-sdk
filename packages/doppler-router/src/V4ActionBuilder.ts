@@ -168,11 +168,7 @@ const ABI_DEFINITION: { [key in V4ActionType]: any[] } = {
     { type: "uint256" },
   ],
   [V4ActionType.CLOSE_CURRENCY]: [{ type: "address" }],
-  [V4ActionType.SWEEP]: [
-    { type: "address" },
-    { type: "address" },
-    { type: "uint256" },
-  ],
+  [V4ActionType.SWEEP]: [{ type: "address" }, { type: "address" }],
   [V4ActionType.WRAP]: [{ type: "uint256" }],
   [V4ActionType.UNWRAP]: [{ type: "uint256" }],
 };
