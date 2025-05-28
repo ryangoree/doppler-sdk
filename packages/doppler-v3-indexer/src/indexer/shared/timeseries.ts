@@ -9,7 +9,7 @@ import {
 import { configs } from "addresses";
 import { updatePool } from "./entities/pool";
 import { updateToken } from "./entities/token";
-import { updateAsset } from "./entities/asset";
+import { insertAssetIfNotExists, updateAsset } from "./entities/asset";
 
 export interface DayMetrics {
   volumeUsd: bigint;
@@ -175,6 +175,12 @@ export const insertOrUpdateDailyVolume = async ({
 
   const assetAddress = isTokenInWeth || isTokenInEth ? tokenOut : tokenIn;
 
+  const asset = await insertAssetIfNotExists({
+    assetAddress: assetAddress.toLowerCase() as `0x${string}`,
+    timestamp,
+    context,
+  });
+
   let computedVolumeUsd;
   const volume = await db
     .insert(dailyVolume)
@@ -227,14 +233,14 @@ export const insertOrUpdateDailyVolume = async ({
       },
     });
     await updateToken({
-      tokenAddress: assetAddress,
+      tokenAddress: asset.address,
       context,
       update: {
         volumeUsd: computedVolumeUsd,
       },
     });
     await updateAsset({
-      assetAddress,
+      assetAddress: asset.address,
       context,
       update: {
         dayVolumeUsd: computedVolumeUsd,
