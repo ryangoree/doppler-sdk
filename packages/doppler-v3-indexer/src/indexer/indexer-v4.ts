@@ -365,7 +365,7 @@ ponder.on("UniswapV4Initializer2:Create", async ({ event, context }) => {
   ]);
 });
 
-ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
+ponder.on("UniswapV4Pool2:Swap", async ({ event, context }) => {
   const address = event.log.address.toLowerCase() as `0x${string}`;
   const { currentTick, totalProceeds, totalTokensSold } = event.args;
   const timestamp = event.block.timestamp;
