@@ -60,10 +60,11 @@ export type SharedAddresses = {
 
 export type V4Addresses = {
   dopplerDeployer: Address;
-  v4Initializer: Address;
   stateView: Address;
   poolManager: Address;
   dopplerLens: Address;
+  v4Initializer: Address;
+  v4Initializer2: Address;
 };
 
 export type V3Addresses = {
@@ -100,6 +101,7 @@ export const configs: IndexerConfigs = {
       poolManager: "0x00B036B58a818B1BC34d502D3fE730Db729e62AC" as Address,
       dopplerDeployer: "0x8350cAd81149A9944c2fb4276955FaAA7D61e836" as Address,
       v4Initializer: "0x992375478626E67F4e639d3298EbCAaE51C3dF0b" as Address,
+      v4Initializer2: "0x2F2BAcd46d3F5c9EE052Ab392b73711dB89129DB" as Address,
       stateView: "0xc199F1072a74D4e905ABa1A84d9a45E2546B6222" as Address,
       dopplerLens: zeroAddress,
     },
@@ -129,6 +131,7 @@ export const configs: IndexerConfigs = {
       v4Initializer: zeroAddress as Address,
       stateView: zeroAddress as Address,
       dopplerLens: zeroAddress,
+      v4Initializer2: zeroAddress,
     },
     shared: {
       airlock: zeroAddress as Address,
@@ -155,6 +158,7 @@ export const configs: IndexerConfigs = {
       v4Initializer: "0xA7A28cB18F73CDd591fa81ead6ffadf749c0d0a2" as Address,
       stateView: "0x86e8631a016f9068c3f085faf484ee3f5fdee8f2" as Address,
       dopplerLens: "0x166109C4EE7fE69164631Caa937dAA5F5cEbFef0" as Address,
+      v4Initializer2: zeroAddress,
     },
     shared: {
       airlock: "0x77EbfBAE15AD200758E9E2E61597c0B07d731254" as Address,
@@ -183,6 +187,7 @@ export const configs: IndexerConfigs = {
       v4Initializer: "0x29D70863ee13542241ab4263A272289FD6E5F625" as Address,
       dopplerLens: "0xB801D2f908fa59b70931F16DC8c2Df093686bA80" as Address,
       stateView: "0x571291b572ed32ce6751a2cb2486ebee8defb9b4" as Address,
+      v4Initializer2: zeroAddress,
     },
     shared: {
       airlock: "0xBE5ad4efe4085AF00FD4a9E30b754cDcEFE9C6Ad" as Address,
@@ -209,6 +214,7 @@ export const configs: IndexerConfigs = {
       poolManager: "0x360e68faccca8ca495c1b759fd9eee466db9fb32" as Address,
       dopplerDeployer: "0x8b4C7DB9121FC885689C0A50D5a1429F15AEc2a0" as Address,
       v4Initializer: "0xC99b485499f78995C6F1640dbB1413c57f8BA684" as Address,
+      v4Initializer2: "0x014E1c0bd34f3B10546E554CB33B3293fECDD056" as Address,
       stateView: "0x76fd297e2d437cd7f76d50f01afe6160f86e9990" as Address,
       dopplerLens: "0xCe3099B2F07029b086E5e92a1573C5f5A3071783" as Address,
     },
@@ -237,6 +243,7 @@ export const configs: IndexerConfigs = {
       poolManager: "0x498581ff718922c3f8e6a244956af099b2652b2b" as Address,
       dopplerDeployer: "0x014E1c0bd34f3B10546E554CB33B3293fECDD056" as Address,
       v4Initializer: "0x8AF018e28c273826e6b2d5a99e81c8fB63729b07" as Address,
+      v4Initializer2: "0x77EbfBAE15AD200758E9E2E61597c0B07d731254" as Address,
       stateView: "0xa3c0c9b65bad0b08107aa264b0f3db444b867a71" as Address,
       dopplerLens: "0x094d926a969b3024ca46d2186bf13fd5cdba9ce2" as Address,
     },

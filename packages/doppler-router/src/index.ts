@@ -1,4 +1,4 @@
-export { CommandBuilder } from "./CommandBuilder";
+export { CommandBuilder, CommandType } from "./CommandBuilder";
 export {
   PermitSingle,
   PermitBatch,
