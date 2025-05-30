@@ -104,17 +104,6 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
       ethPrice,
       context,
     }),
-    insertOrUpdateDailyVolume({
-      poolAddress: poolAddress,
-      amountIn: 0n,
-      amountOut: 0n,
-      timestamp,
-      context,
-      tokenIn: assetAddress,
-      tokenOut: numeraireAddress,
-      ethPrice,
-      marketCapUsd,
-    }),
     addCheckpoint({
       poolAddress: poolAddress,
       asset: assetAddress,
@@ -127,6 +116,18 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
       context,
     }),
   ]);
+
+  await insertOrUpdateDailyVolume({
+    poolAddress: poolAddress,
+    amountIn: 0n,
+    amountOut: 0n,
+    timestamp,
+    context,
+    tokenIn: assetAddress,
+    tokenOut: numeraireAddress,
+    ethPrice,
+    marketCapUsd,
+  });
 });
 
 ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
@@ -246,18 +247,19 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
       ethPrice,
       context,
     }),
-    insertOrUpdateDailyVolume({
-      poolAddress: address,
-      amountIn,
-      amountOut,
-      timestamp,
-      context,
-      tokenIn,
-      tokenOut,
-      ethPrice,
-      marketCapUsd,
-    }),
   ]);
+
+  await insertOrUpdateDailyVolume({
+    poolAddress: address,
+    amountIn,
+    amountOut,
+    timestamp,
+    context,
+    tokenIn,
+    tokenOut,
+    ethPrice,
+    marketCapUsd,
+  });
 });
 
 ponder.on("UniswapV4Initializer2:Create", async ({ event, context }) => {
@@ -340,17 +342,6 @@ ponder.on("UniswapV4Initializer2:Create", async ({ event, context }) => {
       ethPrice,
       context,
     }),
-    insertOrUpdateDailyVolume({
-      poolAddress: poolAddress,
-      amountIn: 0n,
-      amountOut: 0n,
-      timestamp,
-      context,
-      tokenIn: assetAddress,
-      tokenOut: numeraireAddress,
-      ethPrice,
-      marketCapUsd,
-    }),
     addCheckpoint({
       poolAddress: poolAddress,
       asset: assetAddress,
@@ -363,6 +354,17 @@ ponder.on("UniswapV4Initializer2:Create", async ({ event, context }) => {
       context,
     }),
   ]);
+  await insertOrUpdateDailyVolume({
+    poolAddress: poolAddress,
+    amountIn: 0n,
+    amountOut: 0n,
+    timestamp,
+    context,
+    tokenIn: assetAddress,
+    tokenOut: numeraireAddress,
+    ethPrice,
+    marketCapUsd,
+  });
 });
 
 ponder.on("UniswapV4Pool2:Swap", async ({ event, context }) => {
@@ -482,16 +484,17 @@ ponder.on("UniswapV4Pool2:Swap", async ({ event, context }) => {
       ethPrice,
       context,
     }),
-    insertOrUpdateDailyVolume({
-      poolAddress: address,
-      amountIn,
-      amountOut,
-      timestamp,
-      context,
-      tokenIn,
-      tokenOut,
-      ethPrice,
-      marketCapUsd,
-    }),
   ]);
+
+  await insertOrUpdateDailyVolume({
+    poolAddress: address,
+    amountIn,
+    amountOut,
+    timestamp,
+    context,
+    tokenIn,
+    tokenOut,
+    ethPrice,
+    marketCapUsd,
+  });
 });
