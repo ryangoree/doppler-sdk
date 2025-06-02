@@ -303,8 +303,8 @@ export const poolRelations = relations(pool, ({ one, many }) => ({
 }));
 
 export const v2PoolRelations = relations(v2Pool, ({ one }) => ({
-  pool: one(pool, {
-    fields: [v2Pool.address],
+  v3Pool: one(pool, {
+    fields: [v2Pool.v3Pool],
     references: [pool.address],
   }),
 }));
