@@ -373,6 +373,16 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
     ethPrice,
   });
 
+  if (dollarLiquidity < 0) {
+    console.log("Dollar liquidity is negative", {
+      address,
+      dollarLiquidity,
+      assetBalance,
+      quoteBalance,
+      price,
+    });
+  }
+
   const { totalSupply } = await insertTokenIfNotExists({
     tokenAddress: baseToken,
     creatorAddress: address,
