@@ -314,8 +314,6 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
     isToken0,
     baseToken,
     quoteToken,
-    reserves0,
-    reserves1,
     fee,
     totalFee0,
     totalFee1,
@@ -339,11 +337,24 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
     decimals: 18,
   });
 
-  const assetBalance = isToken0 ? reserves0 + amount0 : reserves1 + amount1;
-  const quoteBalance = isToken0 ? reserves1 + amount1 : reserves0 + amount0;
-
   const token0 = isToken0 ? baseToken : quoteToken;
   const token1 = isToken0 ? quoteToken : baseToken;
+
+  const { reserve0, reserve1 } = await getV3PoolReserves({
+    address,
+    token0,
+    token1,
+    context,
+  });
+
+  const initialAssetBalance = isToken0 ? reserve0 : reserve1;
+  const initialQuoteBalance = isToken0 ? reserve1 : reserve0;
+
+  const assetChange = isToken0 ? amount0 : amount1;
+  const quoteChange = isToken0 ? amount1 : amount0;
+
+  const assetBalance = initialAssetBalance + assetChange;
+  const quoteBalance = initialQuoteBalance + quoteChange;
 
   const tokenIn = amount0 > 0n ? token0 : token1;
   const tokenOut = amount0 > 0n ? token1 : token0;
@@ -379,8 +390,8 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
       dollarLiquidity,
       assetBalance,
       quoteBalance,
-      reserves0,
-      reserves1,
+      reserve0,
+      reserve1,
       price,
     });
   }
@@ -436,6 +447,8 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
       update: {
         price,
         dollarLiquidity,
+        reserves0: assetBalance,
+        reserves1: quoteBalance,
         totalFee0: totalFee0 + fee0,
         totalFee1: totalFee1 + fee1,
         graduationBalance: graduationBalance + quoteDelta,
