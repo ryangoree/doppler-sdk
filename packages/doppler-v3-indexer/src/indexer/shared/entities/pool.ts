@@ -60,15 +60,12 @@ export const insertPoolIfNotExists = async ({
   const assetAddr = poolState.asset.toLowerCase() as `0x${string}`;
   const numeraireAddr = poolState.numeraire.toLowerCase() as `0x${string}`;
 
-  let dollarLiquidity;
-  if (ethPrice) {
-    dollarLiquidity = await computeDollarLiquidity({
-      assetBalance: isToken0 ? reserve0 : reserve1,
-      quoteBalance: isToken0 ? reserve1 : reserve0,
-      price,
-      ethPrice,
-    });
-  }
+  const dollarLiquidity = await computeDollarLiquidity({
+    assetBalance: isToken0 ? reserve0 : reserve1,
+    quoteBalance: isToken0 ? reserve1 : reserve0,
+    price,
+    ethPrice,
+  });
 
   const assetTotalSupply = await client.readContract({
     address: assetAddr,
@@ -95,13 +92,15 @@ export const insertPoolIfNotExists = async ({
     type: "v3",
     chainId: BigInt(network.chainId),
     fee,
-    dollarLiquidity: dollarLiquidity ?? 0n,
+    dollarLiquidity,
     dailyVolume: address,
     graduationThreshold: 0n,
     graduationBalance: 0n,
     totalFee0: 0n,
     totalFee1: 0n,
     volumeUsd: 0n,
+    reserves0: reserve0,
+    reserves1: reserve1,
     percentDayChange: 0,
     isToken0,
     marketCapUsd,
