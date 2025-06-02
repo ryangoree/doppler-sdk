@@ -379,6 +379,8 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
       dollarLiquidity,
       assetBalance,
       quoteBalance,
+      reserves0,
+      reserves1,
       price,
     });
   }
