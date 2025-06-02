@@ -44,28 +44,12 @@ export const insertPoolIfNotExists = async ({
     isZora,
   });
 
-  const {
-    slot0Data,
-    liquidity,
-    price,
-    fee,
-    reserve0,
-    reserve1,
-    token0,
-    poolState,
-  } = poolData;
+  const { slot0Data, liquidity, price, fee, token0, poolState } = poolData;
 
   const isToken0 = token0.toLowerCase() === poolState.asset.toLowerCase();
 
   const assetAddr = poolState.asset.toLowerCase() as `0x${string}`;
   const numeraireAddr = poolState.numeraire.toLowerCase() as `0x${string}`;
-
-  const dollarLiquidity = await computeDollarLiquidity({
-    assetBalance: isToken0 ? reserve0 : reserve1,
-    quoteBalance: isToken0 ? reserve1 : reserve0,
-    price,
-    ethPrice,
-  });
 
   const assetTotalSupply = await client.readContract({
     address: assetAddr,
@@ -92,15 +76,15 @@ export const insertPoolIfNotExists = async ({
     type: "v3",
     chainId: BigInt(network.chainId),
     fee,
-    dollarLiquidity,
+    dollarLiquidity: 0n,
     dailyVolume: address,
     graduationThreshold: 0n,
     graduationBalance: 0n,
     totalFee0: 0n,
     totalFee1: 0n,
     volumeUsd: 0n,
-    reserves0: reserve0,
-    reserves1: reserve1,
+    reserves0: 0n,
+    reserves1: 0n,
     percentDayChange: 0,
     isToken0,
     marketCapUsd,

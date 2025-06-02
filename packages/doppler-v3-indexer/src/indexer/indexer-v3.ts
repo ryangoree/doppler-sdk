@@ -100,7 +100,7 @@ ponder.on("UniswapV3Initializer:Create", async ({ event, context }) => {
 
 ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
   const address = event.log.address.toLowerCase() as `0x${string}`;
-  const { tickLower, tickUpper, amount, owner } = event.args;
+  const { tickLower, tickUpper, amount, owner, amount0, amount1 } = event.args;
   const timestamp = event.block.timestamp;
 
   const ethPrice = await fetchEthPrice(timestamp, context);
@@ -111,6 +111,8 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
     isToken0,
     price,
     liquidity,
+    reserves0,
+    reserves1,
     graduationThreshold,
   } = await insertPoolIfNotExists({
     poolAddress: address,
@@ -126,22 +128,12 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
     context,
   });
 
-  const token0 = isToken0 ? baseToken : quoteToken;
-  const token1 = isToken0 ? quoteToken : baseToken;
-
-  const { reserve0, reserve1 } = await getV3PoolReserves({
-    address,
-    token0,
-    token1,
-    context,
-  });
-
-  const assetBalance = isToken0 ? reserve0 : reserve1;
-  const quoteBalance = isToken0 ? reserve1 : reserve0;
+  const newReserves0 = reserves0 + amount0;
+  const newReserves1 = reserves1 + amount1;
 
   const liquidityUsd = await computeDollarLiquidity({
-    assetBalance,
-    quoteBalance,
+    assetBalance: newReserves0,
+    quoteBalance: newReserves1,
     price,
     ethPrice,
   });
@@ -174,8 +166,8 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
       graduationThreshold: graduationThreshold + graduationThresholdDelta,
       liquidity: liquidity + amount,
       dollarLiquidity: liquidityUsd,
-      reserves0: reserve0,
-      reserves1: reserve1,
+      reserves0: newReserves0,
+      reserves1: newReserves1,
     },
   });
 
@@ -212,7 +204,7 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
 ponder.on("UniswapV3Pool:Burn", async ({ event, context }) => {
   const address = event.log.address.toLowerCase() as `0x${string}`;
   const timestamp = event.block.timestamp;
-  const { tickLower, tickUpper, owner, amount } = event.args;
+  const { tickLower, tickUpper, owner, amount, amount0, amount1 } = event.args;
 
   const ethPrice = await fetchEthPrice(timestamp, context);
 
@@ -222,6 +214,8 @@ ponder.on("UniswapV3Pool:Burn", async ({ event, context }) => {
     isToken0,
     price,
     liquidity,
+    reserves0,
+    reserves1,
     graduationThreshold,
   } = await insertPoolIfNotExists({
     poolAddress: address,
@@ -231,22 +225,12 @@ ponder.on("UniswapV3Pool:Burn", async ({ event, context }) => {
     event: "UniswapV3Pool:Burn",
   });
 
-  const token0 = isToken0 ? baseToken : quoteToken;
-  const token1 = isToken0 ? quoteToken : baseToken;
-
-  const { reserve0, reserve1 } = await getV3PoolReserves({
-    address,
-    token0,
-    token1,
-    context,
-  });
-
-  const assetBalance = isToken0 ? reserve0 : reserve1;
-  const quoteBalance = isToken0 ? reserve1 : reserve0;
+  const newReserves0 = reserves0 - amount0;
+  const newReserves1 = reserves1 - amount1;
 
   const liquidityUsd = computeDollarLiquidity({
-    assetBalance,
-    quoteBalance,
+    assetBalance: newReserves0,
+    quoteBalance: newReserves1,
     price,
     ethPrice,
   });
@@ -289,6 +273,8 @@ ponder.on("UniswapV3Pool:Burn", async ({ event, context }) => {
         liquidity: liquidity - amount,
         dollarLiquidity: liquidityUsd,
         graduationThreshold: graduationThreshold - graduationThresholdDelta,
+        reserves0: newReserves0,
+        reserves1: newReserves1,
       },
     }),
     updatePosition({
