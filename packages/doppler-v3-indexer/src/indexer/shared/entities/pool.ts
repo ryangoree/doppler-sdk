@@ -9,6 +9,26 @@ import { getReservesV4, V4PoolData } from "@app/utils/v4-utils/getV4PoolData";
 import { getZoraPoolData, PoolState } from "@app/utils/v3-utils/getV3PoolData";
 import { DERC20ABI } from "@app/abis";
 
+export const fetchExistingPool = async ({
+  poolAddress,
+  context,
+}: {
+  poolAddress: Address;
+  context: Context;
+}): Promise<typeof pool.$inferSelect> => {
+  const { db, chain } = context;
+  const address = poolAddress.toLowerCase() as `0x${string}`;
+  const existingPool = await db.find(pool, {
+    address,
+    chainId: BigInt(chain.id),
+  });
+
+  if (!existingPool) {
+    throw new Error(`Pool ${address} not found in chain ${chain.id}`);
+  }
+  return existingPool;
+};
+
 export const insertPoolIfNotExists = async ({
   poolAddress,
   timestamp,

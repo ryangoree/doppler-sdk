@@ -10,7 +10,11 @@ import {
   insertOrUpdateDailyVolume,
   compute24HourPriceChange,
 } from "./shared/timeseries";
-import { insertPoolIfNotExists, updatePool } from "./shared/entities/pool";
+import {
+  fetchExistingPool,
+  insertPoolIfNotExists,
+  updatePool,
+} from "./shared/entities/pool";
 import { insertAssetIfNotExists, updateAsset } from "./shared/entities/asset";
 import { computeDollarLiquidity } from "@app/utils/computeDollarLiquidity";
 import { insertOrUpdateBuckets } from "./shared/timeseries";
@@ -31,7 +35,12 @@ ponder.on("UniswapV3Initializer:Create", async ({ event, context }) => {
 
   const ethPrice = await fetchEthPrice(timestamp, context);
 
-  const [baseTokenEntity, , poolEntity] = await Promise.all([
+  const poolEntity = await fetchExistingPool({
+    poolAddress: poolOrHookId,
+    context,
+  });
+
+  const [baseTokenEntity] = await Promise.all([
     insertTokenIfNotExists({
       tokenAddress: assetId,
       creatorAddress: creatorId,
@@ -45,12 +54,6 @@ ponder.on("UniswapV3Initializer:Create", async ({ event, context }) => {
       timestamp,
       context,
       isDerc20: false,
-    }),
-    insertPoolIfNotExists({
-      poolAddress: poolOrHookId,
-      timestamp,
-      context,
-      ethPrice,
     }),
   ]);
 
@@ -129,12 +132,9 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
     context,
   });
 
-  const newReserves0 = reserves0 + amount0;
-  const newReserves1 = reserves1 + amount1;
-
-  const liquidityUsd = await computeDollarLiquidity({
-    assetBalance: newReserves0,
-    quoteBalance: newReserves1,
+  const liquidityUsd = computeDollarLiquidity({
+    assetBalance: reserves0 + amount0,
+    quoteBalance: reserves1 + amount1,
     price,
     ethPrice,
   });
@@ -167,8 +167,8 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
       graduationThreshold: graduationThreshold + graduationThresholdDelta,
       liquidity: liquidity + amount,
       dollarLiquidity: liquidityUsd,
-      reserves0: newReserves0,
-      reserves1: newReserves1,
+      reserves0: reserves0 + amount0,
+      reserves1: reserves1 + amount1,
     },
   });
 
