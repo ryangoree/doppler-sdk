@@ -302,7 +302,6 @@ export const refreshCheckpointBlob = async ({
           dollarLiquidity: liquidityUsd,
           marketCapUsd,
         },
-        event: "refreshCheckpointBlob",
       }),
       updateAsset({
         assetAddress,

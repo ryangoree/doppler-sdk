@@ -91,28 +91,13 @@ export const updatePool = async ({
   poolAddress,
   context,
   update,
-  event,
 }: {
   poolAddress: Address;
   context: Context;
-  update?: Partial<typeof pool.$inferInsert>;
-  event?: string;
+  update: Partial<typeof pool.$inferInsert>;
 }) => {
   const { db, chain } = context;
   const address = poolAddress.toLowerCase() as `0x${string}`;
-
-  // First check if the pool exists before attempting to update
-  const existingPool = await db.find(pool, {
-    address,
-    chainId: BigInt(chain.id),
-  });
-
-  if (!existingPool) {
-    console.warn(
-      `Pool ${address} not found in chain ${chain.id} in event ${event}, skipping update`
-    );
-    return;
-  }
 
   await db
     .update(pool, {

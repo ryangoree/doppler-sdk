@@ -110,7 +110,6 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
 
   const {
     baseToken,
-    quoteToken,
     isToken0,
     price,
     liquidity,
