@@ -407,6 +407,8 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
       lastSwapTimestamp: timestamp,
       marketCapUsd,
       percentDayChange: priceChangeInfo,
+      reserves0: assetBalance,
+      reserves1: quoteBalance,
     },
   });
   if (address === "0xFE6A23D6d9f006a1F29224C5545Fb969aB41d1b3".toLowerCase()) {
