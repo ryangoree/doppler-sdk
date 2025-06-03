@@ -34,13 +34,13 @@ export const insertPoolIfNotExists = async ({
   timestamp,
   context,
   ethPrice,
-  isZora = false,
+  update,
 }: {
   poolAddress: Address;
   timestamp: bigint;
   context: Context;
   ethPrice: bigint;
-  isZora?: boolean;
+  update?: Partial<typeof pool.$inferInsert>;
 }): Promise<typeof pool.$inferSelect> => {
   const { db, chain, client } = context;
   const address = poolAddress.toLowerCase() as `0x${string}`;
@@ -57,7 +57,6 @@ export const insertPoolIfNotExists = async ({
   const poolData = await getV3PoolData({
     address,
     context,
-    isZora,
   });
 
   const { slot0Data, liquidity, price, fee, token0, poolState } = poolData;

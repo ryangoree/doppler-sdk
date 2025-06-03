@@ -35,30 +35,26 @@ ponder.on("UniswapV3Initializer:Create", async ({ event, context }) => {
 
   const ethPrice = await fetchEthPrice(timestamp, context);
 
-  const poolEntity = await fetchExistingPool({
+  const { price } = await fetchExistingPool({
     poolAddress: poolOrHookId,
     context,
   });
 
-  const [baseTokenEntity] = await Promise.all([
-    insertTokenIfNotExists({
-      tokenAddress: assetId,
-      creatorAddress: creatorId,
-      timestamp,
-      context,
-      isDerc20: true,
-    }),
-    insertTokenIfNotExists({
-      tokenAddress: numeraireId,
-      creatorAddress: creatorId,
-      timestamp,
-      context,
-      isDerc20: false,
-    }),
-  ]);
+  const { totalSupply } = await insertTokenIfNotExists({
+    tokenAddress: assetId,
+    creatorAddress: creatorId,
+    timestamp,
+    context,
+    isDerc20: true,
+  });
 
-  const { price } = poolEntity;
-  const { totalSupply } = baseTokenEntity;
+  await insertTokenIfNotExists({
+    tokenAddress: numeraireId,
+    creatorAddress: creatorId,
+    timestamp,
+    context,
+    isDerc20: false,
+  });
 
   const marketCapUsd = computeMarketCap({
     price,
@@ -66,30 +62,21 @@ ponder.on("UniswapV3Initializer:Create", async ({ event, context }) => {
     totalSupply,
   });
 
-  await Promise.all([
-    insertActivePoolsBlobIfNotExists({
-      context,
-    }),
-    insertTokenIfNotExists({
-      tokenAddress: numeraireId,
-      creatorAddress: creatorId,
-      timestamp,
-      context,
-      isDerc20: false,
-    }),
-    insertAssetIfNotExists({
-      assetAddress: assetId,
-      timestamp,
-      context,
-    }),
-    insertOrUpdateBuckets({
-      poolAddress: poolOrHookId,
-      price,
-      timestamp,
-      ethPrice,
-      context,
-    }),
-  ]);
+  await insertActivePoolsBlobIfNotExists({
+    context,
+  });
+  await insertAssetIfNotExists({
+    assetAddress: assetId,
+    timestamp,
+    context,
+  });
+  await insertOrUpdateBuckets({
+    poolAddress: poolOrHookId,
+    price,
+    timestamp,
+    ethPrice,
+    context,
+  });
 
   await insertOrUpdateDailyVolume({
     poolAddress: poolOrHookId,
@@ -244,35 +231,33 @@ ponder.on("UniswapV3Pool:Burn", async ({ event, context }) => {
     context,
   });
 
-  await Promise.all([
-    updateAsset({
-      assetAddress: baseToken,
-      context,
-      update: {
-        liquidityUsd,
-      },
-    }),
-    updatePool({
-      poolAddress: address,
-      context,
-      update: {
-        liquidity: liquidity - amount,
-        dollarLiquidity: liquidityUsd,
-        graduationThreshold: graduationThreshold - graduationThresholdDelta,
-        reserves0: newReserves0,
-        reserves1: newReserves1,
-      },
-    }),
-    updatePosition({
-      poolAddress: address,
-      tickLower,
-      tickUpper,
-      context,
-      update: {
-        liquidity: positionEntity.liquidity - amount,
-      },
-    }),
-  ]);
+  await updateAsset({
+    assetAddress: baseToken,
+    context,
+    update: {
+      liquidityUsd,
+    },
+  });
+  await updatePool({
+    poolAddress: address,
+    context,
+    update: {
+      liquidity: liquidity - amount,
+      dollarLiquidity: liquidityUsd,
+      graduationThreshold: graduationThreshold - graduationThresholdDelta,
+      reserves0: newReserves0,
+      reserves1: newReserves1,
+    },
+  });
+  await updatePosition({
+    poolAddress: address,
+    tickLower,
+    tickUpper,
+    context,
+    update: {
+      liquidity: positionEntity.liquidity - amount,
+    },
+  });
 });
 
 ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
@@ -351,32 +336,6 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
     ethPrice,
   });
 
-  if (
-    event.transaction.hash ==
-    "0x0b3b269d7453d44ac8c37c1dc9aa590c0bfd361f05d54ff729712add66f73f72"
-  ) {
-    console.log("Swap", {
-      address,
-      amount0,
-      amount1,
-      sqrtPriceX96,
-      reserves0,
-      reserves1,
-      reserves0After: reserves0 + amount0,
-      reserves1After: reserves1 + amount1,
-      fee,
-      totalFee0,
-      totalFee1,
-      graduationBalance,
-      baseToken,
-      quoteToken,
-      isToken0,
-      price,
-      ethPrice,
-      dollarLiquidity,
-    });
-  }
-
   if (dollarLiquidity < 0) {
     console.log("Dollar liquidity is negative", {
       address,
@@ -411,53 +370,51 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
     context,
   });
 
-  await Promise.all([
-    tryAddActivePool({
-      poolAddress: address,
-      lastSwapTimestamp: Number(timestamp),
-      context,
-    }),
-    insertOrUpdateBuckets({
-      poolAddress: address,
+  await tryAddActivePool({
+    poolAddress: address,
+    lastSwapTimestamp: Number(timestamp),
+    context,
+  });
+  await insertOrUpdateBuckets({
+    poolAddress: address,
+    price,
+    timestamp,
+    ethPrice,
+    context,
+  });
+  await insertOrUpdateDailyVolume({
+    poolAddress: address,
+    amountIn,
+    amountOut,
+    timestamp,
+    context,
+    tokenIn,
+    tokenOut,
+    ethPrice,
+    marketCapUsd,
+  });
+  await updatePool({
+    poolAddress: address,
+    context,
+    update: {
       price,
-      timestamp,
-      ethPrice,
-      context,
-    }),
-    insertOrUpdateDailyVolume({
-      poolAddress: address,
-      amountIn,
-      amountOut,
-      timestamp,
-      context,
-      tokenIn,
-      tokenOut,
-      ethPrice,
+      dollarLiquidity,
+      totalFee0: totalFee0 + fee0,
+      totalFee1: totalFee1 + fee1,
+      graduationBalance: graduationBalance + quoteDelta,
+      lastRefreshed: timestamp,
+      lastSwapTimestamp: timestamp,
       marketCapUsd,
-    }),
-    updatePool({
-      poolAddress: address,
-      context,
-      update: {
-        price,
-        dollarLiquidity,
-        totalFee0: totalFee0 + fee0,
-        totalFee1: totalFee1 + fee1,
-        graduationBalance: graduationBalance + quoteDelta,
-        lastRefreshed: timestamp,
-        lastSwapTimestamp: timestamp,
-        marketCapUsd,
-        percentDayChange: priceChangeInfo,
-      },
-    }),
-    updateAsset({
-      assetAddress: asset.address,
-      context,
-      update: {
-        liquidityUsd: dollarLiquidity,
-        percentDayChange: priceChangeInfo,
-        marketCapUsd,
-      },
-    }),
-  ]);
+      percentDayChange: priceChangeInfo,
+    },
+  });
+  await updateAsset({
+    assetAddress: asset.address,
+    context,
+    update: {
+      liquidityUsd: dollarLiquidity,
+      percentDayChange: priceChangeInfo,
+      marketCapUsd,
+    },
+  });
 });

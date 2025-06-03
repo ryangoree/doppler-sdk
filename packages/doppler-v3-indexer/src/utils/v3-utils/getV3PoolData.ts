@@ -44,7 +44,6 @@ export const getV3PoolData = async ({
 }: {
   address: Address;
   context: Context;
-  isZora?: boolean;
 }): Promise<V3PoolData> => {
   const { client, chain } = context;
 
