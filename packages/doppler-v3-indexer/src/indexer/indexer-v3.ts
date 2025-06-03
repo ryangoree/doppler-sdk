@@ -114,6 +114,15 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
     ethPrice,
   });
 
+  const reserveAssetBefore = isToken0 ? reserves0 : reserves1;
+  const reserveQuoteBefore = isToken0 ? reserves1 : reserves0;
+
+  const reserveAssetDelta = isToken0 ? amount0 : amount1;
+  const reserveQuoteDelta = isToken0 ? amount1 : amount0;
+
+  const nextReservesAsset = reserveAssetBefore + reserveAssetDelta;
+  const nextReservesQuote = reserveQuoteBefore + reserveQuoteDelta;
+
   await insertAssetIfNotExists({
     assetAddress: baseToken,
     timestamp,
@@ -121,8 +130,8 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
   });
 
   const liquidityUsd = computeDollarLiquidity({
-    assetBalance: reserves0 + amount0,
-    quoteBalance: reserves1 + amount1,
+    assetBalance: nextReservesAsset,
+    quoteBalance: nextReservesQuote,
     price,
     ethPrice,
   });
@@ -205,12 +214,18 @@ ponder.on("UniswapV3Pool:Burn", async ({ event, context }) => {
     ethPrice,
   });
 
-  const newReserves0 = reserves0 - amount0;
-  const newReserves1 = reserves1 - amount1;
+  const reserveAssetBefore = isToken0 ? reserves0 : reserves1;
+  const reserveQuoteBefore = isToken0 ? reserves1 : reserves0;
+
+  const reserveAssetDelta = isToken0 ? amount0 : amount1;
+  const reserveQuoteDelta = isToken0 ? amount1 : amount0;
+
+  const nextReservesAsset = reserveAssetBefore - reserveAssetDelta;
+  const nextReservesQuote = reserveQuoteBefore - reserveQuoteDelta;
 
   const liquidityUsd = computeDollarLiquidity({
-    assetBalance: newReserves0,
-    quoteBalance: newReserves1,
+    assetBalance: nextReservesAsset,
+    quoteBalance: nextReservesQuote,
     price,
     ethPrice,
   });
@@ -246,8 +261,8 @@ ponder.on("UniswapV3Pool:Burn", async ({ event, context }) => {
       liquidity: liquidity - amount,
       dollarLiquidity: liquidityUsd,
       graduationThreshold: graduationThreshold - graduationThresholdDelta,
-      reserves0: newReserves0,
-      reserves1: newReserves1,
+      reserves0: reserves0 - amount0,
+      reserves1: reserves1 - amount1,
     },
   });
   await updatePosition({
@@ -297,14 +312,14 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
     decimals: 18,
   });
 
-  const initialAssetBalance = isToken0 ? reserves0 : reserves1;
-  const initialQuoteBalance = isToken0 ? reserves1 : reserves0;
+  const reserveAssetBefore = isToken0 ? reserves0 : reserves1;
+  const reserveQuoteBefore = isToken0 ? reserves1 : reserves0;
 
-  const assetChange = isToken0 ? amount0 : amount1;
-  const quoteChange = isToken0 ? amount1 : amount0;
+  const reserveAssetDelta = isToken0 ? amount0 : amount1;
+  const reserveQuoteDelta = isToken0 ? amount1 : amount0;
 
-  const assetBalance = initialAssetBalance + assetChange;
-  const quoteBalance = initialQuoteBalance + quoteChange;
+  const nextReservesAsset = reserveAssetBefore + reserveAssetDelta;
+  const nextReservesQuote = reserveQuoteBefore + reserveQuoteDelta;
 
   const token0 = isToken0 ? baseToken : quoteToken;
   const token1 = isToken0 ? quoteToken : baseToken;
@@ -331,8 +346,8 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
   const quoteDelta = isToken0 ? amount1 - fee1 : amount0 - fee0;
 
   const dollarLiquidity = computeDollarLiquidity({
-    assetBalance,
-    quoteBalance,
+    assetBalance: nextReservesAsset,
+    quoteBalance: nextReservesQuote,
     price,
     ethPrice,
   });
@@ -341,8 +356,8 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
     console.log("Dollar liquidity is negative", {
       address,
       dollarLiquidity,
-      assetBalance,
-      quoteBalance,
+      assetBalance: nextReservesAsset,
+      quoteBalance: nextReservesQuote,
       reserves0,
       reserves1,
       price,
@@ -398,6 +413,7 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
     poolAddress: address,
     context,
     update: {
+      sqrtPrice: sqrtPriceX96,
       price,
       dollarLiquidity,
       totalFee0: totalFee0 + fee0,
@@ -407,8 +423,8 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
       lastSwapTimestamp: timestamp,
       marketCapUsd,
       percentDayChange: priceChangeInfo,
-      reserves0: assetBalance,
-      reserves1: quoteBalance,
+      reserves0: reserves0 + amount0,
+      reserves1: reserves1 + amount1,
     },
   });
   if (address === "0xFE6A23D6d9f006a1F29224C5545Fb969aB41d1b3".toLowerCase()) {
