@@ -30,7 +30,7 @@ const v4BaseSepoliaStartBlock = 26008121;
 const inkStartBlock = 9500879;
 const v4InkStartBlock = 14937170;
 
-const baseStartBlock = 28415526;
+const baseStartBlock = 28415520;
 const v4BaseStartBlock = 30822164;
 
 export type IndexerConfigs = Record<Network, DopplerConfig>;

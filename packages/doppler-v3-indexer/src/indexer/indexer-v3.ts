@@ -427,13 +427,6 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
       reserves1: reserves1 + amount1,
     },
   });
-  if (address === "0xFE6A23D6d9f006a1F29224C5545Fb969aB41d1b3".toLowerCase()) {
-    const updatedPool = await context.db.find(pool, {
-      address: address,
-      chainId: BigInt(context.chain.id),
-    });
-    console.log("updatedPool", updatedPool);
-  }
   await updateAsset({
     assetAddress: asset.address,
     context,
