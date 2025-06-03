@@ -35,9 +35,11 @@ ponder.on("UniswapV3Initializer:Create", async ({ event, context }) => {
 
   const ethPrice = await fetchEthPrice(timestamp, context);
 
-  const { price } = await fetchExistingPool({
+  const { price } = await insertPoolIfNotExists({
     poolAddress: poolOrHookId,
     context,
+    timestamp,
+    ethPrice,
   });
 
   const { totalSupply } = await insertTokenIfNotExists({
