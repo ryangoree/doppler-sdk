@@ -15,16 +15,12 @@ export const insertPoolIfNotExists = async ({
   context,
   ethPrice,
   isZora = false,
-  totalSupply,
-  event,
 }: {
   poolAddress: Address;
   timestamp: bigint;
   context: Context;
   ethPrice: bigint;
   isZora?: boolean;
-  totalSupply?: bigint;
-  event?: string;
 }): Promise<typeof pool.$inferSelect> => {
   const { db, network, client } = context;
   const address = poolAddress.toLowerCase() as `0x${string}`;

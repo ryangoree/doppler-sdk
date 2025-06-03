@@ -14,12 +14,7 @@ import { insertPoolIfNotExists, updatePool } from "./shared/entities/pool";
 import { insertAssetIfNotExists, updateAsset } from "./shared/entities/asset";
 import { computeDollarLiquidity } from "@app/utils/computeDollarLiquidity";
 import { insertOrUpdateBuckets } from "./shared/timeseries";
-import { getV3PoolReserves } from "@app/utils/v3-utils/getV3PoolData";
-import {
-  computeMarketCap,
-  fetchEthPrice,
-  updateMarketCap,
-} from "./shared/oracle";
+import { computeMarketCap, fetchEthPrice } from "./shared/oracle";
 import {
   insertActivePoolsBlobIfNotExists,
   tryAddActivePool,
@@ -34,25 +29,33 @@ ponder.on("UniswapV3Initializer:Create", async ({ event, context }) => {
   const assetId = asset.toLowerCase() as `0x${string}`;
   const poolOrHookId = poolOrHook.toLowerCase() as `0x${string}`;
 
-  const ethPrice = await fetchEthPrice(event.block.timestamp, context);
+  const ethPrice = await fetchEthPrice(timestamp, context);
 
-  const baseTokenEntity = await insertTokenIfNotExists({
-    tokenAddress: assetId,
-    creatorAddress: creatorId,
-    timestamp,
-    context,
-    isDerc20: true,
-  });
+  const [baseTokenEntity, , poolEntity] = await Promise.all([
+    insertTokenIfNotExists({
+      tokenAddress: assetId,
+      creatorAddress: creatorId,
+      timestamp,
+      context,
+      isDerc20: true,
+    }),
+    insertTokenIfNotExists({
+      tokenAddress: numeraireId,
+      creatorAddress: creatorId,
+      timestamp,
+      context,
+      isDerc20: false,
+    }),
+    insertPoolIfNotExists({
+      poolAddress: poolOrHookId,
+      timestamp,
+      context,
+      ethPrice,
+    }),
+  ]);
 
+  const { price } = poolEntity;
   const { totalSupply } = baseTokenEntity;
-
-  const { price } = await insertPoolIfNotExists({
-    poolAddress: poolOrHookId,
-    timestamp,
-    context,
-    ethPrice,
-    totalSupply,
-  });
 
   const marketCapUsd = computeMarketCap({
     price,
@@ -119,7 +122,6 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
     timestamp,
     context,
     ethPrice,
-    event: "UniswapV3Pool:Mint",
   });
 
   await insertAssetIfNotExists({
@@ -171,13 +173,6 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
     },
   });
 
-  await updateMarketCap({
-    assetAddress: baseToken,
-    price,
-    ethPrice,
-    context,
-  });
-
   const positionEntity = await insertPositionIfNotExists({
     poolAddress: address,
     tickLower,
@@ -202,6 +197,7 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
 });
 
 ponder.on("UniswapV3Pool:Burn", async ({ event, context }) => {
+  console.log("UniswapV3Pool:Burn");
   const address = event.log.address.toLowerCase() as `0x${string}`;
   const timestamp = event.block.timestamp;
   const { tickLower, tickUpper, owner, amount, amount0, amount1 } = event.args;
@@ -210,7 +206,6 @@ ponder.on("UniswapV3Pool:Burn", async ({ event, context }) => {
 
   const {
     baseToken,
-    quoteToken,
     isToken0,
     price,
     liquidity,
@@ -222,7 +217,6 @@ ponder.on("UniswapV3Pool:Burn", async ({ event, context }) => {
     timestamp,
     context,
     ethPrice,
-    event: "UniswapV3Pool:Burn",
   });
 
   const newReserves0 = reserves0 - amount0;
@@ -253,12 +247,6 @@ ponder.on("UniswapV3Pool:Burn", async ({ event, context }) => {
   });
 
   await Promise.all([
-    updateMarketCap({
-      assetAddress: baseToken,
-      price,
-      ethPrice,
-      context,
-    }),
     updateAsset({
       assetAddress: baseToken,
       context,
