@@ -33,7 +33,7 @@ ponder.on("DERC20:Transfer", async ({ event, context }) => {
   const { timestamp } = event.block;
   const { from, to, value } = event.args;
 
-  const { db, network } = context;
+  const { db, chain } = context;
 
   const creatorAddress = event.transaction.from;
 
@@ -137,7 +137,7 @@ ponder.on("DERC20:Transfer", async ({ event, context }) => {
 
   const poolEntity = await db.find(pool, {
     address: assetData.poolAddress,
-    chainId: BigInt(network.chainId),
+    chainId: BigInt(chain.id),
   });
 
   if (poolEntity) {
@@ -155,7 +155,7 @@ ponder.on("V4DERC20:Transfer", async ({ event, context }) => {
   const { address } = event.log;
   const { timestamp } = event.block;
   const { from, to, value } = event.args;
-  const { db, network } = context;
+  const { db, chain } = context;
 
   const creatorAddress = event.transaction.from;
 
@@ -259,7 +259,7 @@ ponder.on("V4DERC20:Transfer", async ({ event, context }) => {
 
   const poolEntity = await db.find(pool, {
     address: assetData.poolAddress,
-    chainId: BigInt(network.chainId),
+    chainId: BigInt(chain.id),
   });
 
   if (poolEntity) {

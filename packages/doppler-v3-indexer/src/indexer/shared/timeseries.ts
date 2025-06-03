@@ -58,7 +58,7 @@ const insertOrUpdateHourBucketUsd = async ({
   ethPrice: bigint;
   context: Context;
 }) => {
-  const { db, network } = context;
+  const { db, chain } = context;
   const hourId = Math.floor(Number(timestamp) / secondsInHour) * secondsInHour;
   const usdPrice = (price * ethPrice) / CHAINLINK_ETH_DECIMALS;
 
@@ -74,7 +74,7 @@ const insertOrUpdateHourBucketUsd = async ({
         high: usdPrice,
         average: usdPrice,
         count: 1,
-        chainId: BigInt(network.chainId),
+        chainId: BigInt(chain.id),
       })
       .onConflictDoUpdate((row) => ({
         close: usdPrice,
@@ -157,12 +157,12 @@ export const insertOrUpdateDailyVolume = async ({
   marketCapUsd: bigint;
   context: Context;
 }) => {
-  const { db, network } = context;
+  const { db, chain } = context;
 
   let volumeUsd;
   const isTokenInWeth =
     tokenIn.toLowerCase() ===
-    (configs[network.name].shared.weth.toLowerCase() as `0x${string}`);
+    (configs[chain.name].shared.weth.toLowerCase() as `0x${string}`);
 
   const isTokenInEth = tokenIn.toLowerCase() === zeroAddress;
 
@@ -187,7 +187,7 @@ export const insertOrUpdateDailyVolume = async ({
     .values({
       pool: poolAddress.toLowerCase() as `0x${string}`,
       volumeUsd: volumeUsd,
-      chainId: BigInt(network.chainId),
+      chainId: BigInt(chain.id),
       lastUpdated: timestamp,
       checkpoints: {},
       earliestCheckpoint: 0n,

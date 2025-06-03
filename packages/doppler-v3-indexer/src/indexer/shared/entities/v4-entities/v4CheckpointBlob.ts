@@ -30,8 +30,8 @@ export const insertCheckpointBlobIfNotExist = async ({
 }: {
   context: Context;
 }) => {
-  const { db, network } = context;
-  const chainId = network.chainId;
+  const { db, chain } = context;
+  const chainId = chain.id;
 
   const existingConfig = await db.find(v4CheckpointBlob, {
     chainId,
@@ -54,8 +54,8 @@ export const updateCheckpointBlob = async ({
   context: Context;
   update?: Partial<typeof v4CheckpointBlob.$inferInsert>;
 }) => {
-  const { db, network } = context;
-  const chainId = network.chainId;
+  const { db, chain } = context;
+  const chainId = chain.id;
 
   await db
     .update(v4CheckpointBlob, {
@@ -87,8 +87,8 @@ export const addCheckpoint = async ({
   poolKey: PoolKey;
   context: Context;
 }) => {
-  const { db, network } = context;
-  const chainId = network.chainId;
+  const { db, chain } = context;
+  const chainId = chain.id;
 
   const checkpointWithoutBigInts = {
     poolKey,
@@ -145,8 +145,8 @@ export const refreshCheckpointBlob = async ({
   context: Context;
   timestamp: number;
 }) => {
-  const { db, network } = context;
-  const chainId = network.chainId;
+  const { db, chain } = context;
+  const chainId = chain.id;
 
   const existingData = await db.find(v4CheckpointBlob, {
     chainId,

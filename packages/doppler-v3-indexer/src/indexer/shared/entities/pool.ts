@@ -22,12 +22,12 @@ export const insertPoolIfNotExists = async ({
   ethPrice: bigint;
   isZora?: boolean;
 }): Promise<typeof pool.$inferSelect> => {
-  const { db, network, client } = context;
+  const { db, chain, client } = context;
   const address = poolAddress.toLowerCase() as `0x${string}`;
 
   const existingPool = await db.find(pool, {
     address,
-    chainId: BigInt(network.chainId),
+    chainId: BigInt(chain.id),
   });
 
   if (existingPool) {
@@ -70,7 +70,7 @@ export const insertPoolIfNotExists = async ({
     quoteToken: numeraireAddr,
     price,
     type: "v3",
-    chainId: BigInt(network.chainId),
+    chainId: BigInt(chain.id),
     fee,
     dollarLiquidity: 0n,
     dailyVolume: address,
@@ -98,18 +98,18 @@ export const updatePool = async ({
   update?: Partial<typeof pool.$inferInsert>;
   event?: string;
 }) => {
-  const { db, network } = context;
+  const { db, chain } = context;
   const address = poolAddress.toLowerCase() as `0x${string}`;
 
   // First check if the pool exists before attempting to update
   const existingPool = await db.find(pool, {
     address,
-    chainId: BigInt(network.chainId),
+    chainId: BigInt(chain.id),
   });
 
   if (!existingPool) {
     console.warn(
-      `Pool ${address} not found in chain ${network.chainId} in event ${event}, skipping update`
+      `Pool ${address} not found in chain ${chain.id} in event ${event}, skipping update`
     );
     return;
   }
@@ -117,7 +117,7 @@ export const updatePool = async ({
   await db
     .update(pool, {
       address,
-      chainId: BigInt(network.chainId),
+      chainId: BigInt(chain.id),
     })
     .set({
       ...update,
@@ -139,12 +139,12 @@ export const insertZoraPoolIfNotExists = async ({
   context: Context;
   ethPrice: bigint;
 }): Promise<typeof pool.$inferSelect> => {
-  const { db, network } = context;
+  const { db, chain } = context;
   const address = poolAddress.toLowerCase() as `0x${string}`;
 
   const existingPool = await db.find(pool, {
     address,
-    chainId: BigInt(network.chainId),
+    chainId: BigInt(chain.id),
   });
 
   if (existingPool) {
@@ -200,7 +200,7 @@ export const insertZoraPoolIfNotExists = async ({
     quoteToken: numeraireAddr,
     price,
     type: "v3",
-    chainId: BigInt(network.chainId),
+    chainId: BigInt(chain.id),
     fee,
     dollarLiquidity: dollarLiquidity ?? 0n,
     dailyVolume: address,
@@ -227,11 +227,11 @@ export const insertPoolIfNotExistsV4 = async ({
   context: Context;
   totalSupply?: bigint;
 }): Promise<typeof pool.$inferSelect> => {
-  const { db, network, client } = context;
+  const { db, chain, client } = context;
   const address = poolAddress.toLowerCase() as `0x${string}`;
   const existingPool = await db.find(pool, {
     address,
-    chainId: BigInt(network.chainId),
+    chainId: BigInt(chain.id),
   });
 
   if (existingPool) {
@@ -285,7 +285,7 @@ export const insertPoolIfNotExistsV4 = async ({
     ...poolData,
     ...slot0Data,
     address,
-    chainId: BigInt(network.chainId),
+    chainId: BigInt(chain.id),
     tick: slot0Data.tick,
     sqrtPrice: slot0Data.sqrtPrice,
     liquidity: liquidity,

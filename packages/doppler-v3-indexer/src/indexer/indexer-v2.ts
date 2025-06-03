@@ -22,7 +22,7 @@ import { zeroAddress } from "viem";
 import { configs } from "@app/types";
 
 ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
-  const { db, network } = context;
+  const { db, chain } = context;
   const { timestamp } = event.block;
   const { amount0In, amount1In, amount0Out, amount1Out } = event.args;
 
@@ -44,9 +44,7 @@ ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
   });
   let v2isToken0 = isToken0;
   if (quoteToken.toLowerCase() == zeroAddress) {
-    const weth = configs[
-      network.name
-    ].shared.weth.toLowerCase() as `0x${string}`;
+    const weth = configs[chain.name].shared.weth.toLowerCase() as `0x${string}`;
     v2isToken0 = baseToken.toLowerCase() < weth.toLowerCase();
   }
 

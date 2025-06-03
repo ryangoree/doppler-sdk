@@ -1,11 +1,7 @@
 import { ponder } from "ponder:registry";
 import { getV4PoolData } from "@app/utils/v4-utils";
 import { insertTokenIfNotExists } from "./shared/entities/token";
-import {
-  computeMarketCap,
-  fetchEthPrice,
-  updateMarketCap,
-} from "./shared/oracle";
+import { computeMarketCap, fetchEthPrice } from "./shared/oracle";
 import { insertPoolIfNotExistsV4, updatePool } from "./shared/entities/pool";
 import { insertOrUpdateDailyVolume } from "./shared/timeseries";
 import { insertAssetIfNotExists, updateAsset } from "./shared/entities/asset";
@@ -227,12 +223,6 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
         totalTokensSold,
         marketCapUsd,
       },
-    }),
-    updateMarketCap({
-      assetAddress: baseToken,
-      price,
-      ethPrice,
-      context,
     }),
     addAndUpdateV4PoolPriceHistory({
       pool: address,
@@ -464,12 +454,6 @@ ponder.on("UniswapV4Pool2:Swap", async ({ event, context }) => {
         totalTokensSold,
         marketCapUsd,
       },
-    }),
-    updateMarketCap({
-      assetAddress: baseToken,
-      price,
-      ethPrice,
-      context,
     }),
     addAndUpdateV4PoolPriceHistory({
       pool: address,

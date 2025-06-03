@@ -18,10 +18,10 @@ export const insertTokenIfNotExists = async ({
   isDerc20?: boolean;
   poolAddress?: Address;
 }): Promise<typeof token.$inferSelect> => {
-  const { db, network } = context;
+  const { db, chain } = context;
 
   let multiCallAddress = {};
-  if (network.name == "ink") {
+  if (chain.name == "ink") {
     multiCallAddress = {
       multicallAddress: "0xcA11bde05977b3631167028862bE2a173976CA11",
     };
@@ -40,7 +40,7 @@ export const insertTokenIfNotExists = async ({
     return existingToken;
   }
 
-  const chainId = BigInt(network.chainId);
+  const chainId = BigInt(chain.id);
 
   // ignore pool field for native tokens
   if (address == zeroAddress) {

@@ -38,7 +38,7 @@ export const updateUser = async ({
   context: Context;
   update: Partial<typeof user.$inferInsert>;
 }) => {
-  const { db, network } = context;
+  const { db } = context;
   const userIdAddr = userId.toLowerCase() as `0x${string}`;
 
   await db

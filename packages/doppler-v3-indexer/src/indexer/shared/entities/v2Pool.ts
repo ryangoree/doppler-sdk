@@ -17,7 +17,7 @@ export const insertV2PoolIfNotExists = async ({
   timestamp: bigint;
   context: Context;
 }): Promise<typeof v2Pool.$inferSelect> => {
-  const { db, network } = context;
+  const { db, chain } = context;
 
   const ethPrice = await fetchEthPrice(timestamp, context);
 
@@ -57,7 +57,7 @@ export const insertV2PoolIfNotExists = async ({
 
   return await db.insert(v2Pool).values({
     address: migrationPoolAddr,
-    chainId: BigInt(network.chainId),
+    chainId: BigInt(chain.id),
     baseToken: assetId,
     quoteToken: numeraireId,
     reserveBaseToken: isToken0 ? reserve0 : reserve1,
