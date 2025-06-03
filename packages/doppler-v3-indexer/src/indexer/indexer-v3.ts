@@ -280,6 +280,18 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
   const timestamp = event.block.timestamp;
   const { amount0, amount1, sqrtPriceX96 } = event.args;
 
+  if (
+    event.transaction.hash ==
+    "0x0b3b269d7453d44ac8c37c1dc9aa590c0bfd361f05d54ff729712add66f73f72"
+  ) {
+    console.log("Swap", {
+      address,
+      amount0,
+      amount1,
+      sqrtPriceX96,
+    });
+  }
+
   const ethPrice = await fetchEthPrice(event.block.timestamp, context);
 
   const {
