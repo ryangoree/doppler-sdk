@@ -197,7 +197,6 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
 });
 
 ponder.on("UniswapV3Pool:Burn", async ({ event, context }) => {
-  console.log("UniswapV3Pool:Burn");
   const address = event.log.address.toLowerCase() as `0x${string}`;
   const timestamp = event.block.timestamp;
   const { tickLower, tickUpper, owner, amount, amount0, amount1 } = event.args;
