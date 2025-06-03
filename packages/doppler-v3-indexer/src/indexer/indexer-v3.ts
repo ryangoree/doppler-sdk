@@ -23,7 +23,6 @@ import {
   insertActivePoolsBlobIfNotExists,
   tryAddActivePool,
 } from "./shared/scheduledJobs";
-import { pool } from "ponder:schema";
 
 ponder.on("UniswapV3Initializer:Create", async ({ event, context }) => {
   const { poolOrHook, asset, numeraire } = event.args;
@@ -89,6 +88,20 @@ ponder.on("UniswapV3Initializer:Create", async ({ event, context }) => {
     tokenOut: numeraireId,
     ethPrice,
     marketCapUsd,
+  });
+});
+
+ponder.on("UniswapV3Pool:Initialize", async ({ event, context }) => {
+  const address = event.log.address.toLowerCase() as `0x${string}`;
+  const timestamp = event.block.timestamp;
+
+  const ethPrice = await fetchEthPrice(timestamp, context);
+
+  await insertPoolIfNotExists({
+    poolAddress: address,
+    timestamp,
+    context,
+    ethPrice,
   });
 });
 
