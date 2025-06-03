@@ -23,6 +23,7 @@ import {
   insertActivePoolsBlobIfNotExists,
   tryAddActivePool,
 } from "./shared/scheduledJobs";
+import { pool } from "ponder:schema";
 
 ponder.on("UniswapV3Initializer:Create", async ({ event, context }) => {
   const { poolOrHook, asset, numeraire } = event.args;
@@ -408,6 +409,13 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
       percentDayChange: priceChangeInfo,
     },
   });
+  if (address === "0xFE6A23D6d9f006a1F29224C5545Fb969aB41d1b3".toLowerCase()) {
+    const updatedPool = await context.db.find(pool, {
+      address: address,
+      chainId: BigInt(context.chain.id),
+    });
+    console.log("updatedPool", updatedPool);
+  }
   await updateAsset({
     assetAddress: asset.address,
     context,
