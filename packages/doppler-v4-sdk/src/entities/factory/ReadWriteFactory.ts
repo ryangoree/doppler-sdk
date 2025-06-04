@@ -13,13 +13,12 @@ import {
   Hash,
   Hex,
   keccak256,
-  parseEther,
+  zeroAddress,
 } from 'viem';
 import { ReadFactory, AirlockABI } from './ReadFactory';
 import { CreateParams } from './types';
 import { DERC20Bytecode, DopplerBytecode } from '@/abis';
 import { DAY_SECONDS, DEFAULT_PD_SLUGS, WAD_STRING } from '@/constants';
-import { encodeSqrtRatioX96, TickMath } from '@uniswap/v3-sdk';
 import { DopplerData, TokenFactoryData } from './types';
 import {
   DopplerPreDeploymentConfig,
@@ -41,13 +40,53 @@ const flags = BigInt(
     (1 << 5) // BEFORE_DONATE_FLAG
 );
 
+/**
+ * ReadWriteFactory provides read and write operations for the Doppler V4 airlock contract (we use the Factory naming convention for clarity).
+ * Extends ReadFactory with additional capabilities for creating pools and migrating assets.
+ *
+ * Key features:
+ * - Create new Doppler pools with tokens, hooks, and governance
+ * - Mine optimal hook addresses with required flags
+ * - Migrate liquidity from existing assets
+ * - Build complete configuration parameters for pool deployment
+ * - Automatic gamma calculation for optimal price discovery
+ * - Parameter validation and error handling
+ *
+ * @example
+ * ```typescript
+ * const factory = new ReadWriteFactory(airlockAddress, drift);
+ *
+ * const { createParams, hook, token } = factory.buildConfig({
+ *   name: "MyToken",
+ *   symbol: "MTK",
+ *   totalSupply: parseEther("1000000"),
+ *   // ... other parameters
+ * }, addresses);
+ *
+ * const simulation = await factory.simulateCreate(createParams);
+ * const txHash = await factory.create(createParams);
+ * ```
+ */
 export class ReadWriteFactory extends ReadFactory {
   declare airlock: ReadWriteContract<AirlockABI>;
 
+  /**
+   * Creates a new ReadWriteFactory instance
+   * @param address - The address of the factory contract
+   * @param drift - A Drift instance with read-write adapter capabilities
+   */
   constructor(address: Address, drift: Drift<ReadWriteAdapter>) {
     super(address, drift);
   }
 
+  /**
+   * Computes the CREATE2 address for a contract deployment
+   * @param salt - The salt used for deployment
+   * @param initCodeHash - Hash of the initialization code
+   * @param deployer - Address of the deploying contract
+   * @returns The computed contract address
+   * @private
+   */
   private computeCreate2Address(
     salt: Hash,
     initCodeHash: Hash,
@@ -60,6 +99,12 @@ export class ReadWriteFactory extends ReadFactory {
     return getAddress(`0x${keccak256(encoded).slice(-40)}`);
   }
 
+  /**
+   * Validates basic parameters for pool deployment
+   * @param params - The deployment configuration to validate
+   * @throws {Error} When validation fails
+   * @private
+   */
   private validateBasicParams(params: DopplerPreDeploymentConfig) {
     if (!params.name || !params.symbol) {
       throw new Error('Name and symbol are required');
@@ -69,12 +114,6 @@ export class ReadWriteFactory extends ReadFactory {
     }
     if (params.numTokensToSell <= 0) {
       throw new Error('Number of tokens to sell must be positive');
-    }
-    if (
-      params.priceRange &&
-      params.priceRange.startPrice <= params.priceRange.endPrice
-    ) {
-      throw new Error('Invalid price range');
     }
     if (params.tickRange) {
       if (params.tickRange.startTick >= params.tickRange.endTick) {
@@ -92,27 +131,19 @@ export class ReadWriteFactory extends ReadFactory {
     }
   }
 
-  private computeTicks(priceRange: PriceRange, tickSpacing: number) {
-    const startPriceString = parseEther(
-      priceRange.startPrice.toString()
-    ).toString();
-    const endPriceString = parseEther(
-      priceRange.endPrice.toString()
-    ).toString();
-
-    const minSqrtRatio = encodeSqrtRatioX96(WAD_STRING, startPriceString);
-    const maxSqrtRatio = encodeSqrtRatioX96(WAD_STRING, endPriceString);
-
-    const startTick = TickMath.getTickAtSqrtRatio(minSqrtRatio);
-    const endTick = TickMath.getTickAtSqrtRatio(maxSqrtRatio);
-
-    return {
-      startTick: Math.floor(startTick / tickSpacing) * tickSpacing,
-      endTick: Math.ceil(endTick / tickSpacing) * tickSpacing,
-    };
-  }
-
-  // Computes optimal gamma parameter based on price range and time parameters
+  /**
+   * Computes optimal gamma parameter based on price range and time parameters
+   * Gamma determines how much the price can move per epoch during the sale.
+   *
+   * @param startTick - Starting tick of the price range
+   * @param endTick - Ending tick of the price range
+   * @param durationDays - Duration of the sale in days
+   * @param epochLength - Length of each epoch in seconds
+   * @param tickSpacing - Tick spacing for the pool
+   * @returns The optimal gamma value
+   * @throws {Error} If computed gamma is not divisible by tick spacing
+   * @private
+   */
   private computeOptimalGamma(
     startTick: number,
     endTick: number,
@@ -137,6 +168,13 @@ export class ReadWriteFactory extends ReadFactory {
     return gamma;
   }
 
+  /**
+   * Encodes token factory initialization data
+   * @param tokenConfig - Basic token configuration (name, symbol, URI)
+   * @param vestingConfig - Vesting schedule configuration
+   * @returns Encoded data for token factory initialization
+   * @private
+   */
   private encodeTokenFactoryData(
     tokenConfig: { name: string; symbol: string; tokenURI: string },
     vestingConfig: {
@@ -168,6 +206,14 @@ export class ReadWriteFactory extends ReadFactory {
     );
   }
 
+  /**
+   * Encodes custom LP liquidity migrator data
+   * @param customLPConfig - Configuration for custom LP migration
+   * @param customLPConfig.customLPWad - Amount of custom LP tokens
+   * @param customLPConfig.customLPRecipient - Recipient of custom LP tokens
+   * @param customLPConfig.lockupPeriod - Lockup period for the tokens
+   * @returns Encoded migrator data
+   */
   public encodeCustomLPLiquidityMigratorData(customLPConfig: {
     customLPWad: bigint;
     customLPRecipient: Address;
@@ -183,6 +229,36 @@ export class ReadWriteFactory extends ReadFactory {
     );
   }
 
+  /**
+   * Builds complete configuration for creating a new Doppler pool
+   *
+   * This method:
+   * 1. Validates all input parameters
+   * 2. Converts price ranges to tick ranges if needed
+   * 3. Computes optimal gamma if not provided
+   * 4. Mines hook and token addresses with proper flags
+   * 5. Encodes all factory data
+   *
+   * @param params - Pre-deployment configuration parameters
+   * @param addresses - Addresses of required Doppler V4 contracts
+   * @returns Object containing createParams, hook address, and token address
+   *
+   * @throws {Error} When validation fails or required parameters are missing
+   *
+   * @example
+   * ```typescript
+   * const config = factory.buildConfig({
+   *   name: "Community Token",
+   *   symbol: "COMM",
+   *   totalSupply: parseEther("1000000"),
+   *   numTokensToSell: parseEther("500000"),
+   *   priceRange: { startPrice: 0.001, endPrice: 0.01 },
+   *   duration: 30,
+   *   epochLength: 3600,
+   *   // ... other required parameters
+   * }, addresses);
+   * ```
+   */
   public buildConfig(
     params: DopplerPreDeploymentConfig,
     addresses: DopplerV4Addresses
@@ -193,32 +269,11 @@ export class ReadWriteFactory extends ReadFactory {
   } {
     this.validateBasicParams(params);
 
-    if (!params.priceRange && !params.tickRange) {
-      throw new Error('Price range or tick range must be provided');
-    }
-
-    let startTick;
-    let endTick;
-    if (params.priceRange) {
-      const ticks = this.computeTicks(params.priceRange, params.tickSpacing);
-      startTick = ticks.startTick;
-      endTick = ticks.endTick;
-    }
-
-    if (params.tickRange) {
-      startTick = params.tickRange.startTick;
-      endTick = params.tickRange.endTick;
-    }
-
-    if (!startTick || !endTick) {
-      throw new Error('Start tick or end tick not found');
-    }
-
     const gamma =
       params.gamma ??
       this.computeOptimalGamma(
-        startTick,
-        endTick,
+        params.tickRange.startTick,
+        params.tickRange.endTick,
         params.duration,
         params.epochLength,
         params.tickSpacing
@@ -263,8 +318,8 @@ export class ReadWriteFactory extends ReadFactory {
       maximumProceeds: params.maxProceeds,
       startingTime: BigInt(startTime),
       endingTime: BigInt(endTime),
-      startingTick: startTick,
-      endingTick: endTick,
+      startingTick: params.tickRange.startTick,
+      endingTick: params.tickRange.endTick,
       epochLength: BigInt(params.epochLength),
       gamma,
       isToken0: false,
@@ -273,6 +328,8 @@ export class ReadWriteFactory extends ReadFactory {
       tickSpacing: params.tickSpacing,
     };
 
+    const numeraire = params.numeraire ?? zeroAddress;
+
     const [salt, hook, token, poolInitializerData, tokenFactoryData] =
       this.mineHookAddress({
         airlock,
@@ -280,8 +337,7 @@ export class ReadWriteFactory extends ReadFactory {
         deployer: dopplerDeployer,
         initialSupply: params.totalSupply,
         numTokensToSell: params.numTokensToSell,
-        numeraire:
-          params.numeraire ?? '0x0000000000000000000000000000000000000000',
+        numeraire,
         tokenFactory,
         tokenFactoryData: tokenParams,
         poolInitializer: v4Initializer,
@@ -307,8 +363,7 @@ export class ReadWriteFactory extends ReadFactory {
       createParams: {
         initialSupply: params.totalSupply,
         numTokensToSell: params.numTokensToSell,
-        numeraire:
-          params.numeraire ?? '0x0000000000000000000000000000000000000000',
+        numeraire,
         tokenFactory,
         tokenFactoryData,
         governanceFactory: governanceFactory,
@@ -327,8 +382,16 @@ export class ReadWriteFactory extends ReadFactory {
 
   /**
    * Mines a salt and hook address with the appropriate flags
-   * @param params Create parameters
-   * @returns [salt, hook, token, poolInitializerData, tokenFactoryData]
+   *
+   * This method iterates through possible salt values to find a combination that:
+   * - Produces a hook address with required Doppler flags
+   * - Maintains proper token ordering relative to numeraire
+   * - Ensures deterministic deployment addresses
+   *
+   * @param params - Parameters for hook address mining
+   * @returns Tuple of [salt, hook address, token address, pool data, token data]
+   * @throws {Error} If no valid salt can be found within the search limit
+   * @private
    */
   private mineHookAddress(params: {
     airlock: Address;
@@ -521,10 +584,26 @@ export class ReadWriteFactory extends ReadFactory {
   }
 
   /**
-   * Creates a new doppler token, hook, migrator, and governance
-   * @param params Create parameters
-   * @param options Optional contract write options
-   * @returns Transaction hash
+   * Creates a new Doppler pool with token, hook, migrator, and governance
+   *
+   * This is the main method for deploying a complete Doppler ecosystem:
+   * - Deploys the token contract with vesting schedules
+   * - Deploys the hook contract for price discovery
+   * - Initializes the Uniswap V4 pool
+   * - Sets up governance contracts
+   * - Configures liquidity migration
+   *
+   * @param params - Complete creation parameters from buildConfig()
+   * @param options - Optional transaction options (gas, value, etc.)
+   * @returns Promise resolving to the transaction hash
+   *
+   * @example
+   * ```typescript
+   * const { createParams } = factory.buildConfig(config, addresses);
+   * const txHash = await factory.create(createParams, {
+   *   gasLimit: 5000000n
+   * });
+   * ```
    */
   public async create(
     params: CreateParams,
@@ -534,9 +613,22 @@ export class ReadWriteFactory extends ReadFactory {
   }
 
   /**
-   * Simulates a pool creation transaction
-   * @param params Create parameters
-   * @returns Simulation results
+   * Simulates a pool creation transaction without executing it
+   *
+   * Useful for:
+   * - Estimating gas costs
+   * - Validating parameters before execution
+   * - Getting return values from the creation
+   * - Testing deployment configurations
+   *
+   * @param params - Complete creation parameters from buildConfig()
+   * @returns Promise resolving to simulation results including gas estimates
+   *
+   * @example
+   * ```typescript
+   * const simulation = await factory.simulateCreate(createParams);
+   * console.log(`Estimated gas: ${simulation.request.gas}`);
+   * ```
    */
   public async simulateCreate(
     params: CreateParams
@@ -545,10 +637,21 @@ export class ReadWriteFactory extends ReadFactory {
   }
 
   /**
-   * Migrates an asset's liquidity
-   * @param asset The address of the asset to migrate
-   * @param options Optional contract write options
-   * @returns Transaction hash
+   * Migrates liquidity for an existing asset from the current pool to the migration pool
+   *
+   * This method triggers the migration process for assets that have completed their
+   * price discovery phase. The migration moves liquidity from the Doppler hook pool
+   * to a standard Uniswap V4 pool for ongoing trading.
+   *
+   * @param asset - The address of the asset token to migrate
+   * @param options - Optional transaction options (gas, value, etc.)
+   * @returns Promise resolving to the transaction hash
+   *
+   * @example
+   * ```typescript
+   * // Migrate liquidity after price discovery ends
+   * const txHash = await factory.migrate(tokenAddress);
+   * ```
    */
   public async migrate(
     asset: Address,

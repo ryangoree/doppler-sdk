@@ -67,12 +67,6 @@ export interface PoolKey {
   hooks: Address;
 }
 
-// this maps onto the tick range, startingTick -> endingTick
-export interface PriceRange {
-  startPrice: number;
-  endPrice: number;
-}
-
 export interface TickRange {
   startTick: number;
   endTick: number;
@@ -94,8 +88,7 @@ export interface DopplerPreDeploymentConfig {
 
   // Price parameters
   numeraire?: Address; // defaults to native if unset
-  priceRange?: PriceRange;
-  tickRange?: TickRange;
+  tickRange: TickRange;
   tickSpacing: number;
   gamma?: number; // allow gamma to be passed directly instead of computed
   fee: number; // In bips
