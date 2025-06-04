@@ -18,13 +18,9 @@ import {
 import { ReadFactory, AirlockABI } from './ReadFactory';
 import { CreateParams } from './types';
 import { DERC20Bytecode, DopplerBytecode } from '@/abis';
-import { DAY_SECONDS, DEFAULT_PD_SLUGS, WAD_STRING } from '@/constants';
+import { DAY_SECONDS, DEFAULT_PD_SLUGS } from '@/constants';
 import { DopplerData, TokenFactoryData } from './types';
-import {
-  DopplerPreDeploymentConfig,
-  DopplerV4Addresses,
-  PriceRange,
-} from '@/types';
+import { DopplerPreDeploymentConfig, DopplerV4Addresses } from '@/types';
 
 const DEFAULT_INITIAL_VOTING_DELAY = 7200;
 const DEFAULT_INITIAL_VOTING_PERIOD = 50400;

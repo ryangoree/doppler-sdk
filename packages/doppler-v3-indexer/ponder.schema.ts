@@ -238,8 +238,8 @@ export const userAsset = onchainTable(
   "user_asset",
   (t) => ({
     chainId: t.bigint().notNull(),
-    userId: t.text().notNull(),
-    assetId: t.text().notNull(),
+    userId: t.hex().notNull(),
+    assetId: t.hex().notNull(),
     balance: t.bigint().notNull(),
     createdAt: t.bigint().notNull(),
     lastInteraction: t.bigint().notNull(),
