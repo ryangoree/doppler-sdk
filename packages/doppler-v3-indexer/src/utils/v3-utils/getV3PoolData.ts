@@ -44,12 +44,11 @@ export const getV3PoolData = async ({
 }: {
   address: Address;
   context: Context;
-  isZora?: boolean;
 }): Promise<V3PoolData> => {
-  const { client, network } = context;
+  const { client, chain } = context;
 
   let multiCallAddress = {};
-  if (network.name == "ink") {
+  if (chain.name == "ink") {
     multiCallAddress = {
       multicallAddress: "0xcA11bde05977b3631167028862bE2a173976CA11",
     };
@@ -140,10 +139,10 @@ export const getV3PoolReserves = async ({
   address: Address;
   context: Context;
 }) => {
-  const { client, network } = context;
+  const { client, chain } = context;
 
   let multiCallAddress = {};
-  if (network.name == "ink") {
+  if (chain.name == "ink") {
     multiCallAddress = {
       multicallAddress: "0xcA11bde05977b3631167028862bE2a173976CA11",
     };
@@ -184,7 +183,7 @@ const getPoolState = async ({
   context: Context;
 }) => {
   const { client } = context;
-  const { v3Initializer } = configs[context.network.name].v3;
+  const { v3Initializer } = configs[context.chain.name].v3;
 
   const poolData = await client.readContract({
     abi: UniswapV3InitializerABI,
@@ -283,10 +282,10 @@ export const getZoraPoolData = async ({
   reserve0: bigint;
   reserve1: bigint;
 }> => {
-  const { client, network } = context;
+  const { client, chain } = context;
 
   let multiCallAddress = {};
-  if (network.name == "ink") {
+  if (chain.name == "ink") {
     multiCallAddress = {
       multicallAddress: "0xcA11bde05977b3631167028862bE2a173976CA11",
     };

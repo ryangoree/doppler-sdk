@@ -1,11 +1,7 @@
 import { ponder } from "ponder:registry";
 import { getV4PoolData } from "@app/utils/v4-utils";
 import { insertTokenIfNotExists } from "./shared/entities/token";
-import {
-  computeMarketCap,
-  fetchEthPrice,
-  updateMarketCap,
-} from "./shared/oracle";
+import { computeMarketCap, fetchEthPrice } from "./shared/oracle";
 import { insertPoolIfNotExistsV4, updatePool } from "./shared/entities/pool";
 import { insertOrUpdateDailyVolume } from "./shared/timeseries";
 import { insertAssetIfNotExists, updateAsset } from "./shared/entities/asset";
@@ -104,17 +100,6 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
       ethPrice,
       context,
     }),
-    insertOrUpdateDailyVolume({
-      poolAddress: poolAddress,
-      amountIn: 0n,
-      amountOut: 0n,
-      timestamp,
-      context,
-      tokenIn: assetAddress,
-      tokenOut: numeraireAddress,
-      ethPrice,
-      marketCapUsd,
-    }),
     addCheckpoint({
       poolAddress: poolAddress,
       asset: assetAddress,
@@ -127,6 +112,18 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
       context,
     }),
   ]);
+
+  await insertOrUpdateDailyVolume({
+    poolAddress: poolAddress,
+    amountIn: 0n,
+    amountOut: 0n,
+    timestamp,
+    context,
+    tokenIn: assetAddress,
+    tokenOut: numeraireAddress,
+    ethPrice,
+    marketCapUsd,
+  });
 });
 
 ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
@@ -140,6 +137,7 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
     quoteToken,
     totalProceeds: totalProceedsPrev,
     totalTokensSold: totalTokensSoldPrev,
+    marketCapUsd: marketCapUsdPrev,
   } = await insertPoolIfNotExistsV4({
     poolAddress: address,
     timestamp,
@@ -195,11 +193,16 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
     ethPrice,
   });
 
-  const marketCapUsd = computeMarketCap({
-    price,
-    ethPrice,
-    totalSupply,
-  });
+  let marketCapUsd;
+  if (price == 340256786698763678858396856460488307819979090561464864775n) {
+    marketCapUsd = marketCapUsdPrev;
+  } else {
+    marketCapUsd = computeMarketCap({
+      price,
+      ethPrice,
+      totalSupply,
+    });
+  }
 
   await Promise.all([
     updateAsset({
@@ -221,11 +224,236 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
         marketCapUsd,
       },
     }),
-    updateMarketCap({
-      assetAddress: baseToken,
+    addAndUpdateV4PoolPriceHistory({
+      pool: address,
+      timestamp: Number(event.block.timestamp),
+      marketCapUsd,
+      context,
+    }),
+    insertOrUpdateBuckets({
+      poolAddress: address,
       price,
+      timestamp,
       ethPrice,
       context,
+    }),
+  ]);
+
+  await insertOrUpdateDailyVolume({
+    poolAddress: address,
+    amountIn,
+    amountOut,
+    timestamp,
+    context,
+    tokenIn,
+    tokenOut,
+    ethPrice,
+    marketCapUsd,
+  });
+});
+
+ponder.on("UniswapV4Initializer2:Create", async ({ event, context }) => {
+  const { poolOrHook, asset: assetId, numeraire } = event.args;
+  const { block } = event;
+  const timestamp = block.timestamp;
+
+  const poolAddress = poolOrHook.toLowerCase() as `0x${string}`;
+  const assetAddress = assetId.toLowerCase() as `0x${string}`;
+  const numeraireAddress = numeraire.toLowerCase() as `0x${string}`;
+
+  const creatorAddress = event.transaction.from.toLowerCase() as `0x${string}`;
+
+  const [baseToken, , , , , ,] = await Promise.all([
+    insertTokenIfNotExists({
+      tokenAddress: assetAddress,
+      creatorAddress,
+      timestamp,
+      context,
+      isDerc20: true,
+      poolAddress: poolAddress,
+    }),
+    insertTokenIfNotExists({
+      tokenAddress: numeraireAddress,
+      creatorAddress,
+      timestamp,
+      context,
+      isDerc20: false,
+    }),
+    insertCheckpointBlobIfNotExist({
+      context,
+    }),
+    insertV4PoolPriceHistoryIfNotExists({
+      pool: poolAddress,
+      context,
+    }),
+    insertActivePoolsBlobIfNotExists({
+      context,
+    }),
+  ]);
+
+  const { totalSupply } = baseToken;
+
+  const [ethPrice, v4PoolData, poolEntity, v4Config] = await Promise.all([
+    fetchEthPrice(timestamp, context),
+    getV4PoolData({
+      hook: poolAddress,
+      context,
+    }),
+    insertPoolIfNotExistsV4({
+      poolAddress,
+      timestamp,
+      context,
+      totalSupply,
+    }),
+    insertV4ConfigIfNotExists({
+      hookAddress: poolAddress,
+      context,
+    }),
+  ]);
+
+  const price = poolEntity.price;
+  const marketCapUsd = computeMarketCap({
+    price,
+    ethPrice,
+    totalSupply,
+  });
+
+  await Promise.all([
+    insertAssetIfNotExists({
+      assetAddress: assetAddress,
+      timestamp,
+      context,
+      marketCapUsd,
+    }),
+    insertOrUpdateBuckets({
+      poolAddress: poolAddress,
+      price: poolEntity.price,
+      timestamp,
+      ethPrice,
+      context,
+    }),
+    addCheckpoint({
+      poolAddress: poolAddress,
+      asset: assetAddress,
+      totalSupply,
+      startingTime: v4Config.startingTime,
+      endingTime: v4Config.endingTime,
+      epochLength: v4Config.epochLength,
+      isToken0: v4Config.isToken0,
+      poolKey: v4PoolData.poolKey,
+      context,
+    }),
+  ]);
+  await insertOrUpdateDailyVolume({
+    poolAddress: poolAddress,
+    amountIn: 0n,
+    amountOut: 0n,
+    timestamp,
+    context,
+    tokenIn: assetAddress,
+    tokenOut: numeraireAddress,
+    ethPrice,
+    marketCapUsd,
+  });
+});
+
+ponder.on("UniswapV4Pool2:Swap", async ({ event, context }) => {
+  const address = event.log.address.toLowerCase() as `0x${string}`;
+  const { currentTick, totalProceeds, totalTokensSold } = event.args;
+  const timestamp = event.block.timestamp;
+
+  const {
+    isToken0,
+    baseToken,
+    quoteToken,
+    totalProceeds: totalProceedsPrev,
+    totalTokensSold: totalTokensSoldPrev,
+    marketCapUsd: marketCapUsdPrev,
+  } = await insertPoolIfNotExistsV4({
+    poolAddress: address,
+    timestamp,
+    context,
+  });
+
+  let amountIn = 0n;
+  let amountOut = 0n;
+  let tokenIn = baseToken;
+  let tokenOut = baseToken;
+  if (totalProceeds > totalProceedsPrev) {
+    amountIn = totalProceeds - totalProceedsPrev;
+    amountOut = totalTokensSoldPrev - totalTokensSold;
+    tokenIn = quoteToken;
+    tokenOut = baseToken;
+  } else {
+    amountIn = totalTokensSoldPrev - totalTokensSold;
+    amountOut = totalProceedsPrev - totalProceeds;
+    tokenIn = baseToken;
+    tokenOut = quoteToken;
+  }
+
+  const { totalSupply } = await insertTokenIfNotExists({
+    tokenAddress: baseToken,
+    creatorAddress: event.transaction.from,
+    timestamp,
+    context,
+  });
+
+  const price = computeV4Price({
+    isToken0,
+    currentTick,
+    baseTokenDecimals: 18,
+  });
+
+  const [v4PoolData, ethPrice, reserves] = await Promise.all([
+    getV4PoolData({
+      hook: address,
+      context,
+    }),
+    fetchEthPrice(event.block.timestamp, context),
+    getReservesV4({
+      hook: address,
+      context,
+    }),
+  ]);
+  const { token0Reserve, token1Reserve } = reserves;
+
+  const dollarLiquidity = computeDollarLiquidity({
+    assetBalance: isToken0 ? token0Reserve : token1Reserve,
+    quoteBalance: isToken0 ? token1Reserve : token0Reserve,
+    price,
+    ethPrice,
+  });
+
+  let marketCapUsd;
+  if (price == 340256786698763678858396856460488307819979090561464864775n) {
+    marketCapUsd = marketCapUsdPrev;
+  } else {
+    marketCapUsd = computeMarketCap({
+      price,
+      ethPrice,
+      totalSupply,
+    });
+  }
+
+  await Promise.all([
+    updateAsset({
+      assetAddress: baseToken,
+      context,
+      update: {
+        liquidityUsd: dollarLiquidity,
+        marketCapUsd,
+      },
+    }),
+    updatePool({
+      poolAddress: address,
+      context,
+      update: {
+        liquidity: v4PoolData.liquidity,
+        dollarLiquidity: dollarLiquidity,
+        totalProceeds,
+        totalTokensSold,
+        marketCapUsd,
+      },
     }),
     addAndUpdateV4PoolPriceHistory({
       pool: address,
@@ -240,16 +468,17 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
       ethPrice,
       context,
     }),
-    insertOrUpdateDailyVolume({
-      poolAddress: address,
-      amountIn,
-      amountOut,
-      timestamp,
-      context,
-      tokenIn,
-      tokenOut,
-      ethPrice,
-      marketCapUsd,
-    }),
   ]);
+
+  await insertOrUpdateDailyVolume({
+    poolAddress: address,
+    amountIn,
+    amountOut,
+    timestamp,
+    context,
+    tokenIn,
+    tokenOut,
+    ethPrice,
+    marketCapUsd,
+  });
 });

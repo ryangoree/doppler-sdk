@@ -18,7 +18,7 @@ export const insertZoraAssetIfNotExists = async ({
   numeraireAddress: Address;
   context: Context;
 }) => {
-  const { db, network } = context;
+  const { db, chain } = context;
   const address = assetAddress.toLowerCase() as `0x${string}`;
 
   const existingAsset = await db.find(asset, {
@@ -29,7 +29,7 @@ export const insertZoraAssetIfNotExists = async ({
     return existingAsset;
   }
 
-  const chainId = BigInt(network.chainId);
+  const chainId = BigInt(chain.id);
 
   const zoraAssetData = {
     numeraire: numeraireAddress,
@@ -76,7 +76,7 @@ export const insertAssetIfNotExists = async ({
   marketCapUsd?: bigint;
   isZora?: boolean;
 }) => {
-  const { db, network } = context;
+  const { db, chain } = context;
   const address = assetAddress.toLowerCase() as `0x${string}`;
 
   const existingAsset = await db.find(asset, {
@@ -87,7 +87,7 @@ export const insertAssetIfNotExists = async ({
     return existingAsset;
   }
 
-  const chainId = BigInt(network.chainId);
+  const chainId = BigInt(chain.id);
   const assetData = await getAssetData(assetAddress, context);
 
   const poolAddress = assetData.pool.toLowerCase() as `0x${string}`;

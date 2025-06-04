@@ -10,7 +10,7 @@ export const insertV4PoolPriceHistoryIfNotExists = async ({
   pool: Address;
   context: Context;
 }) => {
-  const { db, network } = context;
+  const { db, chain } = context;
 
   const existingConfig = await db.find(v4PoolPriceHistory, {
     pool,
@@ -22,7 +22,7 @@ export const insertV4PoolPriceHistoryIfNotExists = async ({
 
   return await db.insert(v4PoolPriceHistory).values({
     pool,
-    chainId: BigInt(network.chainId),
+    chainId: BigInt(chain.id),
     history: {},
   });
 };
@@ -73,6 +73,10 @@ export const addAndUpdateV4PoolPriceHistory = async ({
           Number(formatEther(BigInt(earliestMarketCap)))) /
           Number(formatEther(BigInt(earliestMarketCap)))) *
         100;
+
+  if (dayChangeUsd > 1000000000) {
+    return;
+  }
 
   await Promise.all([
     updateV4PoolPriceHistory({

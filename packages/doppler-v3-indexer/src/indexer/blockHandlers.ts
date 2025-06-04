@@ -83,12 +83,12 @@ ponder.on("MetricRefresherBase:block", async ({ event, context }) => {
 });
 
 ponder.on("ChainlinkEthPriceFeed:block", async ({ event, context }) => {
-  const { db, client, network } = context;
+  const { db, client, chain } = context;
   const { timestamp } = event.block;
 
   const latestAnswer = await client.readContract({
     abi: ChainlinkOracleABI,
-    address: configs[network.name].oracle.chainlinkEth,
+    address: configs[chain.name].oracle.chainlinkEth,
     functionName: "latestAnswer",
   });
 

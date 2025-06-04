@@ -66,8 +66,8 @@ export const getV4PoolData = async ({
   hook: Address;
   context: Context;
 }): Promise<V4PoolData> => {
-  const { stateView } = configs[context.network.name].v4;
-  const { client, network } = context;
+  const { stateView } = configs[context.chain.name].v4;
+  const { client, chain } = context;
 
   const poolConfig = await getV4PoolConfig({ hook, context });
 
@@ -88,7 +88,7 @@ export const getV4PoolData = async ({
   const poolId = getPoolId(key);
 
   let multiCallAddress = {};
-  if (network.name == "ink") {
+  if (chain.name == "ink") {
     multiCallAddress = {
       multicallAddress: "0xcA11bde05977b3631167028862bE2a173976CA11",
     };
@@ -278,7 +278,7 @@ export const getReservesV4 = async ({
   context: Context;
 }) => {
   const { client } = context;
-  const { stateView } = configs[context.network.name].v4;
+  const { stateView } = configs[context.chain.name].v4;
 
   const poolKey = await client.readContract({
     abi: DopplerABI,
@@ -430,8 +430,8 @@ export const getLatestSqrtPrice = async ({
   amount0: bigint;
   amount1: bigint;
 }> => {
-  const { client, network } = context;
-  const lensQuoter = configs[network.name].v4.dopplerLens;
+  const { client, chain } = context;
+  const lensQuoter = configs[chain.name].v4.dopplerLens;
 
   const input: QuoteExactSingleParams = {
     poolKey,

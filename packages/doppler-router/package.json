@@ -1,6 +1,6 @@
 {
   "name": "doppler-router",
-  "version": "1.0.7",
+  "version": "1.0.11",
   "description": "Router utilities for Doppler protocol interactions",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

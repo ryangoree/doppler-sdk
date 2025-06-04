@@ -10,16 +10,15 @@ import {
   insertOrUpdateDailyVolume,
   compute24HourPriceChange,
 } from "./shared/timeseries";
-import { insertPoolIfNotExists, updatePool } from "./shared/entities/pool";
+import {
+  fetchExistingPool,
+  insertPoolIfNotExists,
+  updatePool,
+} from "./shared/entities/pool";
 import { insertAssetIfNotExists, updateAsset } from "./shared/entities/asset";
 import { computeDollarLiquidity } from "@app/utils/computeDollarLiquidity";
 import { insertOrUpdateBuckets } from "./shared/timeseries";
-import { getV3PoolReserves } from "@app/utils/v3-utils/getV3PoolData";
-import {
-  computeMarketCap,
-  fetchEthPrice,
-  updateMarketCap,
-} from "./shared/oracle";
+import { computeMarketCap, fetchEthPrice } from "./shared/oracle";
 import {
   insertActivePoolsBlobIfNotExists,
   tryAddActivePool,
@@ -34,9 +33,16 @@ ponder.on("UniswapV3Initializer:Create", async ({ event, context }) => {
   const assetId = asset.toLowerCase() as `0x${string}`;
   const poolOrHookId = poolOrHook.toLowerCase() as `0x${string}`;
 
-  const ethPrice = await fetchEthPrice(event.block.timestamp, context);
+  const ethPrice = await fetchEthPrice(timestamp, context);
 
-  const baseTokenEntity = await insertTokenIfNotExists({
+  const { price } = await insertPoolIfNotExists({
+    poolAddress: poolOrHookId,
+    context,
+    timestamp,
+    ethPrice,
+  });
+
+  const { totalSupply } = await insertTokenIfNotExists({
     tokenAddress: assetId,
     creatorAddress: creatorId,
     timestamp,
@@ -44,14 +50,12 @@ ponder.on("UniswapV3Initializer:Create", async ({ event, context }) => {
     isDerc20: true,
   });
 
-  const { totalSupply } = baseTokenEntity;
-
-  const { price } = await insertPoolIfNotExists({
-    poolAddress: poolOrHookId,
+  await insertTokenIfNotExists({
+    tokenAddress: numeraireId,
+    creatorAddress: creatorId,
     timestamp,
     context,
-    ethPrice,
-    totalSupply,
+    isDerc20: false,
   });
 
   const marketCapUsd = computeMarketCap({
@@ -60,30 +64,21 @@ ponder.on("UniswapV3Initializer:Create", async ({ event, context }) => {
     totalSupply,
   });
 
-  await Promise.all([
-    insertActivePoolsBlobIfNotExists({
-      context,
-    }),
-    insertTokenIfNotExists({
-      tokenAddress: numeraireId,
-      creatorAddress: creatorId,
-      timestamp,
-      context,
-      isDerc20: false,
-    }),
-    insertAssetIfNotExists({
-      assetAddress: assetId,
-      timestamp,
-      context,
-    }),
-    insertOrUpdateBuckets({
-      poolAddress: poolOrHookId,
-      price,
-      timestamp,
-      ethPrice,
-      context,
-    }),
-  ]);
+  await insertActivePoolsBlobIfNotExists({
+    context,
+  });
+  await insertAssetIfNotExists({
+    assetAddress: assetId,
+    timestamp,
+    context,
+  });
+  await insertOrUpdateBuckets({
+    poolAddress: poolOrHookId,
+    price,
+    timestamp,
+    ethPrice,
+    context,
+  });
 
   await insertOrUpdateDailyVolume({
     poolAddress: poolOrHookId,
@@ -98,27 +93,50 @@ ponder.on("UniswapV3Initializer:Create", async ({ event, context }) => {
   });
 });
 
+ponder.on("UniswapV3Pool:Initialize", async ({ event, context }) => {
+  const address = event.log.address.toLowerCase() as `0x${string}`;
+  const timestamp = event.block.timestamp;
+
+  const ethPrice = await fetchEthPrice(timestamp, context);
+
+  await insertPoolIfNotExists({
+    poolAddress: address,
+    timestamp,
+    context,
+    ethPrice,
+  });
+});
+
 ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
   const address = event.log.address.toLowerCase() as `0x${string}`;
-  const { tickLower, tickUpper, amount, owner } = event.args;
+  const { tickLower, tickUpper, amount, owner, amount0, amount1 } = event.args;
   const timestamp = event.block.timestamp;
 
   const ethPrice = await fetchEthPrice(timestamp, context);
 
   const {
     baseToken,
-    quoteToken,
     isToken0,
     price,
     liquidity,
+    reserves0,
+    reserves1,
     graduationThreshold,
   } = await insertPoolIfNotExists({
     poolAddress: address,
     timestamp,
     context,
     ethPrice,
-    event: "UniswapV3Pool:Mint",
   });
+
+  const reserveAssetBefore = isToken0 ? reserves0 : reserves1;
+  const reserveQuoteBefore = isToken0 ? reserves1 : reserves0;
+
+  const reserveAssetDelta = isToken0 ? amount0 : amount1;
+  const reserveQuoteDelta = isToken0 ? amount1 : amount0;
+
+  const nextReservesAsset = reserveAssetBefore + reserveAssetDelta;
+  const nextReservesQuote = reserveQuoteBefore + reserveQuoteDelta;
 
   await insertAssetIfNotExists({
     assetAddress: baseToken,
@@ -126,22 +144,9 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
     context,
   });
 
-  const token0 = isToken0 ? baseToken : quoteToken;
-  const token1 = isToken0 ? quoteToken : baseToken;
-
-  const { reserve0, reserve1 } = await getV3PoolReserves({
-    address,
-    token0,
-    token1,
-    context,
-  });
-
-  const assetBalance = isToken0 ? reserve0 : reserve1;
-  const quoteBalance = isToken0 ? reserve1 : reserve0;
-
-  const liquidityUsd = await computeDollarLiquidity({
-    assetBalance,
-    quoteBalance,
+  const liquidityUsd = computeDollarLiquidity({
+    assetBalance: nextReservesAsset,
+    quoteBalance: nextReservesQuote,
     price,
     ethPrice,
   });
@@ -174,16 +179,9 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
       graduationThreshold: graduationThreshold + graduationThresholdDelta,
       liquidity: liquidity + amount,
       dollarLiquidity: liquidityUsd,
-      reserves0: reserve0,
-      reserves1: reserve1,
+      reserves0: reserves0 + amount0,
+      reserves1: reserves1 + amount1,
     },
-  });
-
-  await updateMarketCap({
-    assetAddress: baseToken,
-    price,
-    ethPrice,
-    context,
   });
 
   const positionEntity = await insertPositionIfNotExists({
@@ -212,41 +210,37 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
 ponder.on("UniswapV3Pool:Burn", async ({ event, context }) => {
   const address = event.log.address.toLowerCase() as `0x${string}`;
   const timestamp = event.block.timestamp;
-  const { tickLower, tickUpper, owner, amount } = event.args;
+  const { tickLower, tickUpper, owner, amount, amount0, amount1 } = event.args;
 
   const ethPrice = await fetchEthPrice(timestamp, context);
 
   const {
     baseToken,
-    quoteToken,
     isToken0,
     price,
     liquidity,
+    reserves0,
+    reserves1,
     graduationThreshold,
   } = await insertPoolIfNotExists({
     poolAddress: address,
     timestamp,
     context,
     ethPrice,
-    event: "UniswapV3Pool:Burn",
   });
 
-  const token0 = isToken0 ? baseToken : quoteToken;
-  const token1 = isToken0 ? quoteToken : baseToken;
+  const reserveAssetBefore = isToken0 ? reserves0 : reserves1;
+  const reserveQuoteBefore = isToken0 ? reserves1 : reserves0;
 
-  const { reserve0, reserve1 } = await getV3PoolReserves({
-    address,
-    token0,
-    token1,
-    context,
-  });
+  const reserveAssetDelta = isToken0 ? amount0 : amount1;
+  const reserveQuoteDelta = isToken0 ? amount1 : amount0;
 
-  const assetBalance = isToken0 ? reserve0 : reserve1;
-  const quoteBalance = isToken0 ? reserve1 : reserve0;
+  const nextReservesAsset = reserveAssetBefore - reserveAssetDelta;
+  const nextReservesQuote = reserveQuoteBefore - reserveQuoteDelta;
 
   const liquidityUsd = computeDollarLiquidity({
-    assetBalance,
-    quoteBalance,
+    assetBalance: nextReservesAsset,
+    quoteBalance: nextReservesQuote,
     price,
     ethPrice,
   });
@@ -268,39 +262,33 @@ ponder.on("UniswapV3Pool:Burn", async ({ event, context }) => {
     context,
   });
 
-  await Promise.all([
-    updateMarketCap({
-      assetAddress: baseToken,
-      price,
-      ethPrice,
-      context,
-    }),
-    updateAsset({
-      assetAddress: baseToken,
-      context,
-      update: {
-        liquidityUsd,
-      },
-    }),
-    updatePool({
-      poolAddress: address,
-      context,
-      update: {
-        liquidity: liquidity - amount,
-        dollarLiquidity: liquidityUsd,
-        graduationThreshold: graduationThreshold - graduationThresholdDelta,
-      },
-    }),
-    updatePosition({
-      poolAddress: address,
-      tickLower,
-      tickUpper,
-      context,
-      update: {
-        liquidity: positionEntity.liquidity - amount,
-      },
-    }),
-  ]);
+  await updateAsset({
+    assetAddress: baseToken,
+    context,
+    update: {
+      liquidityUsd,
+    },
+  });
+  await updatePool({
+    poolAddress: address,
+    context,
+    update: {
+      liquidity: liquidity - amount,
+      dollarLiquidity: liquidityUsd,
+      graduationThreshold: graduationThreshold - graduationThresholdDelta,
+      reserves0: reserves0 - amount0,
+      reserves1: reserves1 - amount1,
+    },
+  });
+  await updatePosition({
+    poolAddress: address,
+    tickLower,
+    tickUpper,
+    context,
+    update: {
+      liquidity: positionEntity.liquidity - amount,
+    },
+  });
 });
 
 ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
@@ -339,8 +327,14 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
     decimals: 18,
   });
 
-  const assetBalance = isToken0 ? reserves0 + amount0 : reserves1 + amount1;
-  const quoteBalance = isToken0 ? reserves1 + amount1 : reserves0 + amount0;
+  const reserveAssetBefore = isToken0 ? reserves0 : reserves1;
+  const reserveQuoteBefore = isToken0 ? reserves1 : reserves0;
+
+  const reserveAssetDelta = isToken0 ? amount0 : amount1;
+  const reserveQuoteDelta = isToken0 ? amount1 : amount0;
+
+  const nextReservesAsset = reserveAssetBefore + reserveAssetDelta;
+  const nextReservesQuote = reserveQuoteBefore + reserveQuoteDelta;
 
   const token0 = isToken0 ? baseToken : quoteToken;
   const token1 = isToken0 ? quoteToken : baseToken;
@@ -367,11 +361,24 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
   const quoteDelta = isToken0 ? amount1 - fee1 : amount0 - fee0;
 
   const dollarLiquidity = computeDollarLiquidity({
-    assetBalance,
-    quoteBalance,
+    assetBalance: nextReservesAsset,
+    quoteBalance: nextReservesQuote,
     price,
     ethPrice,
   });
+
+  if (dollarLiquidity < 0) {
+    console.log("Dollar liquidity is negative", {
+      address,
+      dollarLiquidity,
+      assetBalance: nextReservesAsset,
+      quoteBalance: nextReservesQuote,
+      reserves0,
+      reserves1,
+      price,
+      transactionHash: event.transaction.hash,
+    });
+  }
 
   const { totalSupply } = await insertTokenIfNotExists({
     tokenAddress: baseToken,
@@ -394,53 +401,54 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
     context,
   });
 
-  await Promise.all([
-    tryAddActivePool({
-      poolAddress: address,
-      lastSwapTimestamp: Number(timestamp),
-      context,
-    }),
-    insertOrUpdateBuckets({
-      poolAddress: address,
+  await tryAddActivePool({
+    poolAddress: address,
+    lastSwapTimestamp: Number(timestamp),
+    context,
+  });
+  await insertOrUpdateBuckets({
+    poolAddress: address,
+    price,
+    timestamp,
+    ethPrice,
+    context,
+  });
+  await insertOrUpdateDailyVolume({
+    poolAddress: address,
+    amountIn,
+    amountOut,
+    timestamp,
+    context,
+    tokenIn,
+    tokenOut,
+    ethPrice,
+    marketCapUsd,
+  });
+  await updatePool({
+    poolAddress: address,
+    context,
+    update: {
+      sqrtPrice: sqrtPriceX96,
       price,
-      timestamp,
-      ethPrice,
-      context,
-    }),
-    insertOrUpdateDailyVolume({
-      poolAddress: address,
-      amountIn,
-      amountOut,
-      timestamp,
-      context,
-      tokenIn,
-      tokenOut,
-      ethPrice,
+      dollarLiquidity,
+      totalFee0: totalFee0 + fee0,
+      totalFee1: totalFee1 + fee1,
+      graduationBalance: graduationBalance + quoteDelta,
+      lastRefreshed: timestamp,
+      lastSwapTimestamp: timestamp,
       marketCapUsd,
-    }),
-    updatePool({
-      poolAddress: address,
-      context,
-      update: {
-        price,
-        dollarLiquidity,
-        totalFee0: totalFee0 + fee0,
-        totalFee1: totalFee1 + fee1,
-        graduationBalance: graduationBalance + quoteDelta,
-        lastRefreshed: timestamp,
-        lastSwapTimestamp: timestamp,
-        marketCapUsd,
-        percentDayChange: priceChangeInfo,
-      },
-    }),
-    updateAsset({
-      assetAddress: asset.address,
-      context,
-      update: {
-        liquidityUsd: dollarLiquidity,
-        percentDayChange: priceChangeInfo,
-        marketCapUsd,
-      },
-    }),
-  ]);
+      percentDayChange: priceChangeInfo,
+      reserves0: reserves0 + amount0,
+      reserves1: reserves1 + amount1,
+    },
+  });
+  await updateAsset({
+    assetAddress: asset.address,
+    context,
+    update: {
+      liquidityUsd: dollarLiquidity,
+      percentDayChange: priceChangeInfo,
+      marketCapUsd,
+    },
+  });
 });

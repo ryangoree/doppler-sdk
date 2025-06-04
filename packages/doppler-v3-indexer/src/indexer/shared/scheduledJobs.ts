@@ -19,8 +19,8 @@ export const insertActivePoolsBlobIfNotExists = async ({
 }: {
   context: Context;
 }) => {
-  const { db, network } = context;
-  const chainId = network.chainId;
+  const { db, chain } = context;
+  const chainId = chain.id;
 
   const existingConfig = await db.find(activePoolsBlob, {
     chainId: BigInt(chainId),
@@ -43,8 +43,8 @@ export const updateActivePoolsBlob = async ({
   context: Context;
   update?: Partial<typeof activePoolsBlob.$inferInsert>;
 }) => {
-  const { db, network } = context;
-  const chainId = network.chainId;
+  const { db, chain } = context;
+  const chainId = chain.id;
 
   await db
     .update(activePoolsBlob, {
@@ -64,8 +64,8 @@ export const tryAddActivePool = async ({
   lastSwapTimestamp: number;
   context: Context;
 }) => {
-  const { db, network } = context;
-  const chainId = network.chainId;
+  const { db, chain } = context;
+  const chainId = chain.id;
 
   const existingData = await db.find(activePoolsBlob, {
     chainId: BigInt(chainId),
@@ -104,8 +104,8 @@ export const refreshActivePoolsBlob = async ({
   context: Context;
   timestamp: number;
 }) => {
-  const { db, network } = context;
-  const chainId = network.chainId;
+  const { db, chain } = context;
+  const chainId = chain.id;
 
   const existingBlob = await db.find(activePoolsBlob, {
     chainId: BigInt(chainId),

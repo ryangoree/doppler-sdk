@@ -29,40 +29,6 @@ export const fetchEthPrice = async (
   return ethPriceData.price;
 };
 
-export const updateMarketCap = async ({
-  assetAddress,
-  price,
-  ethPrice,
-  context,
-}: {
-  assetAddress: Address;
-  price: bigint;
-  ethPrice: bigint;
-  context: Context;
-}) => {
-  const { client } = context;
-
-  const totalSupply = await client.readContract({
-    address: assetAddress,
-    abi: DERC20ABI,
-    functionName: "totalSupply",
-  });
-
-  const marketCapUsd = computeMarketCap({
-    price,
-    ethPrice,
-    totalSupply,
-  });
-
-  await updateAsset({
-    assetAddress,
-    context,
-    update: {
-      marketCapUsd,
-    },
-  });
-};
-
 export const computeMarketCap = ({
   price,
   ethPrice,
