@@ -9,7 +9,7 @@ import {
 } from "@delvtech/drift";
 import { ReadFactory, AirlockABI } from "./ReadFactory";
 import { BundlerAbi } from "../../abis";
-import { Address, encodeAbiParameters, Hex, parseEther } from "viem";
+import { Address, encodeAbiParameters, Hex, parseEther, toHex } from "viem";
 
 // Constants for default configuration values
 export const ONE_YEAR_IN_SECONDS = 365 * 24 * 60 * 60;
@@ -502,12 +502,17 @@ export class ReadWriteFactory extends ReadFactory {
     let createParams!: CreateParams;
     let asset!: Address;
 
+    let i = 0n;
     while (isToken0) {
       const encoded = this.encode(params);
       createParams = encoded.createParams;
+      createParams.salt = this.generateRandomSalt(
+        toHex(BigInt(params.userAddress) + BigInt(i))
+      ) as Hex;
       const simulateResult = await this.simulateCreate(createParams);
       asset = simulateResult.asset;
       isToken0 = Number(asset) < Number(params.numeraire);
+      i++;
     }
 
     return createParams;
