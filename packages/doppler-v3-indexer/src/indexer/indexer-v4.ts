@@ -33,6 +33,15 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
 
   const creatorAddress = event.transaction.from.toLowerCase() as `0x${string}`;
 
+  const v4PoolData = await getV4PoolData({
+    hook: poolAddress,
+    context,
+  });
+
+  if (!v4PoolData) {
+    return;
+  }
+
   const [baseToken, , , , , ,] = await Promise.all([
     insertTokenIfNotExists({
       tokenAddress: assetAddress,
@@ -63,12 +72,8 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
 
   const { totalSupply } = baseToken;
 
-  const [ethPrice, v4PoolData, poolEntity, v4Config] = await Promise.all([
+  const [ethPrice, poolEntity, v4Config] = await Promise.all([
     fetchEthPrice(timestamp, context),
-    getV4PoolData({
-      hook: poolAddress,
-      context,
-    }),
     insertPoolIfNotExistsV4({
       poolAddress,
       timestamp,
@@ -80,6 +85,10 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
       context,
     }),
   ]);
+
+  if (!v4Config) {
+    return;
+  }
 
   const price = poolEntity.price;
   const marketCapUsd = computeMarketCap({
@@ -106,10 +115,10 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
       poolAddress: poolAddress,
       asset: assetAddress,
       totalSupply,
-      startingTime: v4Config.startingTime,
-      endingTime: v4Config.endingTime,
-      epochLength: v4Config.epochLength,
-      isToken0: v4Config.isToken0,
+      startingTime: v4Config?.startingTime,
+      endingTime: v4Config?.endingTime,
+      epochLength: v4Config?.epochLength,
+      isToken0: v4Config?.isToken0,
       poolKey: v4PoolData.poolKey,
       context,
     }),
@@ -132,6 +141,15 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
   const address = event.log.address.toLowerCase() as `0x${string}`;
   const { currentTick, totalProceeds, totalTokensSold } = event.args;
   const timestamp = event.block.timestamp;
+
+  const v4PoolData = await getV4PoolData({
+    hook: address,
+    context,
+  });
+
+  if (!v4PoolData) {
+    return;
+  }
 
   const {
     isToken0,
@@ -175,11 +193,7 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
     baseTokenDecimals: 18,
   });
 
-  const [v4PoolData, ethPrice, reserves] = await Promise.all([
-    getV4PoolData({
-      hook: address,
-      context,
-    }),
+  const [ethPrice, reserves] = await Promise.all([
     fetchEthPrice(event.block.timestamp, context),
     getReservesV4({
       hook: address,
@@ -263,6 +277,14 @@ ponder.on("UniswapV4Initializer2:Create", async ({ event, context }) => {
   const assetAddress = assetId.toLowerCase() as `0x${string}`;
   const numeraireAddress = numeraire.toLowerCase() as `0x${string}`;
 
+  const v4PoolData = await getV4PoolData({
+    hook: poolAddress,
+    context,
+  });
+  if (!v4PoolData) {
+    return;
+  }
+
   const creatorAddress = event.transaction.from.toLowerCase() as `0x${string}`;
 
   const [baseToken, , , , , ,] = await Promise.all([
@@ -295,12 +317,8 @@ ponder.on("UniswapV4Initializer2:Create", async ({ event, context }) => {
 
   const { totalSupply } = baseToken;
 
-  const [ethPrice, v4PoolData, poolEntity, v4Config] = await Promise.all([
+  const [ethPrice, poolEntity, v4Config] = await Promise.all([
     fetchEthPrice(timestamp, context),
-    getV4PoolData({
-      hook: poolAddress,
-      context,
-    }),
     insertPoolIfNotExistsV4({
       poolAddress,
       timestamp,
@@ -319,6 +337,10 @@ ponder.on("UniswapV4Initializer2:Create", async ({ event, context }) => {
     ethPrice,
     totalSupply,
   });
+
+  if (!v4Config) {
+    return;
+  }
 
   await Promise.all([
     insertAssetIfNotExists({
@@ -366,6 +388,14 @@ ponder.on("UniswapV4Pool2:Swap", async ({ event, context }) => {
   const timestamp = event.block.timestamp;
 
   const chainId = chain.id;
+
+  const v4PoolData = await getV4PoolData({
+    hook: address,
+    context,
+  });
+  if (!v4PoolData) {
+    return;
+  }
 
   const {
     isToken0,
@@ -417,11 +447,7 @@ ponder.on("UniswapV4Pool2:Swap", async ({ event, context }) => {
     baseTokenDecimals: 18,
   });
 
-  const [v4PoolData, reserves] = await Promise.all([
-    getV4PoolData({
-      hook: address,
-      context,
-    }),
+  const [reserves] = await Promise.all([
     getReservesV4({
       hook: address,
       context,

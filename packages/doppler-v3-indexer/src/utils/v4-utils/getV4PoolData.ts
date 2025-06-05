@@ -65,11 +65,15 @@ export const getV4PoolData = async ({
 }: {
   hook: Address;
   context: Context;
-}): Promise<V4PoolData> => {
+}): Promise<V4PoolData | undefined> => {
   const { stateView } = configs[context.chain.name].v4;
   const { client, chain } = context;
 
   const poolConfig = await getV4PoolConfig({ hook, context });
+
+  if (!poolConfig) {
+    return;
+  }
 
   const poolKey = await client.readContract({
     abi: DopplerABI,
@@ -156,7 +160,7 @@ export const getV4PoolConfig = async ({
 }: {
   hook: Address;
   context: Context;
-}): Promise<V4PoolConfig> => {
+}): Promise<V4PoolConfig | undefined> => {
   const { client } = context;
 
   const [
@@ -252,7 +256,7 @@ export const getV4PoolConfig = async ({
     isToken0.result == undefined ||
     !numPdSlugs.result
   ) {
-    throw new Error("Failed to get pool config");
+    return;
   }
 
   return {
