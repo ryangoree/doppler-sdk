@@ -26,6 +26,15 @@ ponder.on("Airlock:Migrate", async ({ event, context }) => {
       migrated: true,
     },
   });
+
+  await updatePool({
+    poolAddress: assetId,
+    context,
+    update: {
+      migratedAt: timestamp,
+      migrated: true,
+    },
+  });
 });
 
 ponder.on("DERC20:Transfer", async ({ event, context }) => {

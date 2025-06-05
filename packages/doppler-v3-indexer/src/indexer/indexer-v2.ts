@@ -20,6 +20,7 @@ import { CHAINLINK_ETH_DECIMALS } from "@app/utils/constants";
 import { tryAddActivePool } from "./shared/scheduledJobs";
 import { zeroAddress } from "viem";
 import { configs } from "@app/types";
+import { insertSwapIfNotExists } from "./shared/entities/swap";
 
 ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
   const { db, chain } = context;
@@ -59,6 +60,17 @@ ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
   const assetBalance = v2isToken0 ? reserve0 : reserve1;
   const quoteBalance = v2isToken0 ? reserve1 : reserve0;
 
+  let type = "buy";
+  if (v2isToken0 && amount0In > 0n) {
+    type = "buy";
+  } else if (!v2isToken0 && amount0In > 0n) {
+    type = "sell";
+  } else if (v2isToken0 && amount0In < 0n) {
+    type = "sell";
+  } else if (!v2isToken0 && amount0In < 0n) {
+    type = "buy";
+  }
+
   const price = computeV2Price({ assetBalance, quoteBalance });
 
   const { totalSupply } = await insertTokenIfNotExists({
@@ -87,6 +99,22 @@ ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
     price,
     ethPrice,
   });
+
+  let quoteDelta = 0n;
+  if (v2isToken0) {
+    if (amount1In > 0n) {
+      quoteDelta = amount1In;
+    } else {
+      quoteDelta = amount1Out;
+    }
+  } else {
+    if (amount0In > 0n) {
+      quoteDelta = amount0In
+    } else {
+      quoteDelta = amount0Out;
+    }
+  }
+  const swapValueUsd = quoteDelta * ethPrice / CHAINLINK_ETH_DECIMALS;
 
   await Promise.all([
     tryAddActivePool({
@@ -125,6 +153,19 @@ ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
         percentDayChange: priceChange,
         marketCapUsd,
       },
+    }),
+    insertSwapIfNotExists({
+      txHash: event.transaction.hash,
+      timestamp,
+      context,
+      pool: parentPool,
+      asset: baseToken,
+      chainId: BigInt(chain.id),
+      type,
+      user: event.transaction.from,
+      amountIn,
+      amountOut,
+      usdPrice: swapValueUsd,
     }),
     updatePool({
       poolAddress: parentPool,

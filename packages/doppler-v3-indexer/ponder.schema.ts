@@ -205,6 +205,8 @@ export const pool = onchainTable(
     totalTokensSold: t.bigint().notNull().default(0n),
     holderCount: t.integer().notNull().default(0),
     marketCapUsd: t.bigint().notNull().default(0n),
+    migrated: t.boolean().notNull().default(false),
+    migratedAt: t.bigint(),
   }),
   (table) => ({
     pk: primaryKey({
@@ -271,12 +273,31 @@ export const v4PoolPriceHistory = onchainTable(
   })
 );
 
+export const swap = onchainTable("swap", (t) => ({
+  txHash: t.hex().notNull().primaryKey(),
+  pool: t.hex().notNull(),
+  asset: t.hex().notNull(),
+  chainId: t.bigint().notNull(),
+  amountIn: t.bigint().notNull(),
+  amountOut: t.bigint().notNull(),
+  type: t.text().notNull(), // buy or sell
+  user: t.hex().notNull(),
+  timestamp: t.bigint().notNull(),
+  usdPrice: t.bigint().notNull(),
+}));
+
 /* RELATIONS */
 
 // assets have one pool
 export const assetRelations = relations(asset, ({ one, many }) => ({
   pool: one(pool, { fields: [asset.poolAddress], references: [pool.address] }),
   userAssets: many(userAsset),
+  swaps: many(swap),
+}));
+
+export const swapRelations = relations(swap, ({ one }) => ({
+  pool: one(pool, { fields: [swap.pool], references: [pool.address] }),
+  asset: one(asset, { fields: [swap.asset], references: [asset.address] }),
 }));
 
 // pools have many positions
@@ -300,6 +321,7 @@ export const poolRelations = relations(pool, ({ one, many }) => ({
   }),
   hourBuckets: many(hourBucket),
   hourBucketUsds: many(hourBucketUsd),
+  swaps: many(swap),
 }));
 
 export const v2PoolRelations = relations(v2Pool, ({ one }) => ({

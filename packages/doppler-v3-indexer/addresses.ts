@@ -25,7 +25,7 @@ const unichainStartBlock = 8536880;
 const v4UnichainStartBlock = 17686805;
 
 const baseSepoliaStartBlock = 22668126;
-const v4BaseSepoliaStartBlock = 26008121;
+const v4BaseSepoliaStartBlock = 26638492;
 
 const inkStartBlock = 9500879;
 const v4InkStartBlock = 14937170;
@@ -179,23 +179,23 @@ export const configs: IndexerConfigs = {
       factory: "0x7Ae58f10f7849cA6F5fB71b7f45CB416c9204b1e" as Address,
     },
     v3: {
-      v3Initializer: "0xB5E6Ee3baA67004259846Ad151bB0A2D2836f12d" as Address,
+      v3Initializer: "0xEB6E6Cd5858a87908B2914AE9CC7bbBE91e70067" as Address,
     },
     v4: {
       poolManager: "0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408" as Address,
-      dopplerDeployer: "0xbC6352F1FE2f5790A4a16ff79C9cB5caD238b258" as Address,
-      v4Initializer: "0x29D70863ee13542241ab4263A272289FD6E5F625" as Address,
-      dopplerLens: "0xB801D2f908fa59b70931F16DC8c2Df093686bA80" as Address,
+      dopplerDeployer: "0x7980Be665C8011A413c598F82fa6f95feACa2e1e" as Address,
+      v4Initializer: zeroAddress,
+      dopplerLens: "0x2f36392BfB0A9082b624Ed65f6059E586fB4C530" as Address,
       stateView: "0x571291b572ed32ce6751a2cb2486ebee8defb9b4" as Address,
-      v4Initializer2: zeroAddress,
+      v4Initializer2: "0x511b44b4cC8Cb80223F203E400309b010fEbFAec" as Address,
     },
     shared: {
-      airlock: "0xBE5ad4efe4085AF00FD4a9E30b754cDcEFE9C6Ad" as Address,
-      tokenFactory: "0xF140987E88208b1ef48Cf5D39448Cc82EdF1f51e" as Address,
+      airlock: "0x7E6cF695a8BeA4b2bF94FbB5434a7da3f39A2f8D" as Address,
+      tokenFactory: "0xAd62fc9eEbbDC2880c0d4499B0660928d13405cE" as Address,
       universalRouter: "0x95273d871c8156636e114b63797d78D7E1720d81" as Address,
       governanceFactory:
-        "0x482055c3a704610b22e77ACc29863F92bcFd4298" as Address,
-      migrator: "0xD797E6af3211aE124B8EDff69db21FFe6C659104" as Address,
+        "0xff02a43A90c25941f8c5f4917eaD79EB33C3011C" as Address,
+      migrator: "0x8f4814999D2758ffA69689A37B0ce225C1eEcBFf" as Address,
       weth: "0x4200000000000000000000000000000000000006" as Address,
     },
     oracle: oracleAddresses,

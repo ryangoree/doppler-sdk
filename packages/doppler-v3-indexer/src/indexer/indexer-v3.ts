@@ -11,7 +11,6 @@ import {
   compute24HourPriceChange,
 } from "./shared/timeseries";
 import {
-  fetchExistingPool,
   insertPoolIfNotExists,
   updatePool,
 } from "./shared/entities/pool";
@@ -23,6 +22,8 @@ import {
   insertActivePoolsBlobIfNotExists,
   tryAddActivePool,
 } from "./shared/scheduledJobs";
+import { insertSwapIfNotExists } from "./shared/entities/swap";
+import { CHAINLINK_ETH_DECIMALS, WAD } from "@app/utils/constants";
 
 ponder.on("UniswapV3Initializer:Create", async ({ event, context }) => {
   const { poolOrHook, asset, numeraire } = event.args;
@@ -292,11 +293,14 @@ ponder.on("UniswapV3Pool:Burn", async ({ event, context }) => {
 });
 
 ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
+  const { chain } = context;
   const address = event.log.address.toLowerCase() as `0x${string}`;
   const timestamp = event.block.timestamp;
   const { amount0, amount1, sqrtPriceX96 } = event.args;
 
   const ethPrice = await fetchEthPrice(event.block.timestamp, context);
+
+  const chainId = chain.id;
 
   const {
     isToken0,
@@ -358,6 +362,17 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
     fee0 = 0n;
   }
 
+  let type = "buy";
+  if (isToken0 && amount0 > 0n) {
+    type = "buy";
+  } else if (!isToken0 && amount0 > 0n) {
+    type = "sell";
+  } else if (isToken0 && amount0 < 0n) {
+    type = "sell";
+  } else if (!isToken0 && amount0 < 0n) {
+    type = "buy";
+  }
+
   const quoteDelta = isToken0 ? amount1 - fee1 : amount0 - fee0;
 
   const dollarLiquidity = computeDollarLiquidity({
@@ -366,19 +381,6 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
     price,
     ethPrice,
   });
-
-  if (dollarLiquidity < 0) {
-    console.log("Dollar liquidity is negative", {
-      address,
-      dollarLiquidity,
-      assetBalance: nextReservesAsset,
-      quoteBalance: nextReservesQuote,
-      reserves0,
-      reserves1,
-      price,
-      transactionHash: event.transaction.hash,
-    });
-  }
 
   const { totalSupply } = await insertTokenIfNotExists({
     tokenAddress: baseToken,
@@ -394,6 +396,8 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
     ethPrice,
     totalSupply,
   });
+
+  const swapValueUsd = reserveQuoteDelta * ethPrice / CHAINLINK_ETH_DECIMALS;
 
   const priceChangeInfo = await compute24HourPriceChange({
     poolAddress: address,
@@ -441,6 +445,19 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
       reserves0: reserves0 + amount0,
       reserves1: reserves1 + amount1,
     },
+  });
+  await insertSwapIfNotExists({
+    txHash: event.transaction.hash,
+    timestamp,
+    context,
+    pool: address,
+    asset: baseToken,
+    chainId: BigInt(chainId),
+    type,
+    user: event.transaction.from,
+    amountIn,
+    amountOut,
+    usdPrice: swapValueUsd,
   });
   await updateAsset({
     assetAddress: asset.address,
