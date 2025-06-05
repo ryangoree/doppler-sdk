@@ -12,7 +12,7 @@ ponder.on("Airlock:Migrate", async ({ event, context }) => {
   const { timestamp } = event.block;
   const assetId = event.args.asset.toLowerCase() as `0x${string}`;
 
-  await insertV2PoolIfNotExists({
+  const v2Pool = await insertV2PoolIfNotExists({
     assetAddress: assetId,
     timestamp,
     context,
@@ -28,7 +28,7 @@ ponder.on("Airlock:Migrate", async ({ event, context }) => {
   });
 
   await updatePool({
-    poolAddress: assetId,
+    poolAddress: v2Pool.parentPool,
     context,
     update: {
       migratedAt: timestamp,
