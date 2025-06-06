@@ -9,6 +9,7 @@ import {
 import { configs } from "addresses";
 import { computeV3Price } from "./computeV3Price";
 import { zeroAddress } from "viem";
+import { getMulticallOptions } from "@app/core/utils";
 
 export type PoolState = {
   asset: Address;
@@ -47,12 +48,7 @@ export const getV3PoolData = async ({
 }): Promise<V3PoolData> => {
   const { client, chain } = context;
 
-  let multiCallAddress = {};
-  if (chain.name == "ink") {
-    multiCallAddress = {
-      multicallAddress: "0xcA11bde05977b3631167028862bE2a173976CA11",
-    };
-  }
+  const multicallOptions = getMulticallOptions(chain);
 
   const [slot0, liquidity, token0, token1, fee] = await client.multicall({
     contracts: [
@@ -82,7 +78,7 @@ export const getV3PoolData = async ({
         functionName: "fee",
       },
     ],
-    ...multiCallAddress,
+    ...multicallOptions,
   });
 
   const poolState = await getPoolState({
@@ -141,12 +137,7 @@ export const getV3PoolReserves = async ({
 }) => {
   const { client, chain } = context;
 
-  let multiCallAddress = {};
-  if (chain.name == "ink") {
-    multiCallAddress = {
-      multicallAddress: "0xcA11bde05977b3631167028862bE2a173976CA11",
-    };
-  }
+  const multicallOptions = getMulticallOptions(chain);
 
   const [r0, r1] = await client.multicall({
     contracts: [
@@ -163,7 +154,7 @@ export const getV3PoolReserves = async ({
         args: [address],
       },
     ],
-    ...multiCallAddress,
+    ...multicallOptions,
   });
 
   const reserve0 = r0?.result ?? 0n;
@@ -284,12 +275,7 @@ export const getZoraPoolData = async ({
 }> => {
   const { client, chain } = context;
 
-  let multiCallAddress = {};
-  if (chain.name == "ink") {
-    multiCallAddress = {
-      multicallAddress: "0xcA11bde05977b3631167028862bE2a173976CA11",
-    };
-  }
+  const multicallOptions = getMulticallOptions(chain);
 
   const [slot0, liquidity, token0, token1, fee, reserve0, reserve1] =
     await client.multicall({
@@ -332,7 +318,7 @@ export const getZoraPoolData = async ({
           args: [address],
         },
       ],
-      ...multiCallAddress,
+      ...multicallOptions,
     });
 
   const slot0Data = {

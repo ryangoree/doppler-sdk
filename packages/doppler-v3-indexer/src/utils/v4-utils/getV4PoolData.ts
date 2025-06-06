@@ -15,6 +15,7 @@ import {
   getAmount1Delta,
 } from "../v3-utils/computeGraduationThreshold";
 import { configs } from "addresses";
+import { getMulticallOptions } from "@app/core/utils";
 
 export interface V4PoolConfig {
   numTokensToSell: bigint;
@@ -91,12 +92,8 @@ export const getV4PoolData = async ({
 
   const poolId = getPoolId(key);
 
-  let multiCallAddress = {};
-  if (chain.name == "ink") {
-    multiCallAddress = {
-      multicallAddress: "0xcA11bde05977b3631167028862bE2a173976CA11",
-    };
-  }
+  const multicallOptions = getMulticallOptions(chain);
+  
   const [slot0, liquidity] = await client.multicall({
     contracts: [
       {
@@ -112,7 +109,7 @@ export const getV4PoolData = async ({
         args: [poolId],
       },
     ],
-    ...multiCallAddress,
+    ...multicallOptions,
   });
 
   if (!slot0.result?.[3]) {
