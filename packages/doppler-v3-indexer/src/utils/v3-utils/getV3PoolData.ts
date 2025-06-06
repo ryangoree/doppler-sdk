@@ -10,34 +10,7 @@ import { configs } from "addresses";
 import { computeV3Price } from "./computeV3Price";
 import { zeroAddress } from "viem";
 import { getMulticallOptions } from "@app/core/utils";
-
-export type PoolState = {
-  asset: Address;
-  numeraire: Address;
-  tickLower: number;
-  tickUpper: number;
-  numPositions: number;
-  isInitialized: boolean;
-  isExited: boolean;
-  maxShareToBeSold: bigint;
-  maxShareToBond: bigint;
-  initializer: Address;
-};
-
-export type V3PoolData = {
-  slot0Data: {
-    sqrtPrice: bigint;
-    tick: number;
-  };
-  liquidity: bigint;
-  token0: Address;
-  token1: Address;
-  poolState: PoolState;
-  price: bigint;
-  fee: number;
-  reserve0: bigint;
-  reserve1: bigint;
-};
+import { PoolState, V3PoolData } from "@app/types/v3-types";
 
 export const getV3PoolData = async ({
   address,

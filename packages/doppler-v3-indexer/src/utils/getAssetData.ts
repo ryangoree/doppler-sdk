@@ -1,19 +1,7 @@
-import { Address, Hex, zeroAddress } from "viem";
+import { Hex, zeroAddress } from "viem";
 import { Context } from "ponder:registry";
 import { AirlockABI, ZoraCoinABI } from "@app/abis";
-
-export interface AssetData {
-  numeraire: Address;
-  timelock: Address;
-  governance: Address;
-  liquidityMigrator: Address;
-  poolInitializer: Address;
-  pool: Address;
-  migrationPool: Address;
-  numTokensToSell: bigint;
-  totalSupply: bigint;
-  integrator: Address;
-}
+import { AssetData } from "@app/types/shared";
 
 export const getAssetData = async (
   assetTokenAddr: Hex,

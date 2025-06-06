@@ -1,20 +1,7 @@
-import { Address } from "viem";
-import { Network } from "../chains/types";
-
-export type ContractConfig = {
-  abi: any;
-  chain: Partial<Record<Network, ChainContractConfig>>;
-};
-
-export type ChainContractConfig = {
-  startBlock: number;
-  address: Address | FactoryConfig;
-};
-
-export type FactoryConfig = {
-  address: Address;
-  event: any;
-  parameter: string;
-};
-
-export type ContractConfigMap = Record<string, ContractConfig>;
+// Re-export contract-related types from the centralized location
+export type { 
+  ContractConfig, 
+  ChainContractConfig, 
+  FactoryConfig, 
+  ContractConfigMap 
+} from "@app/types/config";

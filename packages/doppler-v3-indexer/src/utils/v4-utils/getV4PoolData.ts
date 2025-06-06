@@ -6,7 +6,14 @@ import {
   DopplerLensQuoterABI,
   StateViewABI,
 } from "@app/abis";
-import { PoolKey } from "@app/types/v4-types";
+import { 
+  PoolKey, 
+  V4PoolConfig, 
+  PositionData, 
+  Slot0Data, 
+  V4PoolData,
+  QuoteExactSingleParams 
+} from "@app/types/v4-types";
 import { getPoolId } from "./getPoolId";
 import { computeV4Price } from "./computeV4Price";
 import { getAssetData } from "../getAssetData";
@@ -16,49 +23,6 @@ import {
 } from "../v3-utils/computeGraduationThreshold";
 import { configs } from "addresses";
 import { getMulticallOptions } from "@app/core/utils";
-
-export interface V4PoolConfig {
-  numTokensToSell: bigint;
-  minProceeds: bigint;
-  maxProceeds: bigint;
-  startingTime: bigint;
-  endingTime: bigint;
-  startingTick: number;
-  endingTick: number;
-  epochLength: bigint;
-  gamma: number;
-  isToken0: boolean;
-  numPdSlugs: bigint;
-}
-
-export type PositionData = {
-  tickLower: number;
-  tickUpper: number;
-  liquidity: bigint;
-  salt: number;
-};
-
-export interface Slot0Data {
-  sqrtPrice: bigint;
-  tick: number;
-  protocolFee: number;
-  lpFee: number;
-}
-
-export interface V4PoolData {
-  poolKey: PoolKey;
-  slot0Data: Slot0Data;
-  liquidity: bigint;
-  price: bigint;
-  poolConfig: V4PoolConfig;
-}
-
-interface QuoteExactSingleParams {
-  poolKey: PoolKey;
-  zeroForOne: boolean;
-  exactAmount: bigint;
-  hookData: Hex;
-}
 
 export const getV4PoolData = async ({
   hook,
