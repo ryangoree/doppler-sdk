@@ -222,29 +222,31 @@ export const insertOrUpdateDailyVolume = async ({
       };
     });
 
-  await updatePool({
-    poolAddress,
-    context,
-    update: {
-      volumeUsd: computedVolumeUsd,
-      lastRefreshed: timestamp,
-      lastSwapTimestamp: timestamp,
-    },
-  });
-  await updateToken({
-    tokenAddress: asset.address,
-    context,
-    update: {
-      volumeUsd: computedVolumeUsd,
-    },
-  });
-  await updateAsset({
-    assetAddress: asset.address,
-    context,
-    update: {
-      dayVolumeUsd: computedVolumeUsd,
-    },
-  });
+  if (computedVolumeUsd) {
+    await updatePool({
+      poolAddress,
+      context,
+      update: {
+        volumeUsd: computedVolumeUsd,
+        lastRefreshed: timestamp,
+        lastSwapTimestamp: timestamp,
+      },
+    });
+    await updateToken({
+      tokenAddress: asset.address,
+      context,
+      update: {
+        volumeUsd: computedVolumeUsd,
+      },
+    });
+    await updateAsset({
+      assetAddress: asset.address,
+      context,
+      update: {
+        dayVolumeUsd: computedVolumeUsd,
+      },
+    });
+  }
 
   return volume;
 };
