@@ -188,7 +188,7 @@ export const refreshCheckpointBlob = async ({
     );
     const lastUpdatedEpoch = Math.floor(
       (checkpoint.lastUpdated - checkpoint.startingTime) /
-        checkpoint.epochLength
+      checkpoint.epochLength
     );
 
     if (currentEpoch > lastUpdatedEpoch) {
@@ -227,7 +227,7 @@ export const refreshCheckpointBlob = async ({
       } catch (error) {
         // remove it from the list of pools to refresh
         delete updatedCheckpoints[poolAddress as Address];
-        console.warn(
+        console.info(
           `Error getting latest sqrt price, removing pool ${poolAddress} from refresh list`
         );
         return null;
