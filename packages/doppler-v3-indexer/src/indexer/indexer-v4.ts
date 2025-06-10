@@ -21,6 +21,7 @@ import {
 import { insertActivePoolsBlobIfNotExists } from "./shared/scheduledJobs";
 import { insertSwapIfNotExists } from "./shared/entities/swap";
 import { CHAINLINK_ETH_DECIMALS } from "@app/utils/constants";
+import { SwapService } from "@app/core";
 
 ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
   const { poolOrHook, asset: assetId, numeraire } = event.args;
@@ -412,27 +413,16 @@ ponder.on("UniswapV4Pool2:Swap", async ({ event, context }) => {
 
   const ethPrice = await fetchEthPrice(event.block.timestamp, context);
 
-  let amountIn = 0n;
-  let amountOut = 0n;
-  let tokenIn = baseToken;
-  let tokenOut = baseToken;
-  let type = "buy";
-  let swapValueUsd = 0n;
-  if (totalProceeds > totalProceedsPrev) {
-    type = "buy";
-    amountIn = totalProceeds - totalProceedsPrev;
-    amountOut = totalTokensSoldPrev - totalTokensSold;
-    tokenIn = quoteToken;
-    tokenOut = baseToken;
-    swapValueUsd = amountIn * ethPrice / CHAINLINK_ETH_DECIMALS;
-  } else {
-    type = "sell";
-    amountIn = totalTokensSoldPrev - totalTokensSold;
-    amountOut = totalProceedsPrev - totalProceeds;
-    tokenIn = baseToken;
-    tokenOut = quoteToken;
-    swapValueUsd = amountOut * ethPrice / CHAINLINK_ETH_DECIMALS;
-  }
+  const quoteIn = totalProceeds > totalProceedsPrev;
+  const amountIn = quoteIn ? totalProceeds - totalProceedsPrev : totalTokensSoldPrev - totalTokensSold;
+  const amountOut = quoteIn ? totalTokensSoldPrev - totalTokensSold : totalProceedsPrev - totalProceeds;
+  const swapValueUsd = amountIn * ethPrice / CHAINLINK_ETH_DECIMALS;
+  const type = SwapService.determineSwapType({
+    isToken0: isToken0,
+    amountIn,
+    amountOut,
+  });
+
 
   const { totalSupply } = await insertTokenIfNotExists({
     tokenAddress: baseToken,
@@ -529,8 +519,8 @@ ponder.on("UniswapV4Pool2:Swap", async ({ event, context }) => {
     amountOut,
     timestamp,
     context,
-    tokenIn,
-    tokenOut,
+    tokenIn: quoteIn ? quoteToken : baseToken,
+    tokenOut: quoteIn ? baseToken : quoteToken,
     ethPrice,
     marketCapUsd,
   });

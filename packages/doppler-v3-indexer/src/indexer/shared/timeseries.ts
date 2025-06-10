@@ -126,12 +126,12 @@ export const compute24HourPriceChange = async ({
     oldestMarketCapUsd === 0n || marketCapUsd === 0n
       ? 0
       : Number(
-          formatEther(
-            ((BigInt(marketCapUsd) - BigInt(oldestMarketCapUsd)) *
-              BigInt(1e18)) /
-              BigInt(oldestMarketCapUsd)
-          )
-        ) * 100;
+        formatEther(
+          ((BigInt(marketCapUsd) - BigInt(oldestMarketCapUsd)) *
+            BigInt(1e18)) /
+          BigInt(oldestMarketCapUsd)
+        )
+      ) * 100;
 
   return Number(priceChangePercent);
 };
@@ -222,31 +222,29 @@ export const insertOrUpdateDailyVolume = async ({
       };
     });
 
-  if (computedVolumeUsd) {
-    await updatePool({
-      poolAddress,
-      context,
-      update: {
-        volumeUsd: computedVolumeUsd,
-        lastRefreshed: timestamp,
-        lastSwapTimestamp: timestamp,
-      },
-    });
-    await updateToken({
-      tokenAddress: asset.address,
-      context,
-      update: {
-        volumeUsd: computedVolumeUsd,
-      },
-    });
-    await updateAsset({
-      assetAddress: asset.address,
-      context,
-      update: {
-        dayVolumeUsd: computedVolumeUsd,
-      },
-    });
-  }
+  await updatePool({
+    poolAddress,
+    context,
+    update: {
+      volumeUsd: computedVolumeUsd,
+      lastRefreshed: timestamp,
+      lastSwapTimestamp: timestamp,
+    },
+  });
+  await updateToken({
+    tokenAddress: asset.address,
+    context,
+    update: {
+      volumeUsd: computedVolumeUsd,
+    },
+  });
+  await updateAsset({
+    assetAddress: asset.address,
+    context,
+    update: {
+      dayVolumeUsd: computedVolumeUsd,
+    },
+  });
 
   return volume;
 };

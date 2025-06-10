@@ -5,8 +5,8 @@ import { pool } from "ponder:schema";
 import { Address, zeroAddress } from "viem";
 import { Context } from "ponder:registry";
 import { computeMarketCap, fetchEthPrice } from "../oracle";
-import { getReservesV4, V4PoolData } from "@app/utils/v4-utils/getV4PoolData";
-import { getZoraPoolData, PoolState } from "@app/utils/v3-utils/getV3PoolData";
+import { getReservesV4 } from "@app/utils/v4-utils/getV4PoolData";
+import { getZoraPoolData } from "@app/utils/v3-utils/getV3PoolData";
 import { DERC20ABI } from "@app/abis";
 
 export const fetchExistingPool = async ({

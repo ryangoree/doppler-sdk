@@ -21,6 +21,7 @@ import { tryAddActivePool } from "./shared/scheduledJobs";
 import { zeroAddress } from "viem";
 import { configs } from "@app/types";
 import { insertSwapIfNotExists } from "./shared/entities/swap";
+import { SwapService, SwapOrchestrator } from "@app/core";
 
 ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
   const { db, chain } = context;
@@ -60,16 +61,11 @@ ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
   const assetBalance = v2isToken0 ? reserve0 : reserve1;
   const quoteBalance = v2isToken0 ? reserve1 : reserve0;
 
-  let type = "buy";
-  if (v2isToken0 && amount0In > 0n) {
-    type = "buy";
-  } else if (!v2isToken0 && amount0In > 0n) {
-    type = "sell";
-  } else if (v2isToken0 && amount0In < 0n) {
-    type = "sell";
-  } else if (!v2isToken0 && amount0In < 0n) {
-    type = "buy";
-  }
+  const type = SwapService.determineSwapType({
+    isToken0: v2isToken0,
+    amountIn: amount0In,
+    amountOut: amount0Out,
+  });
 
   const price = computeV2Price({ assetBalance, quoteBalance });
 
@@ -81,23 +77,21 @@ ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
     isDerc20: true,
   });
 
-  const marketCapUsd = computeMarketCap({
-    price,
-    ethPrice,
+  const metrics = SwapService.calculateMarketMetrics({
+    liquidity: quoteBalance,
     totalSupply,
+    price,
+    swapAmountIn: amountIn,
+    swapAmountOut: amountOut,
+    ethPriceUSD: ethPrice,
+    assetDecimals: 18, // V2 assumes 18 decimals
+    isQuoteETH: true,
   });
 
   const priceChange = await compute24HourPriceChange({
     poolAddress: address,
-    marketCapUsd,
+    marketCapUsd: metrics.marketCapUsd,
     context,
-  });
-
-  const liquidityUsd = computeDollarLiquidity({
-    assetBalance,
-    quoteBalance,
-    price,
-    ethPrice,
   });
 
   let quoteDelta = 0n;
@@ -138,7 +132,7 @@ ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
       tokenIn,
       tokenOut,
       ethPrice,
-      marketCapUsd,
+      marketCapUsd: metrics.marketCapUsd,
     }),
     updateV2Pool({
       poolAddress: address,
@@ -149,9 +143,9 @@ ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
       assetAddress: baseToken,
       context,
       update: {
-        liquidityUsd: liquidityUsd,
+        liquidityUsd: metrics.liquidityUsd,
         percentDayChange: priceChange,
-        marketCapUsd,
+        marketCapUsd: metrics.marketCapUsd,
       },
     }),
     insertSwapIfNotExists({
@@ -172,11 +166,11 @@ ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
       context,
       update: {
         price,
-        dollarLiquidity: liquidityUsd,
+        dollarLiquidity: metrics.liquidityUsd,
         lastRefreshed: timestamp,
         lastSwapTimestamp: timestamp,
         percentDayChange: priceChange,
-        marketCapUsd,
+        marketCapUsd: metrics.marketCapUsd,
       },
     }),
   ]);
