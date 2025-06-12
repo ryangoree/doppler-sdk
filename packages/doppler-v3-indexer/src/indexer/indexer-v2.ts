@@ -1,11 +1,10 @@
 import { ponder } from "ponder:registry";
-import { token, v2Pool } from "ponder.schema";
+import { v2Pool } from "ponder.schema";
 import {
   insertOrUpdateBuckets,
   insertOrUpdateDailyVolume,
   compute24HourPriceChange,
 } from "./shared/timeseries";
-import { computeV2Price } from "@app/utils/v2-utils/computeV2Price";
 import { getPairData } from "@app/utils/v2-utils/getPairData";
 import { computeDollarLiquidity } from "@app/utils/computeDollarLiquidity";
 import { computeMarketCap, fetchEthPrice } from "./shared/oracle";
@@ -21,7 +20,7 @@ import { tryAddActivePool } from "./shared/scheduledJobs";
 import { zeroAddress } from "viem";
 import { configs } from "@app/types";
 import { insertSwapIfNotExists } from "./shared/entities/swap";
-import { SwapService, SwapOrchestrator } from "@app/core";
+import { SwapService, SwapOrchestrator, PriceService } from "@app/core";
 
 ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
   const { db, chain } = context;
@@ -44,30 +43,26 @@ ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
     context,
     ethPrice,
   });
+
   let v2isToken0 = isToken0;
   if (quoteToken.toLowerCase() == zeroAddress) {
     const weth = configs[chain.name].shared.weth.toLowerCase() as `0x${string}`;
     v2isToken0 = baseToken.toLowerCase() < weth.toLowerCase();
   }
 
-  const amountIn = amount0In > 0 ? amount0In : amount1In;
-  const amountOut = amount0Out > 0 ? amount0Out : amount1Out;
-  const token0 = v2isToken0 ? baseToken : quoteToken;
-  const token1 = v2isToken0 ? quoteToken : baseToken;
-
-  const tokenIn = amount0In > 0 ? token0 : token1;
-  const tokenOut = amount0In > 0 ? token1 : token0;
-
   const assetBalance = v2isToken0 ? reserve0 : reserve1;
   const quoteBalance = v2isToken0 ? reserve1 : reserve0;
 
+  const amount0 = amount0In > 0 ? amount0In : -amount0Out;
+  const amount1 = amount0Out > 0 ? amount0Out : -amount1Out;
+
   const type = SwapService.determineSwapType({
     isToken0: v2isToken0,
-    amountIn: amount0In,
-    amountOut: amount0Out,
+    amount0,
+    amount1,
   });
 
-  const price = computeV2Price({ assetBalance, quoteBalance });
+  const price = PriceService.computePriceFromReserves({ assetBalance, quoteBalance });
 
   const { totalSupply } = await insertTokenIfNotExists({
     tokenAddress: baseToken,
@@ -78,13 +73,14 @@ ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
   });
 
   const metrics = SwapService.calculateMarketMetrics({
-    liquidity: quoteBalance,
     totalSupply,
     price,
-    swapAmountIn: amountIn,
-    swapAmountOut: amountOut,
+    swapAmountIn: amount0In > 0 ? amount0In : amount1In,
+    swapAmountOut: amount0Out > 0 ? amount0Out : amount1Out,
     ethPriceUSD: ethPrice,
-    assetDecimals: 18, // V2 assumes 18 decimals
+    assetDecimals: 18,
+    assetBalance,
+    quoteBalance,
     isQuoteETH: true,
   });
 
@@ -121,8 +117,8 @@ ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
     assetAddress: baseToken,
     quoteAddress: quoteToken,
     isToken0: v2isToken0,
-    amountIn,
-    amountOut,
+    amountIn: amount0In > 0 ? amount0In : amount1In,
+    amountOut: amount0Out > 0 ? amount0Out : amount1Out,
     price,
     ethPriceUSD: ethPrice,
   });
@@ -193,22 +189,20 @@ ponder.on("UniswapV2PairUnichain:Swap", async ({ event, context }) => {
 
   const amountIn = amount0In > 0 ? amount0In : amount1In;
   const amountOut = amount0Out > 0 ? amount0Out : amount1Out;
-  const token0 = isToken0 ? baseToken : quoteToken;
-  const token1 = isToken0 ? quoteToken : baseToken;
-
-  const tokenIn = amount0In > 0 ? token0 : token1;
-  const tokenOut = amount0In > 0 ? token1 : token0;
 
   const assetBalance = isToken0 ? reserve0 : reserve1;
   const quoteBalance = isToken0 ? reserve1 : reserve0;
 
+  const amount0 = amount0In > 0 ? amount0In : -amount0Out;
+  const amount1 = amount0Out > 0 ? amount0Out : -amount1Out;
+
   const type = SwapService.determineSwapType({
     isToken0,
-    amountIn: amount0In,
-    amountOut: amount0Out,
+    amount0,
+    amount1,
   });
 
-  const price = computeV2Price({ assetBalance, quoteBalance });
+  const price = PriceService.computePriceFromReserves({ assetBalance, quoteBalance });
 
   const { totalSupply } = await insertTokenIfNotExists({
     tokenAddress: baseToken,

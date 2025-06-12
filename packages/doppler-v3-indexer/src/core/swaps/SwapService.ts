@@ -1,6 +1,6 @@
 import { Address } from "viem";
 import { SwapType } from "@app/types/shared";
-import { PriceService } from "@app/core/pricing";
+import { MarketDataService } from "@app/core/market";
 
 /**
  * Common swap data structure across all protocols
@@ -41,20 +41,20 @@ export class SwapService {
    */
   static determineSwapType(params: {
     isToken0: boolean;
-    amountIn: bigint;
-    amountOut: bigint;
+    amount0: bigint;
+    amount1: bigint;
   }): SwapType {
-    const { isToken0, amountIn, amountOut } = params;
+    const { isToken0, amount0, amount1 } = params;
 
     // For V2/V3: positive amount means tokens going in (swap input)
     // If asset is token0 and amount0 is positive, user is buying with token0
-    if (isToken0 && amountIn > 0n) {
+    if (isToken0 && amount0 < 0n) {
       return "buy";
-    } else if (!isToken0 && amountIn > 0n) {
+    } else if (isToken0 && amount0 > 0n) {
       return "sell";
-    } else if (isToken0 && amountIn < 0n) {
+    } else if (!isToken0 && amount0 < 0n) {
       return "sell";
-    } else if (!isToken0 && amountIn < 0n) {
+    } else if (!isToken0 && amount0 < 0n) {
       return "buy";
     }
 
@@ -74,56 +74,48 @@ export class SwapService {
 
   /**
    * Calculates market metrics from swap data
+   * Delegates to MarketDataService for consistency
    */
   static calculateMarketMetrics(params: {
-    liquidity: bigint;
     totalSupply: bigint;
     price: bigint;
     swapAmountIn: bigint;
     swapAmountOut: bigint;
     ethPriceUSD: bigint;
     assetDecimals: number;
+    assetBalance: bigint;
+    quoteBalance: bigint;
     isQuoteETH?: boolean;
   }): MarketMetrics {
     const {
-      liquidity,
       totalSupply,
       price,
       swapAmountIn,
       swapAmountOut,
       ethPriceUSD,
       assetDecimals,
+      assetBalance,
+      quoteBalance,
       isQuoteETH = true,
     } = params;
 
-    // Calculate liquidity in USD
-    const liquidityUsd = isQuoteETH
-      ? (liquidity * ethPriceUSD) / BigInt(10 ** 18)
-      : liquidity;
-
-    // Calculate market cap in USD
-    const priceUsd = PriceService.computePriceUSD({
+    const metrics = MarketDataService.calculateMarketMetrics({
       price,
+      totalSupply,
+      assetBalance,
+      quoteBalance,
       ethPriceUSD,
+      swapAmountIn,
+      swapAmountOut,
+      assetDecimals,
       isQuoteETH,
     });
 
-    const marketCapUsd = (totalSupply * priceUsd) / BigInt(10 ** assetDecimals);
-
-    // Calculate swap value in USD
-    const swapAmount = swapAmountIn > 0n ? swapAmountIn : swapAmountOut;
-    const swapValueUsd = isQuoteETH
-      ? (swapAmount * ethPriceUSD) / BigInt(10 ** 18)
-      : swapAmount;
-
-    // TODO: Calculate percent day change (requires historical price)
-    const percentDayChange = 0;
-
     return {
-      liquidityUsd,
-      marketCapUsd,
-      swapValueUsd,
-      percentDayChange,
+      liquidityUsd: metrics.liquidityUsd,
+      marketCapUsd: metrics.marketCapUsd,
+      swapValueUsd: metrics.volumeUsd || 0n,
+      percentDayChange: 0, // TODO: Implement historical price tracking
     };
   }
 

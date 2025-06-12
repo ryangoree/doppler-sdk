@@ -160,20 +160,20 @@ export const insertOrUpdateDailyVolume = async ({
   const { db, chain } = context;
 
   let volumeUsd;
-  const isTokenInWeth =
+
+  const isTokenInEth =
+    tokenIn.toLowerCase() === zeroAddress ||
     tokenIn.toLowerCase() ===
     (configs[chain.name].shared.weth.toLowerCase() as `0x${string}`);
 
-  const isTokenInEth = tokenIn.toLowerCase() === zeroAddress;
-
-  if (isTokenInWeth || isTokenInEth) {
+  if (isTokenInEth) {
     volumeUsd = (amountIn * ethPrice) / CHAINLINK_ETH_DECIMALS;
   } else {
     const uintAmountOut = amountOut > 0n ? amountOut : -amountOut;
     volumeUsd = (uintAmountOut * ethPrice) / CHAINLINK_ETH_DECIMALS;
   }
 
-  const assetAddress = isTokenInWeth || isTokenInEth ? tokenOut : tokenIn;
+  const assetAddress = isTokenInEth ? tokenOut : tokenIn;
 
   const asset = await insertAssetIfNotExists({
     assetAddress: assetAddress.toLowerCase() as `0x${string}`,
@@ -221,6 +221,7 @@ export const insertOrUpdateDailyVolume = async ({
         lastUpdated: timestamp,
       };
     });
+
 
   if (computedVolumeUsd) {
     await updatePool({

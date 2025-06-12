@@ -1,12 +1,12 @@
 import { Address } from "viem";
 import { ChainConfig } from "./types";
-import { 
-  CHAIN_IDS, 
-  START_BLOCKS, 
-  V4_START_BLOCKS, 
-  ORACLE_ADDRESSES, 
-  COMMON_ADDRESSES, 
-  RPC_ENV_VARS 
+import {
+  CHAIN_IDS,
+  START_BLOCKS,
+  V4_START_BLOCKS,
+  ORACLE_ADDRESSES,
+  COMMON_ADDRESSES,
+  RPC_ENV_VARS
 } from "./constants";
 
 export const baseSepoliaConfig: ChainConfig = {
@@ -26,10 +26,10 @@ export const baseSepoliaConfig: ChainConfig = {
     v4: {
       poolManager: "0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408" as Address,
       dopplerDeployer: "0x7980Be665C8011A413c598F82fa6f95feACa2e1e" as Address,
-      v4Initializer: COMMON_ADDRESSES.ZERO_ADDRESS,
+      v4Initializer2: COMMON_ADDRESSES.ZERO_ADDRESS,
       dopplerLens: "0x2f36392BfB0A9082b624Ed65f6059E586fB4C530" as Address,
       stateView: "0x571291b572ed32ce6751a2cb2486ebee8defb9b4" as Address,
-      v4Initializer2: "0x511b44b4cC8Cb80223F203E400309b010fEbFAec" as Address,
+      v4Initializer: "0x511b44b4cC8Cb80223F203E400309b010fEbFAec" as Address,
     },
     shared: {
       airlock: "0x7E6cF695a8BeA4b2bF94FbB5434a7da3f39A2f8D" as Address,

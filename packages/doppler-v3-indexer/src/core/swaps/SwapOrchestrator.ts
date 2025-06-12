@@ -97,13 +97,13 @@ export class SwapOrchestrator {
 
       // Update daily volume
       insertOrUpdateDailyVolume({
+        context,
         poolAddress: poolData.parentPoolAddress,
         amountIn: swapData.amountIn,
         amountOut: swapData.amountOut,
         timestamp: swapData.timestamp,
-        context,
-        tokenIn: swapData.isToken0 ? swapData.assetAddress : swapData.quoteAddress,
-        tokenOut: swapData.isToken0 ? swapData.quoteAddress : swapData.assetAddress,
+        tokenIn: swapType === "buy" ? swapData.quoteAddress : swapData.assetAddress,
+        tokenOut: swapType === "buy" ? swapData.assetAddress : swapData.quoteAddress,
         ethPrice: swapData.ethPriceUSD,
         marketCapUsd: metrics.marketCapUsd,
       }),

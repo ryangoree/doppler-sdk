@@ -6,13 +6,13 @@ import {
   DopplerLensQuoterABI,
   StateViewABI,
 } from "@app/abis";
-import { 
-  PoolKey, 
-  V4PoolConfig, 
-  PositionData, 
-  Slot0Data, 
+import {
+  PoolKey,
+  V4PoolConfig,
+  PositionData,
+  Slot0Data,
   V4PoolData,
-  QuoteExactSingleParams 
+  QuoteExactSingleParams
 } from "@app/types/v4-types";
 import { getPoolId } from "./getPoolId";
 import { computeV4Price } from "./computeV4Price";
@@ -30,15 +30,11 @@ export const getV4PoolData = async ({
 }: {
   hook: Address;
   context: Context;
-}): Promise<V4PoolData | undefined> => {
+}): Promise<V4PoolData> => {
   const { stateView } = configs[context.chain.name].v4;
   const { client, chain } = context;
 
   const poolConfig = await getV4PoolConfig({ hook, context });
-
-  if (!poolConfig) {
-    return;
-  }
 
   const poolKey = await client.readContract({
     abi: DopplerABI,
@@ -57,7 +53,7 @@ export const getV4PoolData = async ({
   const poolId = getPoolId(key);
 
   const multicallOptions = getMulticallOptions(chain);
-  
+
   const [slot0, liquidity] = await client.multicall({
     contracts: [
       {
@@ -100,7 +96,7 @@ export const getV4PoolData = async ({
     functionName: "decimals",
   });
 
-  const price = await computeV4Price({
+  const price = computeV4Price({
     isToken0,
     currentTick: slot0Data.tick,
     baseTokenDecimals,
@@ -111,7 +107,7 @@ export const getV4PoolData = async ({
     slot0Data,
     liquidity: liquidityResult,
     price,
-    poolConfig,
+    poolConfig: poolConfig!,
   };
 };
 
@@ -121,7 +117,7 @@ export const getV4PoolConfig = async ({
 }: {
   hook: Address;
   context: Context;
-}): Promise<V4PoolConfig | undefined> => {
+}): Promise<V4PoolConfig> => {
   const { client } = context;
 
   const [
@@ -204,34 +200,18 @@ export const getV4PoolConfig = async ({
     ],
   });
 
-  if (
-    !numTokensToSell.result ||
-    !minProceeds.result ||
-    !maxProceeds.result ||
-    !startingTime.result ||
-    !endingTime.result ||
-    !startingTick.result ||
-    !endingTick.result ||
-    !epochLength.result ||
-    !gamma.result ||
-    isToken0.result == undefined ||
-    !numPdSlugs.result
-  ) {
-    return;
-  }
-
   return {
-    numTokensToSell: numTokensToSell.result,
-    minProceeds: minProceeds.result,
-    maxProceeds: maxProceeds.result,
-    startingTime: startingTime.result,
-    endingTime: endingTime.result,
-    startingTick: startingTick.result,
-    endingTick: endingTick.result,
-    epochLength: epochLength.result,
-    gamma: gamma.result,
-    isToken0: isToken0.result,
-    numPdSlugs: numPdSlugs.result,
+    numTokensToSell: numTokensToSell.result!,
+    minProceeds: minProceeds.result!,
+    maxProceeds: maxProceeds.result!,
+    startingTime: startingTime.result!,
+    endingTime: endingTime.result!,
+    startingTick: startingTick.result!,
+    endingTick: endingTick.result!,
+    epochLength: epochLength.result!,
+    gamma: gamma.result!,
+    isToken0: isToken0.result!,
+    numPdSlugs: numPdSlugs.result!,
   };
 };
 

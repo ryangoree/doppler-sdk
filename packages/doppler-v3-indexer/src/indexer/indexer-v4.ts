@@ -9,7 +9,6 @@ import { insertOrUpdateBuckets } from "./shared/timeseries";
 import { computeDollarLiquidity } from "@app/utils/computeDollarLiquidity";
 import { insertV4ConfigIfNotExists } from "./shared/entities/v4-entities/v4Config";
 import { getReservesV4 } from "@app/utils/v4-utils/getV4PoolData";
-import { computeV4Price } from "@app/utils/v4-utils/computeV4Price";
 import {
   addCheckpoint,
   insertCheckpointBlobIfNotExist,
@@ -21,8 +20,10 @@ import {
 import { insertActivePoolsBlobIfNotExists } from "./shared/scheduledJobs";
 import { insertSwapIfNotExists } from "./shared/entities/swap";
 import { CHAINLINK_ETH_DECIMALS } from "@app/utils/constants";
-import { SwapService, SwapOrchestrator } from "@app/core";
+import { SwapService, SwapOrchestrator, PriceService } from "@app/core";
 import { tryAddActivePool } from "./shared/scheduledJobs";
+import { TickMath } from "@uniswap/v3-sdk";
+import { computeV4Price } from "@app/utils/v4-utils/computeV4Price";
 
 ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
   const { poolOrHook, asset: assetId, numeraire } = event.args;
@@ -35,16 +36,7 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
 
   const creatorAddress = event.transaction.from.toLowerCase() as `0x${string}`;
 
-  const v4PoolData = await getV4PoolData({
-    hook: poolAddress,
-    context,
-  });
-
-  if (!v4PoolData) {
-    return;
-  }
-
-  const [baseToken, , , , , ,] = await Promise.all([
+  const [baseToken, ethPrice, poolData] = await Promise.all([
     insertTokenIfNotExists({
       tokenAddress: assetAddress,
       creatorAddress,
@@ -52,6 +44,11 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
       context,
       isDerc20: true,
       poolAddress: poolAddress,
+    }),
+    fetchEthPrice(timestamp, context),
+    getV4PoolData({
+      hook: poolAddress,
+      context,
     }),
     insertTokenIfNotExists({
       tokenAddress: numeraireAddress,
@@ -74,23 +71,19 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
 
   const { totalSupply } = baseToken;
 
-  const [ethPrice, poolEntity, v4Config] = await Promise.all([
-    fetchEthPrice(timestamp, context),
+  const [poolEntity, v4Config] = await Promise.all([
     insertPoolIfNotExistsV4({
       poolAddress,
       timestamp,
+      ethPrice,
+      poolData,
       context,
-      totalSupply,
     }),
     insertV4ConfigIfNotExists({
       hookAddress: poolAddress,
       context,
     }),
   ]);
-
-  if (!v4Config) {
-    return;
-  }
 
   const price = poolEntity.price;
   const marketCapUsd = computeMarketCap({
@@ -117,11 +110,11 @@ ponder.on("UniswapV4Initializer:Create", async ({ event, context }) => {
       poolAddress: poolAddress,
       asset: assetAddress,
       totalSupply,
-      startingTime: v4Config?.startingTime,
-      endingTime: v4Config?.endingTime,
-      epochLength: v4Config?.epochLength,
-      isToken0: v4Config?.isToken0,
-      poolKey: v4PoolData.poolKey,
+      startingTime: v4Config.startingTime,
+      endingTime: v4Config.endingTime,
+      epochLength: v4Config.epochLength,
+      isToken0: v4Config.isToken0,
+      poolKey: poolData.poolKey,
       context,
     }),
   ]);
@@ -145,14 +138,29 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
   const { currentTick, totalProceeds, totalTokensSold } = event.args;
   const timestamp = event.block.timestamp;
 
-  const v4PoolData = await getV4PoolData({
-    hook: address,
-    context,
-  });
 
-  if (!v4PoolData) {
-    return;
-  }
+  const [ethPrice, v4PoolData] = await Promise.all([
+    fetchEthPrice(event.block.timestamp, context),
+    getV4PoolData({
+      hook: address,
+      context,
+    }),
+  ]);
+
+  const start0 = performance.now();
+  const [reserves, poolEntity] = await Promise.all([
+    getReservesV4({
+      hook: address,
+      context,
+    }),
+    insertPoolIfNotExistsV4({
+      poolAddress: address,
+      timestamp,
+      ethPrice,
+      poolData: v4PoolData,
+      context,
+    }),
+  ]);
 
   const {
     isToken0,
@@ -161,22 +169,20 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
     totalProceeds: totalProceedsPrev,
     totalTokensSold: totalTokensSoldPrev,
     marketCapUsd: marketCapUsdPrev,
-  } = await insertPoolIfNotExistsV4({
-    poolAddress: address,
-    timestamp,
-    context,
-  });
+  } = poolEntity;
 
   const quoteIn = totalProceeds > totalProceedsPrev;
   const amountIn = quoteIn ? totalProceeds - totalProceedsPrev : totalTokensSoldPrev - totalTokensSold;
   const amountOut = quoteIn ? totalTokensSoldPrev - totalTokensSold : totalProceedsPrev - totalProceeds;
 
-  const type = SwapService.determineSwapType({
-    isToken0,
-    amountIn,
-    amountOut,
+  const type = SwapService.determineSwapTypeV4({
+    currentProceeds: totalProceeds,
+    previousProceeds: totalProceedsPrev,
   });
+  const end0 = performance.now();
+  console.log(`time taken0: ${end0 - start0}ms`);
 
+  const start1 = performance.now();
   const { totalSupply } = await insertTokenIfNotExists({
     tokenAddress: baseToken,
     creatorAddress: event.transaction.from,
@@ -184,19 +190,14 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
     context,
   });
 
-  const price = computeV4Price({
+  const sqrtPriceX96 = BigInt(TickMath.getSqrtRatioAtTick(currentTick).toString());
+  const price = PriceService.computePriceFromSqrtPriceX96({
+    sqrtPriceX96,
     isToken0,
-    currentTick,
-    baseTokenDecimals: 18,
+    decimals: 18,
   });
 
-  const [ethPrice, reserves] = await Promise.all([
-    fetchEthPrice(event.block.timestamp, context),
-    getReservesV4({
-      hook: address,
-      context,
-    }),
-  ]);
+
   const { token0Reserve, token1Reserve } = reserves;
 
   const dollarLiquidity = computeDollarLiquidity({
@@ -243,7 +244,10 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
     swapValueUsd,
     percentDayChange: 0, // TODO: implement price change calculation
   };
+  const end1 = performance.now();
+  console.log(`time taken1: ${end1 - start1}ms`);
 
+  const start2 = performance.now();
   // Define entity updaters
   const entityUpdaters = {
     updatePool,
@@ -288,6 +292,8 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
       context,
     }),
   ]);
+  const end2 = performance.now();
+  console.log(`time taken2: ${end2 - start2}ms`);
 });
 
 ponder.on("UniswapV4Initializer2:Create", async ({ event, context }) => {
@@ -299,17 +305,9 @@ ponder.on("UniswapV4Initializer2:Create", async ({ event, context }) => {
   const assetAddress = assetId.toLowerCase() as `0x${string}`;
   const numeraireAddress = numeraire.toLowerCase() as `0x${string}`;
 
-  const v4PoolData = await getV4PoolData({
-    hook: poolAddress,
-    context,
-  });
-  if (!v4PoolData) {
-    return;
-  }
-
   const creatorAddress = event.transaction.from.toLowerCase() as `0x${string}`;
 
-  const [baseToken, , , , , ,] = await Promise.all([
+  const [baseToken, ethPrice, poolData] = await Promise.all([
     insertTokenIfNotExists({
       tokenAddress: assetAddress,
       creatorAddress,
@@ -317,6 +315,11 @@ ponder.on("UniswapV4Initializer2:Create", async ({ event, context }) => {
       context,
       isDerc20: true,
       poolAddress: poolAddress,
+    }),
+    fetchEthPrice(timestamp, context),
+    getV4PoolData({
+      hook: poolAddress,
+      context,
     }),
     insertTokenIfNotExists({
       tokenAddress: numeraireAddress,
@@ -339,13 +342,13 @@ ponder.on("UniswapV4Initializer2:Create", async ({ event, context }) => {
 
   const { totalSupply } = baseToken;
 
-  const [ethPrice, poolEntity, v4Config] = await Promise.all([
-    fetchEthPrice(timestamp, context),
+  const [poolEntity, v4Config] = await Promise.all([
     insertPoolIfNotExistsV4({
       poolAddress,
       timestamp,
+      ethPrice,
       context,
-      totalSupply,
+      poolData,
     }),
     insertV4ConfigIfNotExists({
       hookAddress: poolAddress,
@@ -386,7 +389,7 @@ ponder.on("UniswapV4Initializer2:Create", async ({ event, context }) => {
       endingTime: v4Config.endingTime,
       epochLength: v4Config.epochLength,
       isToken0: v4Config.isToken0,
-      poolKey: v4PoolData.poolKey,
+      poolKey: poolData.poolKey,
       context,
     }),
   ]);
@@ -411,13 +414,13 @@ ponder.on("UniswapV4Pool2:Swap", async ({ event, context }) => {
 
   const chainId = chain.id;
 
-  const v4PoolData = await getV4PoolData({
-    hook: address,
-    context,
-  });
-  if (!v4PoolData) {
-    return;
-  }
+  const [ethPrice, poolData] = await Promise.all([
+    fetchEthPrice(timestamp, context),
+    getV4PoolData({
+      hook: address,
+      context,
+    }),
+  ]);
 
   const {
     isToken0,
@@ -429,19 +432,9 @@ ponder.on("UniswapV4Pool2:Swap", async ({ event, context }) => {
   } = await insertPoolIfNotExistsV4({
     poolAddress: address,
     timestamp,
+    ethPrice,
     context,
-  });
-
-  const ethPrice = await fetchEthPrice(event.block.timestamp, context);
-
-  const quoteIn = totalProceeds > totalProceedsPrev;
-  const amountIn = quoteIn ? totalProceeds - totalProceedsPrev : totalTokensSoldPrev - totalTokensSold;
-  const amountOut = quoteIn ? totalTokensSoldPrev - totalTokensSold : totalProceedsPrev - totalProceeds;
-  const swapValueUsd = amountIn * ethPrice / CHAINLINK_ETH_DECIMALS;
-  const type = SwapService.determineSwapType({
-    isToken0: isToken0,
-    amountIn,
-    amountOut,
+    poolData,
   });
 
   const { totalSupply } = await insertTokenIfNotExists({
@@ -450,6 +443,17 @@ ponder.on("UniswapV4Pool2:Swap", async ({ event, context }) => {
     timestamp,
     context,
   });
+
+  const quoteIn = totalProceeds > totalProceedsPrev;
+  const amountIn = quoteIn ? totalProceeds - totalProceedsPrev : totalTokensSoldPrev - totalTokensSold;
+  const amountOut = quoteIn ? totalTokensSoldPrev - totalTokensSold : totalProceedsPrev - totalProceeds;
+  const swapValueUsd = amountIn * ethPrice / CHAINLINK_ETH_DECIMALS;
+
+  const type = SwapService.determineSwapTypeV4({
+    currentProceeds: totalProceeds,
+    previousProceeds: totalProceedsPrev,
+  });
+
 
   const price = computeV4Price({
     isToken0,
@@ -541,7 +545,7 @@ ponder.on("UniswapV4Pool2:Swap", async ({ event, context }) => {
       poolAddress: address,
       context,
       update: {
-        liquidity: v4PoolData.liquidity,
+        liquidity: poolData.liquidity,
         totalProceeds,
         totalTokensSold,
       },

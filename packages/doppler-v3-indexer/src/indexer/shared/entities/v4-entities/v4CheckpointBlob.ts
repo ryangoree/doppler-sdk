@@ -3,7 +3,7 @@ import { v4CheckpointBlob } from "ponder:schema";
 import { Address, parseEther } from "viem";
 import { getLatestSqrtPrice } from "@app/utils/v4-utils/getV4PoolData";
 import { PoolKey } from "@app/types/v4-types";
-import { computeV4PriceFromSqrtPriceX96 } from "@app/utils/v4-utils/computeV4Price";
+import { PriceService } from "@app/core";
 import { computeMarketCap, fetchEthPrice } from "../../oracle";
 import { insertAssetIfNotExists, updateAsset, updatePool } from "..";
 import { pool } from "ponder:schema";
@@ -272,10 +272,10 @@ export const refreshCheckpointBlob = async ({
       continue;
     }
 
-    const price = computeV4PriceFromSqrtPriceX96({
+    const price = PriceService.computePriceFromSqrtPriceX96({
       sqrtPriceX96,
       isToken0,
-      baseTokenDecimals: 18,
+      decimals: 18,
     });
 
     const marketCapUsd = computeMarketCap({
