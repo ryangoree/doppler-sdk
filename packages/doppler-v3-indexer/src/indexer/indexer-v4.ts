@@ -147,7 +147,6 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
     }),
   ]);
 
-  const start0 = performance.now();
   const [reserves, poolEntity] = await Promise.all([
     getReservesV4({
       hook: address,
@@ -179,10 +178,7 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
     currentProceeds: totalProceeds,
     previousProceeds: totalProceedsPrev,
   });
-  const end0 = performance.now();
-  console.log(`time taken0: ${end0 - start0}ms`);
 
-  const start1 = performance.now();
   const { totalSupply } = await insertTokenIfNotExists({
     tokenAddress: baseToken,
     creatorAddress: event.transaction.from,
@@ -244,10 +240,7 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
     swapValueUsd,
     percentDayChange: 0, // TODO: implement price change calculation
   };
-  const end1 = performance.now();
-  console.log(`time taken1: ${end1 - start1}ms`);
 
-  const start2 = performance.now();
   // Define entity updaters
   const entityUpdaters = {
     updatePool,
@@ -292,8 +285,6 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
       context,
     }),
   ]);
-  const end2 = performance.now();
-  console.log(`time taken2: ${end2 - start2}ms`);
 });
 
 ponder.on("UniswapV4Initializer2:Create", async ({ event, context }) => {

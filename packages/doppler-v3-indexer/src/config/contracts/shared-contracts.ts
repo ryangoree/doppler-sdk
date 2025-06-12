@@ -1,7 +1,6 @@
 import { ContractConfigMap } from "./types";
 import { chainConfigs } from "../chains";
 import { AirlockABI } from "../../abis";
-import { createAirlockMigrationFactory } from "./factories";
 
 export const generateSharedContracts = (): ContractConfigMap => {
   const contracts: ContractConfigMap = {};

@@ -1,10 +1,10 @@
 import { ContractConfigMap } from "./types";
 import { chainConfigs } from "../chains";
-import { 
-  UniswapV4InitializerABI, 
-  DERC20ABI, 
-  PoolManagerABI, 
-  DopplerABI 
+import {
+  UniswapV4InitializerABI,
+  DERC20ABI,
+  PoolManagerABI,
+  DopplerABI
 } from "../../abis";
 import { createV4AssetFactory, createV4PoolFactory } from "./factories";
 
@@ -13,8 +13,8 @@ export const generateV4Contracts = (): ContractConfigMap => {
 
   // Get chains with V4 contracts
   const v4Chains = Object.entries(chainConfigs).filter(
-    ([_, config]) => 
-      config.v4StartBlock && 
+    ([_, config]) =>
+      config.v4StartBlock &&
       config.addresses.v4.poolManager !== "0x0000000000000000000000000000000000000000"
   );
 
@@ -52,6 +52,19 @@ export const generateV4Contracts = (): ContractConfigMap => {
         ])
       ),
     };
+
+    contracts.V4DERC20_2 = {
+      abi: DERC20ABI,
+      chain: Object.fromEntries(
+        v4InitializerChains.map(([name, config]) => [
+          name,
+          {
+            startBlock: config.v4StartBlock!,
+            address: createV4AssetFactory(config.addresses.v4.v4Initializer2),
+          },
+        ])
+      ),
+    }
 
     // V4 Pool contracts
     contracts.UniswapV4Pool = {

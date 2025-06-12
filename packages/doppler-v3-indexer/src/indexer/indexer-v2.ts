@@ -30,12 +30,15 @@ ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
   const address = event.log.address.toLowerCase() as `0x${string}`;
 
   const v2PoolData = await db.find(v2Pool, { address });
-  if (!v2PoolData) return;
 
-  const parentPool = v2PoolData.parentPool.toLowerCase() as `0x${string}`;
-  const { reserve0, reserve1 } = await getPairData({ address, context });
+  const parentPool = v2PoolData!.parentPool.toLowerCase() as `0x${string}`;
 
-  const ethPrice = await fetchEthPrice(timestamp, context);
+  const [reserves, ethPrice] = await Promise.all([
+    getPairData({ address, context }),
+    fetchEthPrice(timestamp, context),
+  ]);
+
+  const { reserve0, reserve1 } = reserves;
 
   const { isToken0, baseToken, quoteToken } = await insertPoolIfNotExists({
     poolAddress: parentPool,
@@ -84,12 +87,6 @@ ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
     isQuoteETH: true,
   });
 
-  const priceChange = await compute24HourPriceChange({
-    poolAddress: address,
-    marketCapUsd: metrics.marketCapUsd,
-    context,
-  });
-
   let quoteDelta = 0n;
   if (v2isToken0) {
     if (amount1In > 0n) {
@@ -105,6 +102,13 @@ ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
     }
   }
   const swapValueUsd = quoteDelta * ethPrice / CHAINLINK_ETH_DECIMALS;
+
+  const priceChange = await compute24HourPriceChange({
+    poolAddress: address,
+    marketCapUsd: metrics.marketCapUsd,
+    context,
+  });
+
 
   // Create swap data
   const swapData = SwapOrchestrator.createSwapData({
@@ -142,29 +146,35 @@ ponder.on("UniswapV2Pair:Swap", async ({ event, context }) => {
   };
 
   // Perform common updates via orchestrator
-  await SwapOrchestrator.performSwapUpdates(
-    {
-      swapData,
-      swapType: type,
-      metrics: marketMetrics,
-      poolData: {
-        parentPoolAddress: parentPool,
-        price,
+  Promise.all([
+    await SwapOrchestrator.performSwapUpdates(
+      {
+        swapData,
+        swapType: type,
+        metrics: marketMetrics,
+        poolData: {
+          parentPoolAddress: parentPool,
+          price,
+        },
+        chainId: BigInt(chain.id),
+        context,
       },
-      chainId: BigInt(chain.id),
+      entityUpdaters
+    ),
+    await updateV2Pool({
+      poolAddress: address,
       context,
-    },
-    entityUpdaters
-  );
+      update: { price: (price * ethPrice) / CHAINLINK_ETH_DECIMALS },
+    }),
+  ]);
 
   // V2-specific updates
-  await updateV2Pool({
-    poolAddress: address,
-    context,
-    update: { price: (price * ethPrice) / CHAINLINK_ETH_DECIMALS },
-  });
 });
 
+/* =================== INFO =================== */
+/* COMMENT THIS OUT IF DOING LOCAL DEVELOPMENT */
+/* DONT ASK QUESTIONS JUST DO IT */
+/* ========================================= */
 ponder.on("UniswapV2PairUnichain:Swap", async ({ event, context }) => {
   const { db, chain } = context;
   const { address } = event.log;
