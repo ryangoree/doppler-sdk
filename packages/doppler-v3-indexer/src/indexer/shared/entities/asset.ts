@@ -1,80 +1,18 @@
 import { Context } from "ponder:registry";
 import { asset } from "ponder:schema";
-import { Address, zeroAddress } from "viem";
+import { Address } from "viem";
 import { getAssetData } from "@app/utils/getAssetData";
-
-export const insertZoraAssetIfNotExists = async ({
-  assetAddress,
-  timestamp,
-  poolAddress,
-  totalSupply,
-  numeraireAddress,
-  context,
-}: {
-  assetAddress: Address;
-  timestamp: bigint;
-  poolAddress: Address;
-  totalSupply: bigint;
-  numeraireAddress: Address;
-  context: Context;
-}) => {
-  const { db, chain } = context;
-  const address = assetAddress.toLowerCase() as `0x${string}`;
-
-  const existingAsset = await db.find(asset, {
-    address,
-  });
-
-  if (existingAsset) {
-    return existingAsset;
-  }
-
-  const chainId = BigInt(chain.id);
-
-  const zoraAssetData = {
-    numeraire: numeraireAddress,
-    pool: poolAddress,
-    timelock: zeroAddress,
-    governance: zeroAddress,
-    liquidityMigrator: zeroAddress,
-    poolInitializer: zeroAddress,
-    migrationPool: zeroAddress,
-    numTokensToSell: BigInt(0),
-    totalSupply: totalSupply,
-    integrator: zeroAddress,
-  };
-
-  const isToken0 = assetAddress.toLowerCase() < numeraireAddress.toLowerCase();
-
-  return await db.insert(asset).values({
-    ...zoraAssetData,
-    poolAddress,
-    address,
-    chainId,
-    isToken0,
-    createdAt: timestamp,
-    migratedAt: null,
-    migrated: false,
-    holderCount: 0,
-    percentDayChange: 0,
-    marketCapUsd: 0n,
-    dayVolumeUsd: 0n,
-    liquidityUsd: 0n,
-  });
-};
 
 export const insertAssetIfNotExists = async ({
   assetAddress,
   timestamp,
   context,
   marketCapUsd,
-  isZora = false,
 }: {
   assetAddress: Address;
   timestamp: bigint;
   context: Context;
   marketCapUsd?: bigint;
-  isZora?: boolean;
 }) => {
   const { db, chain } = context;
   const address = assetAddress.toLowerCase() as `0x${string}`;

@@ -1,10 +1,9 @@
 import { getAbiItem } from "viem";
 import { FactoryConfig } from "./types";
-import { 
+import {
   UniswapV3InitializerABI,
   UniswapV4InitializerABI,
   AirlockABI,
-  ZoraFactoryABI,
 } from "../../abis";
 import { UniswapV2FactoryABI } from "../../abis/UniswapV2Factory";
 
@@ -43,16 +42,4 @@ export const createV2PairFactory = (factoryAddress: string): FactoryConfig => ({
   address: factoryAddress as `0x${string}`,
   event: getAbiItem({ abi: UniswapV2FactoryABI, name: "PairCreated" }),
   parameter: "pair",
-});
-
-export const createZoraCoinFactory = (factoryAddress: string): FactoryConfig => ({
-  address: factoryAddress as `0x${string}`,
-  event: getAbiItem({ abi: ZoraFactoryABI, name: "CoinCreated" }),
-  parameter: "coin",
-});
-
-export const createZoraPoolFactory = (factoryAddress: string): FactoryConfig => ({
-  address: factoryAddress as `0x${string}`,
-  event: getAbiItem({ abi: ZoraFactoryABI, name: "CoinCreated" }),
-  parameter: "pool",
 });

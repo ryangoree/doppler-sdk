@@ -9,14 +9,10 @@ import {
   DopplerABI,
   PoolManagerABI,
   UniswapV2PairABI,
-  ZoraFactoryABI,
-  ZoraCoinABI,
 } from "./src/abis";
 import {
   CHAIN_IDS,
   configs,
-  zoraFactoryBase,
-  zoraStartBlock,
 } from "./addresses";
 import { UniswapV2FactoryABI } from "@app/abis/UniswapV2Factory";
 
@@ -317,41 +313,6 @@ export default createConfig({
             address: base.v3.v3Initializer,
             event: getAbiItem({ abi: UniswapV3InitializerABI, name: "Create" }),
             parameter: "poolOrHook",
-          }),
-        },
-      },
-    },
-    ZoraFactory: {
-      abi: ZoraFactoryABI,
-      chain: {
-        base: {
-          startBlock: zoraStartBlock,
-          address: zoraFactoryBase,
-        },
-      },
-    },
-    ZoraCoin: {
-      abi: ZoraCoinABI,
-      chain: {
-        base: {
-          startBlock: zoraStartBlock,
-          address: factory({
-            address: zoraFactoryBase,
-            event: getAbiItem({ abi: ZoraFactoryABI, name: "CoinCreated" }),
-            parameter: "coin",
-          }),
-        },
-      },
-    },
-    ZoraUniswapV3Pool: {
-      abi: UniswapV3PoolABI,
-      chain: {
-        base: {
-          startBlock: zoraStartBlock,
-          address: factory({
-            address: zoraFactoryBase,
-            event: getAbiItem({ abi: ZoraFactoryABI, name: "CoinCreated" }),
-            parameter: "pool",
           }),
         },
       },
