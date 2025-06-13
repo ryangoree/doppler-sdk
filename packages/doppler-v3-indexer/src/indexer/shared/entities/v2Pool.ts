@@ -3,7 +3,7 @@ import { Address } from "viem";
 import { Context } from "ponder:registry";
 import { getPairData } from "@app/utils/v2-utils/getPairData";
 import { insertAssetIfNotExists } from "./asset";
-import { computeV2Price } from "@app/utils/v2-utils/computeV2Price";
+import { PriceService } from "@app/core";
 import { fetchEthPrice } from "../oracle";
 import { CHAINLINK_ETH_DECIMALS } from "@app/utils/constants";
 import { insertPoolIfNotExists } from "./pool";
@@ -48,7 +48,7 @@ export const insertV2PoolIfNotExists = async ({
     context,
   });
 
-  const price = computeV2Price({
+  const price = PriceService.computePriceFromReserves({
     assetBalance: reserve0,
     quoteBalance: reserve1,
   });

@@ -6,6 +6,7 @@ import { CHAINLINK_ETH_DECIMALS } from "@app/utils/constants";
 import { updateAsset } from "./entities/asset";
 import { DERC20ABI } from "@app/abis";
 import { updatePool } from "./entities/pool";
+import { MarketDataService } from "@app/core";
 
 export const fetchEthPrice = async (
   timestamp: bigint,
@@ -38,8 +39,11 @@ export const computeMarketCap = ({
   ethPrice: bigint;
   totalSupply: bigint;
 }) => {
-  const marketCap = (price * totalSupply) / BigInt(10 ** 18);
-  const marketCapUsd = (marketCap * ethPrice) / CHAINLINK_ETH_DECIMALS;
-
-  return marketCapUsd;
+  return MarketDataService.calculateMarketCap({
+    price,
+    totalSupply,
+    ethPriceUSD: ethPrice,
+    assetDecimals: 18,
+    isQuoteETH: true,
+  });
 };

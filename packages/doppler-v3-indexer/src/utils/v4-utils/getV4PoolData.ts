@@ -6,7 +6,14 @@ import {
   DopplerLensQuoterABI,
   StateViewABI,
 } from "@app/abis";
-import { PoolKey } from "@app/types/v4-types";
+import {
+  PoolKey,
+  V4PoolConfig,
+  PositionData,
+  Slot0Data,
+  V4PoolData,
+  QuoteExactSingleParams
+} from "@app/types/v4-types";
 import { getPoolId } from "./getPoolId";
 import { computeV4Price } from "./computeV4Price";
 import { getAssetData } from "../getAssetData";
@@ -15,49 +22,7 @@ import {
   getAmount1Delta,
 } from "../v3-utils/computeGraduationThreshold";
 import { configs } from "addresses";
-
-export interface V4PoolConfig {
-  numTokensToSell: bigint;
-  minProceeds: bigint;
-  maxProceeds: bigint;
-  startingTime: bigint;
-  endingTime: bigint;
-  startingTick: number;
-  endingTick: number;
-  epochLength: bigint;
-  gamma: number;
-  isToken0: boolean;
-  numPdSlugs: bigint;
-}
-
-export type PositionData = {
-  tickLower: number;
-  tickUpper: number;
-  liquidity: bigint;
-  salt: number;
-};
-
-export interface Slot0Data {
-  sqrtPrice: bigint;
-  tick: number;
-  protocolFee: number;
-  lpFee: number;
-}
-
-export interface V4PoolData {
-  poolKey: PoolKey;
-  slot0Data: Slot0Data;
-  liquidity: bigint;
-  price: bigint;
-  poolConfig: V4PoolConfig;
-}
-
-interface QuoteExactSingleParams {
-  poolKey: PoolKey;
-  zeroForOne: boolean;
-  exactAmount: bigint;
-  hookData: Hex;
-}
+import { getMulticallOptions } from "@app/core/utils";
 
 export const getV4PoolData = async ({
   hook,
@@ -65,15 +30,11 @@ export const getV4PoolData = async ({
 }: {
   hook: Address;
   context: Context;
-}): Promise<V4PoolData | undefined> => {
+}): Promise<V4PoolData> => {
   const { stateView } = configs[context.chain.name].v4;
   const { client, chain } = context;
 
   const poolConfig = await getV4PoolConfig({ hook, context });
-
-  if (!poolConfig) {
-    return;
-  }
 
   const poolKey = await client.readContract({
     abi: DopplerABI,
@@ -91,12 +52,8 @@ export const getV4PoolData = async ({
 
   const poolId = getPoolId(key);
 
-  let multiCallAddress = {};
-  if (chain.name == "ink") {
-    multiCallAddress = {
-      multicallAddress: "0xcA11bde05977b3631167028862bE2a173976CA11",
-    };
-  }
+  const multicallOptions = getMulticallOptions(chain);
+
   const [slot0, liquidity] = await client.multicall({
     contracts: [
       {
@@ -112,7 +69,7 @@ export const getV4PoolData = async ({
         args: [poolId],
       },
     ],
-    ...multiCallAddress,
+    ...multicallOptions,
   });
 
   if (!slot0.result?.[3]) {
@@ -139,7 +96,7 @@ export const getV4PoolData = async ({
     functionName: "decimals",
   });
 
-  const price = await computeV4Price({
+  const price = computeV4Price({
     isToken0,
     currentTick: slot0Data.tick,
     baseTokenDecimals,
@@ -150,7 +107,7 @@ export const getV4PoolData = async ({
     slot0Data,
     liquidity: liquidityResult,
     price,
-    poolConfig,
+    poolConfig: poolConfig!,
   };
 };
 
@@ -160,7 +117,7 @@ export const getV4PoolConfig = async ({
 }: {
   hook: Address;
   context: Context;
-}): Promise<V4PoolConfig | undefined> => {
+}): Promise<V4PoolConfig> => {
   const { client } = context;
 
   const [
@@ -243,34 +200,18 @@ export const getV4PoolConfig = async ({
     ],
   });
 
-  if (
-    !numTokensToSell.result ||
-    !minProceeds.result ||
-    !maxProceeds.result ||
-    !startingTime.result ||
-    !endingTime.result ||
-    !startingTick.result ||
-    !endingTick.result ||
-    !epochLength.result ||
-    !gamma.result ||
-    isToken0.result == undefined ||
-    !numPdSlugs.result
-  ) {
-    return;
-  }
-
   return {
-    numTokensToSell: numTokensToSell.result,
-    minProceeds: minProceeds.result,
-    maxProceeds: maxProceeds.result,
-    startingTime: startingTime.result,
-    endingTime: endingTime.result,
-    startingTick: startingTick.result,
-    endingTick: endingTick.result,
-    epochLength: epochLength.result,
-    gamma: gamma.result,
-    isToken0: isToken0.result,
-    numPdSlugs: numPdSlugs.result,
+    numTokensToSell: numTokensToSell.result!,
+    minProceeds: minProceeds.result!,
+    maxProceeds: maxProceeds.result!,
+    startingTime: startingTime.result!,
+    endingTime: endingTime.result!,
+    startingTick: startingTick.result!,
+    endingTick: endingTick.result!,
+    epochLength: epochLength.result!,
+    gamma: gamma.result!,
+    isToken0: isToken0.result!,
+    numPdSlugs: numPdSlugs.result!,
   };
 };
 

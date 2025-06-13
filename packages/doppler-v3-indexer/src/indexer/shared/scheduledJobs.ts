@@ -67,9 +67,16 @@ export const tryAddActivePool = async ({
   const { db, chain } = context;
   const chainId = chain.id;
 
-  const existingData = await db.find(activePoolsBlob, {
+  let existingData = await db.find(activePoolsBlob, {
     chainId: BigInt(chainId),
   });
+
+  if (!existingData) {
+    existingData = await insertActivePoolsBlobIfNotExists({
+      context,
+    });
+
+  }
 
   if (!existingData) {
     throw new Error("Active pools blob not found");
@@ -163,8 +170,8 @@ export const refreshActivePoolsBlob = async ({
 
       const totalVolumeUsd = oldestCheckpointTime
         ? Object.values(updatedCheckpoints).reduce((acc, vol) => {
-            return acc + BigInt(vol.volumeUsd);
-          }, BigInt(0))
+          return acc + BigInt(vol.volumeUsd);
+        }, BigInt(0))
         : 0n;
 
       if (!oldestCheckpointTime) {
@@ -177,9 +184,9 @@ export const refreshActivePoolsBlob = async ({
 
       const newestMarketCapUsd = newestCheckpointTime
         ? BigInt(
-            volumeCheckpoints[newestCheckpointTime!.toString()]?.marketCapUsd ||
-              "0"
-          )
+          volumeCheckpoints[newestCheckpointTime!.toString()]?.marketCapUsd ||
+          "0"
+        )
         : 0n;
 
       const percentDayChange = await compute24HourPriceChange({

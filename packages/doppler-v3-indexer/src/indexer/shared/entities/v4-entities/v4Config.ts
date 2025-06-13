@@ -22,10 +22,6 @@ export const insertV4ConfigIfNotExists = async ({
 
   const config = await getV4PoolConfig({ hook: hookAddress, context });
 
-  if (!config) {
-    return;
-  }
-
   return await db.insert(v4PoolConfig).values({
     ...config,
     hookAddress,

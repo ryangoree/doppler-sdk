@@ -1,4 +1,4 @@
-import { WAD } from "../constants";
+import { PriceService } from "@app/core/pricing";
 
 export const computeV2Price = ({
   assetBalance,
@@ -7,6 +7,8 @@ export const computeV2Price = ({
   assetBalance: bigint;
   quoteBalance: bigint;
 }) => {
-  const quote = (WAD * quoteBalance) / assetBalance;
-  return quote;
+  return PriceService.computePriceFromReserves({
+    assetBalance,
+    quoteBalance,
+  });
 };
