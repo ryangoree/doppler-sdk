@@ -2,6 +2,7 @@ import { Context } from "ponder:registry";
 import { token } from "ponder.schema";
 import { Address, zeroAddress } from "viem";
 import { DERC20ABI } from "@app/abis";
+import { addPendingTokenImage } from "../pending-token-images";
 
 export const insertTokenIfNotExists = async ({
   tokenAddress,
@@ -151,12 +152,29 @@ export const insertTokenIfNotExists = async ({
           if (tokenUriData.image.startsWith("https://")) {
             image = tokenUriData.image;
           }
+        } else {
+          // Add to pending list for retry
+          await addPendingTokenImage({
+            context,
+            chainId,
+            tokenAddress: address,
+            tokenURI,
+            timestamp: Number(timestamp),
+          });
         }
       } catch (error) {
         console.error(
           `Failed to fetch ohara metadata for token ${address}:`,
           error
         );
+        // Add to pending list for retry
+        await addPendingTokenImage({
+          context,
+          chainId,
+          tokenAddress: address,
+          tokenURI,
+          timestamp: Number(timestamp),
+        });
       }
     }
 

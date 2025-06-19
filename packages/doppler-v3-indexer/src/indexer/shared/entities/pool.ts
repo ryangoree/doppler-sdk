@@ -5,8 +5,10 @@ import { Address } from "viem";
 import { Context } from "ponder:registry";
 import { computeMarketCap } from "../oracle";
 import { getReservesV4 } from "@app/utils/v4-utils/getV4PoolData";
+import { computeGraduationPercentage } from "@app/utils/v4-utils";
 import { DERC20ABI } from "@app/abis";
 import { V4PoolData } from "@app/types";
+import { configs } from "@app/types";
 
 export const fetchExistingPool = async ({
   poolAddress,
@@ -63,6 +65,8 @@ export const insertPoolIfNotExists = async ({
   const assetAddr = poolState.asset.toLowerCase() as `0x${string}`;
   const numeraireAddr = poolState.numeraire.toLowerCase() as `0x${string}`;
 
+  const isQuoteEth = poolState.numeraire.toLowerCase() === "0x0000000000000000000000000000000000000000" || poolState.numeraire.toLowerCase() === configs[chain.name].shared.weth;
+
   const assetTotalSupply = await client.readContract({
     address: assetAddr,
     abi: DERC20ABI,
@@ -90,7 +94,7 @@ export const insertPoolIfNotExists = async ({
     fee,
     dollarLiquidity: 0n,
     dailyVolume: address,
-    graduationThreshold: 0n,
+    maxThreshold: 0n,
     graduationBalance: 0n,
     totalFee0: 0n,
     totalFee1: 0n,
@@ -100,6 +104,7 @@ export const insertPoolIfNotExists = async ({
     percentDayChange: 0,
     isToken0,
     marketCapUsd,
+    isQuoteEth
   });
 };
 
@@ -157,6 +162,8 @@ export const insertPoolIfNotExistsV4 = async ({
     ? poolKey.currency1
     : poolKey.currency0;
 
+  const isQuoteEth = numeraireAddr.toLowerCase() === "0x0000000000000000000000000000000000000000" || numeraireAddr.toLowerCase() === configs[chain.name].shared.weth;
+
 
   const [reserves, totalSupply] = await Promise.all([
     getReservesV4({
@@ -189,6 +196,11 @@ export const insertPoolIfNotExistsV4 = async ({
     totalSupply,
   });
 
+  const graduationPercentage = computeGraduationPercentage({
+    maxThreshold: poolConfig.maxProceeds,
+    graduationBalance: 0n,
+  });
+
   return await db.insert(pool).values({
     address,
     chainId: BigInt(chain.id),
@@ -208,12 +220,15 @@ export const insertPoolIfNotExistsV4 = async ({
     percentDayChange: 0,
     totalFee0: 0n,
     totalFee1: 0n,
-    graduationThreshold: 0n,
+    maxThreshold: poolConfig.maxProceeds,
+    minThreshold: poolConfig.minProceeds,
     graduationBalance: 0n,
+    graduationPercentage,
     isToken0: poolConfig.isToken0,
     marketCapUsd,
     reserves0: token0Reserve,
     reserves1: token1Reserve,
     poolKey: JSON.stringify(poolKey),
+    isQuoteEth
   });
 };
