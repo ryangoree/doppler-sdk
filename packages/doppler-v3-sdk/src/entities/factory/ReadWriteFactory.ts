@@ -10,6 +10,7 @@ import {
 import { ReadFactory, AirlockABI } from "./ReadFactory";
 import { BundlerAbi } from "../../abis";
 import { Address, encodeAbiParameters, Hex, parseEther, toHex } from "viem";
+import { BeneficiaryData, V4MigratorData } from "../../types";
 
 // Constants for default configuration values
 export const ONE_YEAR_IN_SECONDS = 365 * 24 * 60 * 60;
@@ -27,6 +28,9 @@ export const DEFAULT_MAX_SHARE_TO_BE_SOLD = parseEther("0.35");
 export const DEFAULT_INITIAL_VOTING_DELAY = 172800;
 export const DEFAULT_INITIAL_VOTING_PERIOD = 1209600;
 export const DEFAULT_INITIAL_PROPOSAL_THRESHOLD = BigInt(0);
+
+export const WAD = BigInt(10 ** 18);
+export const DEAD_ADDRESS = "0x000000000000000000000000000000000000dEaD" as Address;
 
 /**
  * Parameters required for creating a new Doppler V3 pool
@@ -603,6 +607,103 @@ export class ReadWriteFactory extends ReadFactory {
     this.defaultGovernanceConfig = this.mergeWithDefaults(
       configs.defaultGovernanceConfig || {},
       this.defaultGovernanceConfig
+    );
+  }
+
+  /**
+   * Sort beneficiaries by address in ascending order
+   * @param beneficiaries Array of beneficiary data
+   * @returns Sorted array of beneficiaries
+   */
+  public sortBeneficiaries(
+    beneficiaries: BeneficiaryData[]
+  ): BeneficiaryData[] {
+    return [...beneficiaries].sort((a, b) => {
+      const aNum = BigInt(a.beneficiary);
+      const bNum = BigInt(b.beneficiary);
+      return aNum < bNum ? -1 : aNum > bNum ? 1 : 0;
+    });
+  }
+
+  /**
+   * Validate beneficiary data
+   * @param beneficiaries Array of beneficiary data to validate
+   * @throws Error if validation fails
+   */
+  private validateBeneficiaries(beneficiaries: BeneficiaryData[]): void {
+    if (beneficiaries.length === 0) {
+      throw new Error("At least one beneficiary is required");
+    }
+
+    // Check that beneficiaries are sorted
+    for (let i = 1; i < beneficiaries.length; i++) {
+      if (
+        BigInt(beneficiaries[i].beneficiary) <=
+        BigInt(beneficiaries[i - 1].beneficiary)
+      ) {
+        throw new Error(
+          "Beneficiaries must be sorted in ascending order by address"
+        );
+      }
+    }
+
+    // Check that all shares are positive
+    let totalShares = BigInt(0);
+    for (const beneficiary of beneficiaries) {
+      if (beneficiary.shares <= 0) {
+        throw new Error("All beneficiary shares must be positive");
+      }
+      totalShares += beneficiary.shares;
+    }
+
+    // Check that shares sum to WAD
+    if (totalShares !== WAD) {
+      throw new Error(
+        `Total shares must equal ${WAD} (100%), but got ${totalShares}`
+      );
+    }
+  }
+
+  /**
+   * Encode V4 migrator data for Uniswap V4 migration with StreamableFeesLocker
+   * @param data V4 migrator configuration
+   * @returns Encoded hex data
+   */
+  public encodeV4MigratorData(data: V4MigratorData): Hex {
+    // Validate beneficiaries before encoding
+    this.validateBeneficiaries(data.beneficiaries);
+
+    return encodeAbiParameters(
+      [
+        {
+          name: "migratorData",
+          type: "tuple",
+          components: [
+            { name: "fee", type: "uint24" },
+            { name: "tickSpacing", type: "int24" },
+            { name: "lockDuration", type: "uint256" },
+            {
+              name: "beneficiaries",
+              type: "tuple[]",
+              components: [
+                { name: "beneficiary", type: "address" },
+                { name: "shares", type: "uint96" },
+              ],
+            },
+          ],
+        },
+      ],
+      [
+        {
+          fee: data.fee,
+          tickSpacing: data.tickSpacing,
+          lockDuration: BigInt(data.lockDuration),
+          beneficiaries: data.beneficiaries.map((b) => ({
+            beneficiary: b.beneficiary,
+            shares: b.shares,
+          })),
+        },
+      ]
     );
   }
 }

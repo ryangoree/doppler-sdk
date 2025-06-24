@@ -52,3 +52,20 @@ export interface Slot0 {
   feeProtocol: number;
   unlocked: boolean;
 }
+
+export interface BeneficiaryData {
+  beneficiary: Address;
+  shares: bigint; // in WAD (1e18)
+}
+
+export interface V4MigratorData {
+  fee: number; // in bips
+  tickSpacing: number;
+  lockDuration: number; // in seconds
+  beneficiaries: BeneficiaryData[];
+}
+
+export interface StreamableFeesConfig {
+  lockDuration: number; // in seconds
+  beneficiaries: BeneficiaryData[];
+}
