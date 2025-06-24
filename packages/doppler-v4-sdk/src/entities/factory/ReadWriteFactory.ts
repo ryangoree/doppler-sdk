@@ -287,7 +287,7 @@ export class ReadWriteFactory extends ReadFactory {
     }
 
     // Check ordering (must be in ascending order by address)
-    let prevBeneficiary = zeroAddress;
+    let prevBeneficiary: Address = zeroAddress;
     let totalShares = BigInt(0);
 
     for (const beneficiary of beneficiaries) {
