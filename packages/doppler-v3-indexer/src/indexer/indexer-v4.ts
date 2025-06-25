@@ -283,6 +283,8 @@ ponder.on("UniswapV4Pool:Swap", async ({ event, context }) => {
         liquidity: v4PoolData.liquidity,
         graduationBalance: totalProceeds,
         graduationPercentage,
+        totalProceeds,
+        totalTokensSold,
       },
     }),
     addAndUpdateV4PoolPriceHistory({
@@ -553,6 +555,8 @@ ponder.on("UniswapV4Pool2:Swap", async ({ event, context }) => {
         totalProceeds,
         totalTokensSold,
         graduationPercentage,
+        totalProceeds,
+        totalTokensSold,
       },
     }),
     addAndUpdateV4PoolPriceHistory({
