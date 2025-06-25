@@ -153,6 +153,7 @@ export interface InitializerContractDependencies {
  * @property saleConfig Optional sale configuration overrides
  * @property v3PoolConfig Optional pool configuration overrides
  * @property vestingConfig Vesting configuration or "default" preset
+ * @property liquidityMigratorData Optional encoded V4 migrator data for future migration
  */
 export interface CreateV3PoolParams {
   integrator: Address;
@@ -164,6 +165,7 @@ export interface CreateV3PoolParams {
   v3PoolConfig?: Partial<V3PoolConfig>;
   vestingConfig: VestingConfig | "default";
   governanceConfig?: Partial<GovernanceConfig>;
+  liquidityMigratorData?: Hex;
 }
 
 /**
@@ -460,7 +462,7 @@ export class ReadWriteFactory extends ReadFactory {
       vestingConfig
     );
     const poolInitializerData = this.encodePoolInitializerData(v3PoolConfig);
-    const liquidityMigratorData = "0x" as Hex;
+    const liquidityMigratorData = params.liquidityMigratorData ?? ("0x" as Hex);
 
     // Prepare final arguments
     const {
