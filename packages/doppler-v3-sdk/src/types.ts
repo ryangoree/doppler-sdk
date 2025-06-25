@@ -4,6 +4,7 @@ export type DopplerV3Addresses = {
   airlock: Address;
   tokenFactory: Address;
   governanceFactory: Address;
+  noOpGovernanceFactory?: Address;
   liquidityMigrator: Address;
   v3Initializer: Address;
   universalRouter: Address;
