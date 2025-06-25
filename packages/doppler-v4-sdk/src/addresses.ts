@@ -39,7 +39,7 @@ export const DOPPLER_V4_ADDRESSES: { [chainId: number]: DopplerV4Addresses } = {
     airlock: '0xBE5ad4efe4085AF00FD4a9E30b754cDcEFE9C6Ad' as Address,
     tokenFactory: '0xF140987E88208b1ef48Cf5D39448Cc82EdF1f51e' as Address,
     governanceFactory: '0x482055c3a704610b22e77ACc29863F92bcFd4298' as Address,
-    noOpGovernanceFactory: '0x0000000000000000000000000000000000000000' as Address, // TODO: Deploy and update
+    noOpGovernanceFactory: '0x916B8987E4aD325C10d58ED8Dc2036a6FF5EB228' as Address,
     migrator: '0xD797E6af3211aE124B8EDff69db21FFe6C659104' as Address,
     streamableFeesLocker: '0x0000000000000000000000000000000000000000' as Address, // TODO: Deploy and update
     dopplerDeployer: '0xbC6352F1FE2f5790A4a16ff79C9cB5caD238b258' as Address,
