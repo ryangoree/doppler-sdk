@@ -2,6 +2,7 @@ import { v2Pool } from "ponder:schema";
 import { Address } from "viem";
 import { Context } from "ponder:registry";
 import { getPairData } from "@app/utils/v2-utils/getPairData";
+import { getPoolDataSafe } from "@app/utils/v2-utils/getPoolDataSafe";
 import { insertAssetIfNotExists } from "./asset";
 import { PriceService } from "@app/core";
 import { fetchEthPrice } from "../oracle";
@@ -53,7 +54,7 @@ export const insertV2PoolIfNotExists = async ({
 
   const poolAddr = poolAddress.toLowerCase() as `0x${string}`;
 
-  const { reserve0, reserve1 } = await getPairData({
+  const { reserve0, reserve1 } = await getPoolDataSafe({
     address: migrationPoolAddr,
     context,
   });
