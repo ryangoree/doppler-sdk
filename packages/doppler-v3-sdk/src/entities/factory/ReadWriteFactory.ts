@@ -677,34 +677,22 @@ export class ReadWriteFactory extends ReadFactory {
 
     return encodeAbiParameters(
       [
-        {
-          name: "migratorData",
-          type: "tuple",
-          components: [
-            { name: "fee", type: "uint24" },
-            { name: "tickSpacing", type: "int24" },
-            { name: "lockDuration", type: "uint256" },
-            {
-              name: "beneficiaries",
-              type: "tuple[]",
-              components: [
-                { name: "beneficiary", type: "address" },
-                { name: "shares", type: "uint96" },
-              ],
-            },
-          ],
-        },
+        { type: "uint24" },  // fee
+        { type: "int24" },   // tickSpacing
+        { type: "uint32" },  // lockDuration
+        { type: "tuple[]", components: [
+          { type: "address", name: "beneficiary" },
+          { type: "uint96", name: "shares" }
+        ]}
       ],
       [
-        {
-          fee: data.fee,
-          tickSpacing: data.tickSpacing,
-          lockDuration: BigInt(data.lockDuration),
-          beneficiaries: data.beneficiaries.map((b) => ({
-            beneficiary: b.beneficiary,
-            shares: b.shares,
-          })),
-        },
+        data.fee,
+        data.tickSpacing,
+        data.lockDuration,
+        data.beneficiaries.map(b => ({
+          beneficiary: b.beneficiary,
+          shares: b.shares
+        }))
       ]
     );
   }

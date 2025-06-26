@@ -12,6 +12,8 @@ export type DopplerV3Addresses = {
   quoterV2: Address;
   univ2Router02: Address;
   bundler: Address;
+  v4Migrator?: Address;
+  streamableFeesLocker?: Address;
 };
 
 export type PoolKey = {
