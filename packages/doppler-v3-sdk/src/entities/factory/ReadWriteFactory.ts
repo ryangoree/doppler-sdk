@@ -11,6 +11,7 @@ import { ReadFactory, AirlockABI } from "./ReadFactory";
 import { BundlerAbi } from "../../abis";
 import { Address, encodeAbiParameters, Hex, parseEther, toHex } from "viem";
 import { BeneficiaryData, V4MigratorData } from "../../types";
+import { DOPPLER_V3_ADDRESSES } from "../../addresses";
 
 // Constants for default configuration values
 export const ONE_YEAR_IN_SECONDS = 365 * 24 * 60 * 60;
@@ -194,6 +195,7 @@ export class ReadWriteFactory extends ReadFactory {
   declare defaultVestingConfig: VestingConfig;
   declare defaultSaleConfig: SaleConfig;
   declare defaultGovernanceConfig: GovernanceConfig;
+  private drift: Drift<ReadWriteAdapter>;
   /**
    * Create a new ReadWriteFactory instance
    * @param address Contract address
@@ -207,6 +209,7 @@ export class ReadWriteFactory extends ReadFactory {
     defaultConfigs?: DefaultConfigs
   ) {
     super(address, drift);
+    this.drift = drift;
     this.bundler = drift.contract({
       abi: BundlerAbi,
       address: bundlerAddress,
@@ -504,6 +507,48 @@ export class ReadWriteFactory extends ReadFactory {
   public async encodeCreateData(
     params: CreateV3PoolParams
   ): Promise<CreateParams> {
+    // First, perform validation before any encoding
+    const saleConfig = this.getMergedSaleConfig(params.saleConfig);
+    const vestingConfig = this.getMergedVestingConfig(
+      params.vestingConfig,
+      params.userAddress
+    );
+    const totalVestedAmount = vestingConfig.amounts.reduce(
+      (sum, amount) => sum + amount,
+      0n
+    );
+
+    // Validation Rule #1: Supply Integrity Constraint
+    if (saleConfig.initialSupply < saleConfig.numTokensToSell + totalVestedAmount) {
+      throw new Error(
+        `Configuration Error: Vesting and sale amounts (${
+          saleConfig.numTokensToSell + totalVestedAmount
+        }) exceed the initial supply (${
+          saleConfig.initialSupply
+        }). Please adjust your vesting schedule or increase the initial supply.`
+      );
+    }
+
+    // Validation Rule #2: No-Op Governance Constraint
+    // Check if the governance factory is a no-op governance factory
+    const chainId = await this.drift.getChainId();
+    const addresses = DOPPLER_V3_ADDRESSES[chainId];
+    const isNoOp = addresses?.noOpGovernanceFactory &&
+      params.contracts.governanceFactory.toLowerCase() === 
+      addresses.noOpGovernanceFactory.toLowerCase();
+
+    if (isNoOp) {
+      const excess = saleConfig.initialSupply - (saleConfig.numTokensToSell + totalVestedAmount);
+      if (excess !== 0n) {
+        throw new Error(
+          `Configuration Error: No-op governance requires zero excess tokens. ` +
+          `The current configuration creates an excess of ${excess} tokens. ` +
+          `Please set initialSupply to be exactly the sum of numTokensToSell and vested amounts.`
+        );
+      }
+    }
+
+    // If validation passes, proceed with the original logic
     let isToken0 = true;
     let createParams!: CreateParams;
     let asset!: Address;
