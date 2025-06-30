@@ -5,9 +5,13 @@ import { Address, Hex } from "viem";
  */
 export interface V4Addresses {
   poolManager: Address;
-  hookInitializer: Address;
+  dopplerDeployer: Address;
+  v4Initializer: Address;
+  v4Initializer2: Address;
   stateView: Address;
-  quoter: Address;
+  dopplerLens: Address;
+  v4Migrator: Address;
+  v4MigratorHook: Address;
 }
 
 /**

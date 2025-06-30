@@ -4,7 +4,8 @@ import {
   UniswapV4InitializerABI,
   DERC20ABI,
   PoolManagerABI,
-  DopplerABI
+  DopplerABI,
+  V4MigratorABI
 } from "../../abis";
 import { createV4AssetFactory, createV4PoolFactory } from "./factories";
 
@@ -130,6 +131,40 @@ export const generateV4Contracts = (): ContractConfigMap => {
   }
 
   // PoolManager contract
+  contracts.PoolManager = {
+    abi: PoolManagerABI,
+    chain: Object.fromEntries(
+      v4Chains.map(([name, config]) => [
+        name,
+        {
+          startBlock: config.v4StartBlock!,
+          address: config.addresses.v4.poolManager,
+        },
+      ])
+    ),
+  };
+
+  // V4 Migrator contract
+  const v4MigratorChains = v4Chains.filter(
+    ([_, config]) => config.addresses.v4.v4Migrator !== "0x0000000000000000000000000000000000000000"
+  );
+
+  if (v4MigratorChains.length > 0) {
+    contracts.V4Migrator = {
+      abi: V4MigratorABI,
+      chain: Object.fromEntries(
+        v4MigratorChains.map(([name, config]) => [
+          name,
+          {
+            startBlock: config.v4StartBlock!,
+            address: config.addresses.v4.v4Migrator,
+          },
+        ])
+      ),
+    };
+  }
+
+  // PoolManager contract - needed to track migrated V4 pools
   contracts.PoolManager = {
     abi: PoolManagerABI,
     chain: Object.fromEntries(

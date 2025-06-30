@@ -30,6 +30,8 @@ export const baseSepoliaConfig: ChainConfig = {
       dopplerLens: "0x2f36392BfB0A9082b624Ed65f6059E586fB4C530" as Address,
       stateView: "0x571291b572ed32ce6751a2cb2486ebee8defb9b4" as Address,
       v4Initializer: "0x511b44b4cC8Cb80223F203E400309b010fEbFAec" as Address,
+      v4Migrator: "0x853fbee6391d75c82cb0cf77eb83251896a2d77a" as Address,
+      v4MigratorHook: "0x189ef4d1f328b5d76df78c5409a72e1e8d1c2000" as Address,
     },
     shared: {
       airlock: "0x7E6cF695a8BeA4b2bF94FbB5434a7da3f39A2f8D" as Address,
@@ -64,6 +66,8 @@ export const baseConfig: ChainConfig = {
       v4Initializer2: "0x77EbfBAE15AD200758E9E2E61597c0B07d731254" as Address,
       stateView: "0xa3c0c9b65bad0b08107aa264b0f3db444b867a71" as Address,
       dopplerLens: "0x094d926a969b3024ca46d2186bf13fd5cdba9ce2" as Address,
+      v4Migrator: "0x82Cc0DAAea3c9Ee022bC61dbC7Bf6dB6460b6000" as Address,
+      v4MigratorHook: "0x82cc0daaea3c9ee022bc61dbc7bf6db6460b6000" as Address,
     },
     shared: {
       airlock: "0x660eAaEdEBc968f8f3694354FA8EC0b4c5Ba8D12" as Address,

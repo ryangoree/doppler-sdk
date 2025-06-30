@@ -8,7 +8,7 @@ export const getPoolId = (poolKey: PoolKey): Hex => {
         { type: "address" },
         { type: "address" },
         { type: "uint24" },
-        { type: "uint24" },
+        { type: "int24" },
         { type: "address" },
       ],
       [
