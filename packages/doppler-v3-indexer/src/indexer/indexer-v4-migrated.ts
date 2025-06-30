@@ -19,6 +19,9 @@ import { tryAddActivePool } from "./shared/scheduledJobs";
 import { insertTokenIfNotExists } from "./shared/entities/token";
 import { CHAINLINK_ETH_DECIMALS } from "@app/utils/constants";
 import { computeMarketCap } from "./shared/oracle";
+import { pool, position } from "ponder:schema";
+import { fetchExistingPool } from "./shared/entities/pool";
+import { insertPositionIfNotExists, updatePosition } from "./shared/entities/position";
 
 // Helper to get V4MigratorHook address for a chain
 const getV4MigratorHook = (chainName: string): Address | null => {
@@ -47,14 +50,13 @@ ponder.on("PoolManager:Initialize", async ({ event, context }) => {
   }
   
   // Get the existing pool entity (should have been created by Airlock:Migrate)
-  const existingPool = await db.pool.findUnique({
-    where: {
-      address: poolId,
-      chainId: BigInt(chain.id),
-    },
-  });
-  
-  if (!existingPool) {
+  let existingPool;
+  try {
+    existingPool = await fetchExistingPool({
+      poolAddress: poolId,
+      context,
+    });
+  } catch (error) {
     console.warn(`Pool ${poolId} initialized via V4Migrator but not found in database`);
     return;
   }
@@ -92,14 +94,17 @@ ponder.on("PoolManager:Swap", async ({ event, context }) => {
   const { db, chain } = context;
   
   // Check if this pool was created via migration
-  const pool = await db.pool.findUnique({
-    where: {
-      address: poolId,
-      chainId: BigInt(chain.id),
-    },
-  });
+  let pool;
+  try {
+    pool = await fetchExistingPool({
+      poolAddress: poolId,
+      context,
+    });
+  } catch (error) {
+    return; // Pool not found, skip
+  }
   
-  if (!pool || !pool.migratedFromPool) {
+  if (!pool.migratedFromPool) {
     return; // Not a migrated pool, skip
   }
   
@@ -252,14 +257,17 @@ ponder.on("PoolManager:ModifyLiquidity", async ({ event, context }) => {
   const { db, chain } = context;
   
   // Check if this pool was created via migration
-  const pool = await db.pool.findUnique({
-    where: {
-      address: poolId,
-      chainId: BigInt(chain.id),
-    },
-  });
+  let pool;
+  try {
+    pool = await fetchExistingPool({
+      poolAddress: poolId,
+      context,
+    });
+  } catch (error) {
+    return; // Pool not found, skip
+  }
   
-  if (!pool || !pool.migratedFromPool) {
+  if (!pool.migratedFromPool) {
     return; // Not a migrated pool, skip
   }
   
@@ -291,28 +299,34 @@ ponder.on("PoolManager:ModifyLiquidity", async ({ event, context }) => {
   
   // Update position tracking if this is a new position
   if (liquidityDelta > 0n) {
-    await db.position.upsert({
-      where: {
-        pool_tickLower_tickUpper_chainId: {
-          pool: poolId,
-          tickLower: Number(tickLower),
-          tickUpper: Number(tickUpper),
-          chainId: BigInt(chain.id),
+    const existingPosition = await db.find(position, {
+      pool: poolId,
+      tickLower: Number(tickLower),
+      tickUpper: Number(tickUpper),
+      chainId: BigInt(chain.id),
+    });
+    
+    if (existingPosition) {
+      await updatePosition({
+        poolAddress: poolId,
+        tickLower: Number(tickLower),
+        tickUpper: Number(tickUpper),
+        context,
+        update: {
+          liquidity: newLiquidity,
         },
-      },
-      create: {
-        owner: sender.toLowerCase() as Address,
-        pool: poolId,
+      });
+    } else {
+      await insertPositionIfNotExists({
+        poolAddress: poolId,
         tickLower: Number(tickLower),
         tickUpper: Number(tickUpper),
         liquidity: BigInt(liquidityDelta),
-        createdAt: timestamp,
-        chainId: BigInt(chain.id),
-      },
-      update: {
-        liquidity: newLiquidity,
-      },
-    });
+        owner: sender,
+        timestamp,
+        context,
+      });
+    }
   }
 });
 
@@ -323,14 +337,17 @@ ponder.on("PoolManager:Donate", async ({ event, context }) => {
   const { db, chain } = context;
   
   // Check if this pool was created via migration
-  const pool = await db.pool.findUnique({
-    where: {
-      address: poolId,
-      chainId: BigInt(chain.id),
-    },
-  });
+  let pool;
+  try {
+    pool = await fetchExistingPool({
+      poolAddress: poolId,
+      context,
+    });
+  } catch (error) {
+    return; // Pool not found, skip
+  }
   
-  if (!pool || !pool.migratedFromPool) {
+  if (!pool.migratedFromPool) {
     return; // Not a migrated pool, skip
   }
   
