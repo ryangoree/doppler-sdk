@@ -1,5 +1,5 @@
 import { ponder } from "ponder:registry";
-import { pool } from "ponder.schema";
+import { pool, v4pools } from "ponder:schema";
 import { insertAssetIfNotExists, updateAsset } from "./shared/entities/asset";
 import { insertTokenIfNotExists, updateToken } from "./shared/entities/token";
 import { insertV2PoolIfNotExists } from "./shared/entities/v2Pool";
@@ -72,74 +72,80 @@ ponder.on("Airlock:Migrate", async ({ event, context }) => {
         return;
       }
       
-      // Use the pool ID as the address for migrated V4 pools
-      const poolAddress = poolId.toLowerCase() as `0x${string}`;
-      
-      const existingPool = await db.find(pool, {
-        address: poolAddress,
+      // Check if v4pool already exists
+      const existingV4Pool = await db.find(v4pools, {
+        poolId: poolId.toLowerCase() as `0x${string}`,
         chainId: BigInt(chain.id),
       });
 
-      if (!existingPool) {
+      if (!existingV4Pool) {
         // Extract basic information from the poolKey
         const isToken0First = poolKey.currency0.toLowerCase() < poolKey.currency1.toLowerCase();
         const baseToken = isToken0First ? poolKey.currency0 : poolKey.currency1;
         const quoteToken = isToken0First ? poolKey.currency1 : poolKey.currency0;
         
-        await db.insert(pool).values({
-          address: poolAddress,
+        // Create the v4pools entity
+        await db.insert(v4pools).values({
+          poolId: poolId.toLowerCase() as `0x${string}`,
           chainId: BigInt(chain.id),
+          
+          // PoolKey components
+          currency0: poolKey.currency0.toLowerCase() as `0x${string}`,
+          currency1: poolKey.currency1.toLowerCase() as `0x${string}`,
+          fee: Number(poolKey.fee),
+          tickSpacing: Number(poolKey.tickSpacing),
+          hooks: poolKey.hooks.toLowerCase() as `0x${string}`,
+          
+          // Pool state (will be initialized by PoolManager:Initialize event)
+          sqrtPriceX96: 0n,
+          liquidity: 0n,
+          tick: 0,
+          
+          // Token references
           baseToken: baseToken.toLowerCase() as `0x${string}`,
           quoteToken: quoteToken.toLowerCase() as `0x${string}`,
           asset: assetId,
-          isToken0: assetId === baseToken.toLowerCase(),
-          createdAt: timestamp,
-          lastRefreshed: timestamp,
-          fee: Number(poolKey.fee),
-          price: 0n, // Will be updated when trading starts
-          tick: 0, // Will be updated on initialization
-          sqrtPrice: 0n, // Will be updated on initialization
-          liquidity: 0n, // Will be updated on initialization
-          type: "v4", // V4 pool type
-          dollarLiquidity: 0n,
-          dailyVolume: "0x0000000000000000000000000000000000000000" as `0x${string}`, // Will be updated
+          
+          // Migration tracking
+          migratedFromPool: oldPoolAddress,
+          migratedAt: timestamp,
+          migratorVersion: "v4",
+          
+          // Metrics (will be updated by swap events)
+          price: 0n,
           volumeUsd: 0n,
-          percentDayChange: 0,
+          dollarLiquidity: 0n,
           totalFee0: 0n,
           totalFee1: 0n,
-          graduationBalance: 0n,
-          graduationPercentage: 0,
-          maxThreshold: 0n,
           reserves0: 0n,
           reserves1: 0n,
-          totalProceeds: 0n,
-          totalTokensSold: 0n,
-          holderCount: 0,
-          marketCapUsd: 0n,
-          migrated: false, // This is the new pool, not migrated itself
-          migratedFromPool: oldPoolAddress,
+          
+          // Timestamps
+          createdAt: timestamp,
+          lastRefreshed: timestamp,
+          lastSwapTimestamp: null,
+          
+          // Price tracking
+          percentDayChange: 0,
+          
+          // Relations
+          dailyVolume: null,
+          
+          // Helper fields
+          isToken0: assetId === baseToken.toLowerCase(),
           isQuoteEth: quoteToken.toLowerCase() === "0x0000000000000000000000000000000000000000" || 
                       quoteToken.toLowerCase() === chainConfigs[chain.name as keyof typeof chainConfigs].addresses.shared.weth.toLowerCase(),
         });
       }
 
-      // Update the old pool as migrated
+      // Update the old pool as migrated (store the V4 pool ID)
       await updatePool({
         poolAddress: oldPoolAddress,
         context,
         update: {
           migratedAt: timestamp,
           migrated: true,
-          migratedToPool: poolId,
-        },
-      });
-
-      // Update the new pool with migration info
-      await updatePool({
-        poolAddress: poolId,
-        context,
-        update: {
-          migratedFromPool: oldPoolAddress,
+          migratedToV4PoolId: poolId.toLowerCase() as `0x${string}`, // Store the 32-byte pool ID
         },
       });
 
@@ -150,7 +156,8 @@ ponder.on("Airlock:Migrate", async ({ event, context }) => {
         update: {
           migratedAt: timestamp,
           migrated: true,
-          poolAddress: poolId, // Update to point to new pool
+          // Note: We keep poolAddress pointing to the original pool
+          // The v4pools entity tracks the new pool
         },
       });
 

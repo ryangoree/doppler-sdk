@@ -19,8 +19,9 @@ import { tryAddActivePool } from "./shared/scheduledJobs";
 import { insertTokenIfNotExists } from "./shared/entities/token";
 import { CHAINLINK_ETH_DECIMALS } from "@app/utils/constants";
 import { computeMarketCap } from "./shared/oracle";
-import { pool, position } from "ponder:schema";
+import { pool, position, v4pools } from "ponder:schema";
 import { fetchExistingPool } from "./shared/entities/pool";
+import { fetchExistingV4Pool, updateV4Pool } from "./shared/entities/v4pools";
 import { insertPositionIfNotExists, updatePosition } from "./shared/entities/position";
 
 // Helper to get V4MigratorHook address for a chain
@@ -49,15 +50,15 @@ ponder.on("PoolManager:Initialize", async ({ event, context }) => {
     return; // Not a migrated pool
   }
   
-  // Get the existing pool entity (should have been created by Airlock:Migrate)
-  let existingPool;
+  // Get the existing v4pool entity (should have been created by Airlock:Migrate)
+  let existingV4Pool;
   try {
-    existingPool = await fetchExistingPool({
-      poolAddress: poolId,
+    existingV4Pool = await fetchExistingV4Pool({
+      poolId: poolId,
       context,
     });
   } catch (error) {
-    console.warn(`Pool ${poolId} initialized via V4Migrator but not found in database`);
+    console.warn(`V4 pool ${poolId} initialized via V4Migrator but not found in database`);
     return;
   }
   
@@ -67,20 +68,20 @@ ponder.on("PoolManager:Initialize", async ({ event, context }) => {
   // Calculate the initial price from tick
   const price = computeV4Price({
     tick: Number(tick),
-    isToken0: existingPool.isToken0,
+    isToken0: existingV4Pool.isToken0,
   });
   
   // Calculate initial dollar price
   const dollarPrice = (price * ethPrice) / CHAINLINK_ETH_DECIMALS;
   
-  // Update the pool with initialization data
-  await updatePool({
-    poolAddress: poolId,
+  // Update the v4pool with initialization data
+  await updateV4Pool({
+    poolId: poolId,
     context,
     update: {
       price: dollarPrice,
       tick: Number(tick),
-      sqrtPrice: sqrtPriceX96,
+      sqrtPriceX96: sqrtPriceX96,
       lastRefreshed: timestamp,
     },
   });
@@ -94,17 +95,17 @@ ponder.on("PoolManager:Swap", async ({ event, context }) => {
   const { db, chain } = context;
   
   // Check if this pool was created via migration
-  let pool;
+  let v4pool;
   try {
-    pool = await fetchExistingPool({
-      poolAddress: poolId,
+    v4pool = await fetchExistingV4Pool({
+      poolId: poolId,
       context,
     });
   } catch (error) {
-    return; // Pool not found, skip
+    return; // V4 pool not found, skip
   }
   
-  if (!pool.migratedFromPool) {
+  if (!v4pool.migratedFromPool) {
     return; // Not a migrated pool, skip
   }
   
@@ -115,7 +116,7 @@ ponder.on("PoolManager:Swap", async ({ event, context }) => {
   const newTick = Number(tick);
   const price = computeV4Price({
     tick: newTick,
-    isToken0: pool.isToken0, // Use the stored token order
+    isToken0: v4pool.isToken0, // Use the stored token order
   });
   
   // Determine swap amounts (V4 uses negative values for amounts out)
@@ -125,15 +126,15 @@ ponder.on("PoolManager:Swap", async ({ event, context }) => {
   
   // Determine the swap type
   const type = SwapService.determineSwapType({
-    isToken0: pool.isToken0,
+    isToken0: v4pool.isToken0,
     amount0: amount0 > 0n ? amount0 : -amount0,
     amount1: amount1 > 0n ? amount1 : -amount1,
   });
   
   // Get token total supply for market cap calculation
   const { totalSupply } = await insertTokenIfNotExists({
-    tokenAddress: pool.asset,
-    creatorAddress: pool.address,
+    tokenAddress: v4pool.asset!,
+    creatorAddress: v4pool.poolId,
     timestamp,
     context,
     isDerc20: true,
@@ -147,14 +148,14 @@ ponder.on("PoolManager:Swap", async ({ event, context }) => {
     swapAmountOut: amountOut,
     ethPriceUSD: ethPrice,
     assetDecimals: 18,
-    assetBalance: pool.reserves0, // Use stored reserves
-    quoteBalance: pool.reserves1,
-    isQuoteETH: pool.isQuoteEth,
+    assetBalance: v4pool.reserves0, // Use stored reserves
+    quoteBalance: v4pool.reserves1,
+    isQuoteETH: v4pool.isQuoteEth,
   });
   
   // Calculate swap value in USD
   let quoteDelta = 0n;
-  if (pool.isToken0) {
+  if (v4pool.isToken0) {
     if (amount1 > 0n) {
       quoteDelta = amount1;
     } else {
@@ -184,9 +185,9 @@ ponder.on("PoolManager:Swap", async ({ event, context }) => {
     transactionFrom: txFrom,
     blockNumber: event.block.number,
     timestamp,
-    assetAddress: pool.asset,
-    quoteAddress: pool.quoteToken,
-    isToken0: pool.isToken0,
+    assetAddress: v4pool.asset!,
+    quoteAddress: v4pool.quoteToken,
+    isToken0: v4pool.isToken0,
     amountIn,
     amountOut,
     price,
@@ -231,20 +232,20 @@ ponder.on("PoolManager:Swap", async ({ event, context }) => {
       },
       entityUpdaters
     ),
-    updatePool({
-      poolAddress: poolId,
+    updateV4Pool({
+      poolId: poolId,
       context,
       update: {
         price,
         tick: newTick,
-        sqrtPrice: sqrtPriceX96,
+        sqrtPriceX96: sqrtPriceX96,
         liquidity,
-        volumeUsd: pool.volumeUsd + BigInt(Math.floor(swapValueUsd)), 
+        volumeUsd: v4pool.volumeUsd + BigInt(Math.floor(swapValueUsd)), 
         lastSwapTimestamp: timestamp,
-        totalFee0: isZeroForOne ? pool.totalFee0 + feeAmount : pool.totalFee0,
-        totalFee1: !isZeroForOne ? pool.totalFee1 + feeAmount : pool.totalFee1,
-        reserves0: pool.isToken0 ? pool.reserves0 - (isZeroForOne ? amountOut : amountIn) : pool.reserves0 + (isZeroForOne ? amountIn : amountOut),
-        reserves1: pool.isToken0 ? pool.reserves1 + (!isZeroForOne ? amountIn : amountOut) : pool.reserves1 - (!isZeroForOne ? amountOut : amountIn),
+        totalFee0: isZeroForOne ? v4pool.totalFee0 + feeAmount : v4pool.totalFee0,
+        totalFee1: !isZeroForOne ? v4pool.totalFee1 + feeAmount : v4pool.totalFee1,
+        reserves0: v4pool.isToken0 ? v4pool.reserves0 - (isZeroForOne ? amountOut : amountIn) : v4pool.reserves0 + (isZeroForOne ? amountIn : amountOut),
+        reserves1: v4pool.isToken0 ? v4pool.reserves1 + (!isZeroForOne ? amountIn : amountOut) : v4pool.reserves1 - (!isZeroForOne ? amountOut : amountIn),
       },
     }),
   ]);
@@ -257,17 +258,17 @@ ponder.on("PoolManager:ModifyLiquidity", async ({ event, context }) => {
   const { db, chain } = context;
   
   // Check if this pool was created via migration
-  let pool;
+  let v4pool;
   try {
-    pool = await fetchExistingPool({
-      poolAddress: poolId,
+    v4pool = await fetchExistingV4Pool({
+      poolId: poolId,
       context,
     });
   } catch (error) {
-    return; // Pool not found, skip
+    return; // V4 pool not found, skip
   }
   
-  if (!pool.migratedFromPool) {
+  if (!v4pool.migratedFromPool) {
     return; // Not a migrated pool, skip
   }
   
@@ -276,8 +277,8 @@ ponder.on("PoolManager:ModifyLiquidity", async ({ event, context }) => {
   
   // Update pool liquidity
   const newLiquidity = liquidityDelta > 0n 
-    ? pool.liquidity + BigInt(liquidityDelta)
-    : pool.liquidity - BigInt(-liquidityDelta);
+    ? v4pool.liquidity + BigInt(liquidityDelta)
+    : v4pool.liquidity - BigInt(-liquidityDelta);
   
   // Calculate dollar liquidity
   const dollarLiquidity = await computeDollarLiquidity({
@@ -287,8 +288,8 @@ ponder.on("PoolManager:ModifyLiquidity", async ({ event, context }) => {
     ethPrice,
   });
   
-  await updatePool({
-    poolAddress: poolId,
+  await updateV4Pool({
+    poolId: poolId,
     context,
     update: {
       liquidity: newLiquidity,
@@ -337,23 +338,23 @@ ponder.on("PoolManager:Donate", async ({ event, context }) => {
   const { db, chain } = context;
   
   // Check if this pool was created via migration
-  let pool;
+  let v4pool;
   try {
-    pool = await fetchExistingPool({
-      poolAddress: poolId,
+    v4pool = await fetchExistingV4Pool({
+      poolId: poolId,
       context,
     });
   } catch (error) {
-    return; // Pool not found, skip
+    return; // V4 pool not found, skip
   }
   
-  if (!pool.migratedFromPool) {
+  if (!v4pool.migratedFromPool) {
     return; // Not a migrated pool, skip
   }
   
   // Update pool reserves with donated amounts
-  await updatePool({
-    poolAddress: poolId,
+  await updateV4Pool({
+    poolId: poolId,
     context,
     update: {
       reserves0: pool.reserves0 + amount0,
