@@ -35,7 +35,7 @@ const getV4MigratorHook = (chainName: string): Address | null => {
 
 // Track PoolManager Initialize events for pools created via V4Migrator
 ponder.on("PoolManager:Initialize", async ({ event, context }) => {
-  const { id: poolId, currency0, currency1, fee, tickSpacing, hooks, sqrtPriceX96, tick } = event.args;
+  const { id: poolId, key: poolKey, sqrtPriceX96, tick } = event.args;
   const { timestamp } = event.block;
   const { db, chain } = context;
   
@@ -46,7 +46,7 @@ ponder.on("PoolManager:Initialize", async ({ event, context }) => {
   }
   
   // Only process if this pool uses our migrator hook
-  if (hooks.toLowerCase() !== v4MigratorHook.toLowerCase()) {
+  if (poolKey.hooks.toLowerCase() !== v4MigratorHook.toLowerCase()) {
     return; // Not a migrated pool
   }
   
@@ -67,8 +67,9 @@ ponder.on("PoolManager:Initialize", async ({ event, context }) => {
   
   // Calculate the initial price from tick
   const price = computeV4Price({
-    tick: Number(tick),
+    currentTick: Number(tick),
     isToken0: existingV4Pool.isToken0,
+    baseTokenDecimals: 18,
   });
   
   // Calculate initial dollar price
@@ -115,8 +116,9 @@ ponder.on("PoolManager:Swap", async ({ event, context }) => {
   // Calculate the new price after the swap
   const newTick = Number(tick);
   const price = computeV4Price({
-    tick: newTick,
+    currentTick: newTick,
     isToken0: v4pool.isToken0, // Use the stored token order
+    baseTokenDecimals: 18,
   });
   
   // Determine swap amounts (V4 uses negative values for amounts out)
@@ -147,7 +149,7 @@ ponder.on("PoolManager:Swap", async ({ event, context }) => {
     swapAmountIn: amountIn,
     swapAmountOut: amountOut,
     ethPriceUSD: ethPrice,
-    assetDecimals: 18,
+    assetDecimals: 18n,
     assetBalance: v4pool.reserves0, // Use stored reserves
     quoteBalance: v4pool.reserves1,
     isQuoteETH: v4pool.isQuoteEth,
@@ -168,7 +170,7 @@ ponder.on("PoolManager:Swap", async ({ event, context }) => {
       quoteDelta = -amount0;
     }
   }
-  const swapValueUsd = quoteDelta * ethPrice / CHAINLINK_ETH_DECIMALS;
+  const swapValueUsd = Number(quoteDelta * ethPrice / CHAINLINK_ETH_DECIMALS);
   
   // Calculate 24-hour price change
   const priceChange = await compute24HourPriceChange({
@@ -282,9 +284,9 @@ ponder.on("PoolManager:ModifyLiquidity", async ({ event, context }) => {
   
   // Calculate dollar liquidity
   const dollarLiquidity = await computeDollarLiquidity({
-    assetBalance: pool.reserves0,
-    quoteBalance: pool.reserves1,
-    price: pool.price,
+    assetBalance: v4pool.reserves0,
+    quoteBalance: v4pool.reserves1,
+    price: v4pool.price,
     ethPrice,
   });
   
@@ -357,8 +359,8 @@ ponder.on("PoolManager:Donate", async ({ event, context }) => {
     poolId: poolId,
     context,
     update: {
-      reserves0: pool.reserves0 + amount0,
-      reserves1: pool.reserves1 + amount1,
+      reserves0: v4pool.reserves0 + amount0,
+      reserves1: v4pool.reserves1 + amount1,
       lastRefreshed: timestamp,
     },
   });
