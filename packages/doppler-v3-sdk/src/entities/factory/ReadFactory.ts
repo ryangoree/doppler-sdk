@@ -51,6 +51,12 @@ export class ReadFactory {
     });
   }
 
+  async owner(
+    options?: ContractOptions
+  ): Promise<FunctionReturn<AirlockABI, "owner">> {
+    return this.airlock.read("owner", options);
+  }
+
   async getCreateEvents(
     options?: GetEventsOptions
   ): Promise<EventLog<AirlockABI, "Create">[]> {

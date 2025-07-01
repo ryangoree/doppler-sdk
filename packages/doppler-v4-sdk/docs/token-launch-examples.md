@@ -82,8 +82,8 @@ async function launchTokenWithGovernance() {
     beneficiaries: sortedBeneficiaries
   };
   
-  // 5. Encode migrator data
-  const liquidityMigratorData = factory.encodeV4MigratorData(v4Config);
+  // 5. Encode migrator data (automatically includes 5% for airlock owner)
+  const liquidityMigratorData = await factory.encodeV4MigratorData(v4Config);
   
   // 6. Configure vesting (optional)
   const vestingRecipients = [
@@ -198,8 +198,8 @@ async function launchTokenNoOpGovernance() {
     beneficiaries: sortedBeneficiaries
   };
   
-  // 5. Encode migrator data
-  const liquidityMigratorData = factory.encodeV4MigratorData(v4Config);
+  // 5. Encode migrator data (automatically includes 5% for airlock owner)
+  const liquidityMigratorData = await factory.encodeV4MigratorData(v4Config);
   
   // 6. Build configuration with no-op governance
   const { createParams, hook, token } = await factory.buildConfig({
@@ -285,7 +285,7 @@ async function launchTokenCustomQuote() {
     beneficiaries: sortedBeneficiaries
   };
   
-  const liquidityMigratorData = factory.encodeV4MigratorData(v4Config);
+  const liquidityMigratorData = await factory.encodeV4MigratorData(v4Config);
   
   // 3. Build configuration with USDC as quote
   const { createParams, hook, token } = await factory.buildConfig({
