@@ -35,7 +35,7 @@ const getV4MigratorHook = (chainName: string): Address | null => {
 
 // Track PoolManager Initialize events for pools created via V4Migrator
 ponder.on("PoolManager:Initialize", async ({ event, context }) => {
-  const { id: poolId, key: poolKey, sqrtPriceX96, tick } = event.args;
+  const { id: poolId, currency0, currency1, fee, tickSpacing, hooks, sqrtPriceX96, tick } = event.args;
   const { timestamp } = event.block;
   const { db, chain } = context;
   
@@ -46,7 +46,7 @@ ponder.on("PoolManager:Initialize", async ({ event, context }) => {
   }
   
   // Only process if this pool uses our migrator hook
-  if (poolKey.hooks.toLowerCase() !== v4MigratorHook.toLowerCase()) {
+  if (hooks.toLowerCase() !== v4MigratorHook.toLowerCase()) {
     return; // Not a migrated pool
   }
   
