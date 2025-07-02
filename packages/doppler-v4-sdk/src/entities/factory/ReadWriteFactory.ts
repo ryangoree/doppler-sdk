@@ -18,9 +18,9 @@ import {
 import { ReadFactory, AirlockABI } from './ReadFactory';
 import { CreateParams } from './types';
 import { DERC20Bytecode, DopplerBytecode } from '@/abis';
-import { DAY_SECONDS, DEFAULT_PD_SLUGS } from '@/constants';
+import { DAY_SECONDS, DEFAULT_PD_SLUGS, DEAD_ADDRESS, WAD } from '@/constants';
 import { DopplerData, TokenFactoryData } from './types';
-import { DopplerPreDeploymentConfig, DopplerV4Addresses } from '@/types';
+import { DopplerPreDeploymentConfig, DopplerV4Addresses, PriceRange, TickRange, V4MigratorData, BeneficiaryData } from '@/types';
 
 const DEFAULT_INITIAL_VOTING_DELAY = 7200;
 const DEFAULT_INITIAL_VOTING_PERIOD = 50400;
@@ -165,6 +165,24 @@ export class ReadWriteFactory extends ReadFactory {
   }
 
   /**
+   * Computes tick values from price range
+   * @param priceRange - The price range in human-readable format
+   * @param tickSpacing - The tick spacing for the pool
+   * @returns The tick range
+   * @private
+   */
+  private computeTicks(priceRange: PriceRange, tickSpacing: number): TickRange {
+    // Convert prices to ticks using the formula: tick = log(price) / log(1.0001) * tickSpacing
+    const startTick = Math.floor(Math.log(priceRange.startPrice) / Math.log(1.0001) / tickSpacing) * tickSpacing;
+    const endTick = Math.ceil(Math.log(priceRange.endPrice) / Math.log(1.0001) / tickSpacing) * tickSpacing;
+    
+    return {
+      startTick,
+      endTick
+    };
+  }
+
+  /**
    * Encodes token factory initialization data
    * @param tokenConfig - Basic token configuration (name, symbol, URI)
    * @param vestingConfig - Vesting schedule configuration
@@ -226,6 +244,125 @@ export class ReadWriteFactory extends ReadFactory {
   }
 
   /**
+   * Encodes V4 migrator data for Uniswap V4 migration with StreamableFeesLocker
+   * @param v4Config - Configuration for V4 migration
+   * @param includeDefaultBeneficiary - Whether to include the airlock owner as a default 5% beneficiary
+   * @returns Encoded migrator data
+   * @throws {Error} If beneficiaries are invalid
+   */
+  public async encodeV4MigratorData(
+    v4Config: V4MigratorData,
+    includeDefaultBeneficiary: boolean = true
+  ): Promise<Hex> {
+    let beneficiaries = [...v4Config.beneficiaries];
+
+    if (includeDefaultBeneficiary) {
+      // Get the airlock owner address
+      const airlockOwner = await this.owner();
+      
+      // Check if airlock owner is already in the beneficiaries list
+      const existingOwnerIndex = beneficiaries.findIndex(
+        b => b.beneficiary.toLowerCase() === airlockOwner.toLowerCase()
+      );
+
+      if (existingOwnerIndex === -1) {
+        // Add airlock owner as 5% beneficiary
+        const ownerShares = BigInt(0.05e18); // 5% in WAD
+        
+        // Scale down other beneficiaries proportionally
+        const remainingShares = WAD - ownerShares; // 95% remaining
+        const currentTotal = beneficiaries.reduce((sum, b) => sum + b.shares, BigInt(0));
+        
+        beneficiaries = beneficiaries.map(b => ({
+          ...b,
+          shares: (b.shares * remainingShares) / currentTotal
+        }));
+        
+        // Add the owner beneficiary
+        beneficiaries.push({
+          beneficiary: airlockOwner,
+          shares: ownerShares
+        });
+        
+        // Sort beneficiaries by address
+        beneficiaries = this.sortBeneficiaries(beneficiaries);
+      }
+    }
+
+    // Validate beneficiaries
+    this.validateBeneficiaries(beneficiaries);
+    
+    return encodeAbiParameters(
+      [
+        { type: 'uint24' },  // fee
+        { type: 'int24' },   // tickSpacing
+        { type: 'uint32' },  // lockDuration
+        { type: 'tuple[]', components: [
+          { type: 'address', name: 'beneficiary' },
+          { type: 'uint96', name: 'shares' }
+        ]}
+      ],
+      [
+        v4Config.fee,
+        v4Config.tickSpacing,
+        v4Config.lockDuration,
+        beneficiaries.map(b => ({
+          beneficiary: b.beneficiary,
+          shares: b.shares
+        }))
+      ]
+    );
+  }
+
+  /**
+   * Validates beneficiaries array for V4 migration
+   * @param beneficiaries - Array of beneficiaries to validate
+   * @throws {Error} If validation fails
+   * @private
+   */
+  private validateBeneficiaries(beneficiaries: BeneficiaryData[]): void {
+    if (!beneficiaries || beneficiaries.length === 0) {
+      throw new Error('At least one beneficiary is required');
+    }
+
+    // Check ordering (must be in ascending order by address)
+    let prevBeneficiary: Address = zeroAddress;
+    let totalShares = BigInt(0);
+
+    for (const beneficiary of beneficiaries) {
+      if (beneficiary.beneficiary <= prevBeneficiary) {
+        throw new Error('Beneficiaries must be sorted in ascending order by address');
+      }
+      if (beneficiary.shares <= 0) {
+        throw new Error('All beneficiary shares must be positive');
+      }
+      prevBeneficiary = beneficiary.beneficiary;
+      totalShares += beneficiary.shares;
+    }
+
+    // Check total shares equals WAD (1e18)
+    if (totalShares !== WAD) {
+      throw new Error(`Total shares must equal ${WAD.toString()} (1e18), got ${totalShares.toString()}`);
+    }
+  }
+
+  /**
+   * Helper function to sort beneficiaries by address
+   * @param beneficiaries - Array of beneficiaries to sort
+   * @returns Sorted array of beneficiaries
+   */
+  public sortBeneficiaries(beneficiaries: BeneficiaryData[]): BeneficiaryData[] {
+    if (!beneficiaries || beneficiaries.length === 0) {
+      return [];
+    }
+    return [...beneficiaries].sort((a, b) => {
+      const addrA = a.beneficiary.toLowerCase();
+      const addrB = b.beneficiary.toLowerCase();
+      return addrA < addrB ? -1 : addrA > addrB ? 1 : 0;
+    });
+  }
+
+  /**
    * Builds complete configuration for creating a new Doppler pool
    *
    * This method:
@@ -257,7 +394,8 @@ export class ReadWriteFactory extends ReadFactory {
    */
   public buildConfig(
     params: DopplerPreDeploymentConfig,
-    addresses: DopplerV4Addresses
+    addresses: DopplerV4Addresses,
+    options?: { useGovernance?: boolean }
   ): {
     createParams: CreateParams;
     hook: Hex;
@@ -265,11 +403,38 @@ export class ReadWriteFactory extends ReadFactory {
   } {
     this.validateBasicParams(params);
 
+    // Validate governance configuration
+    const useGovernance = options?.useGovernance ?? true;
+    if (!useGovernance && addresses.noOpGovernanceFactory === '0x0000000000000000000000000000000000000000') {
+      throw new Error('NoOpGovernanceFactory address not configured for this chain. Please deploy NoOpGovernanceFactory first.');
+    }
+
+    if (!params.priceRange && !params.tickRange) {
+      throw new Error('Price range or tick range must be provided');
+    }
+
+    let startTick;
+    let endTick;
+    if (params.priceRange) {
+      const ticks = this.computeTicks(params.priceRange, params.tickSpacing);
+      startTick = ticks.startTick;
+      endTick = ticks.endTick;
+    }
+
+    if (params.tickRange) {
+      startTick = params.tickRange.startTick;
+      endTick = params.tickRange.endTick;
+    }
+
+    if (!startTick || !endTick) {
+      throw new Error('Start tick or end tick not found');
+    }
+
     const gamma =
       params.gamma ??
       this.computeOptimalGamma(
-        params.tickRange.startTick,
-        params.tickRange.endTick,
+        startTick,
+        endTick,
         params.duration,
         params.epochLength,
         params.tickSpacing
@@ -314,8 +479,8 @@ export class ReadWriteFactory extends ReadFactory {
       maximumProceeds: params.maxProceeds,
       startingTime: BigInt(startTime),
       endingTime: BigInt(endTime),
-      startingTick: params.tickRange.startTick,
-      endingTick: params.tickRange.endTick,
+      startingTick: startTick,
+      endingTick: endTick,
       epochLength: BigInt(params.epochLength),
       gamma,
       isToken0: false,
@@ -340,20 +505,28 @@ export class ReadWriteFactory extends ReadFactory {
         poolInitializerData: dopplerParams,
       });
 
-    const governanceFactoryData = encodeAbiParameters(
-      [
-        { type: 'string' },
-        { type: 'uint48' },
-        { type: 'uint32' },
-        { type: 'uint256' },
-      ],
-      [
-        params.name,
-        DEFAULT_INITIAL_VOTING_DELAY,
-        DEFAULT_INITIAL_VOTING_PERIOD,
-        DEFAULT_INITIAL_PROPOSAL_THRESHOLD,
-      ]
-    );
+    // Determine which governance factory to use
+    const selectedGovernanceFactory = useGovernance
+      ? addresses.governanceFactory
+      : addresses.noOpGovernanceFactory;
+
+    // When using NoOpGovernanceFactory, the data is ignored, but we still need to provide valid encoding
+    const governanceFactoryData = useGovernance
+      ? encodeAbiParameters(
+          [
+            { type: 'string' },
+            { type: 'uint48' },
+            { type: 'uint32' },
+            { type: 'uint256' },
+          ],
+          [
+            params.name,
+            DEFAULT_INITIAL_VOTING_DELAY,
+            DEFAULT_INITIAL_VOTING_PERIOD,
+            DEFAULT_INITIAL_PROPOSAL_THRESHOLD,
+          ]
+        )
+      : '0x' as Hex; // NoOpGovernanceFactory ignores the data
 
     return {
       createParams: {
@@ -362,7 +535,7 @@ export class ReadWriteFactory extends ReadFactory {
         numeraire,
         tokenFactory,
         tokenFactoryData,
-        governanceFactory: governanceFactory,
+        governanceFactory: selectedGovernanceFactory,
         governanceFactoryData,
         poolInitializer: v4Initializer,
         poolInitializerData,

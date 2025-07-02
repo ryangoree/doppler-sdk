@@ -147,4 +147,19 @@ export class ReadFactory {
       asset,
     });
   }
+
+  /**
+   * Retrieves the owner address of the airlock contract
+   *
+   * @returns Promise resolving to the owner address
+   *
+   * @example
+   * ```typescript
+   * const ownerAddress = await factory.owner();
+   * console.log('Airlock owner:', ownerAddress);
+   * ```
+   */
+  async owner(): Promise<Address> {
+    return this.airlock.read('owner');
+  }
 }

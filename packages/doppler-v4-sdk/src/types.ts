@@ -19,7 +19,9 @@ export interface DopplerV4Addresses {
   v4Initializer: Address;
   v3Initializer?: Address;
   governanceFactory: Address;
+  noOpGovernanceFactory: Address;
   migrator: Address;
+  streamableFeesLocker: Address;
   poolManager: Address;
   dopplerDeployer: Address;
   universalRouter: Address;
@@ -72,6 +74,11 @@ export interface TickRange {
   endTick: number;
 }
 
+export interface PriceRange {
+  startPrice: number;
+  endPrice: number;
+}
+
 export interface DopplerPreDeploymentConfig {
   // Token details
   name: string;
@@ -88,7 +95,8 @@ export interface DopplerPreDeploymentConfig {
 
   // Price parameters
   numeraire?: Address; // defaults to native if unset
-  tickRange: TickRange;
+  tickRange?: TickRange;
+  priceRange?: PriceRange;
   tickSpacing: number;
   gamma?: number; // allow gamma to be passed directly instead of computed
   fee: number; // In bips
@@ -142,4 +150,21 @@ export interface DeployerParams {
   publicClient: PublicClient;
   walletClient: WalletClient;
   addresses?: DopplerV4Addresses;
+}
+
+export interface BeneficiaryData {
+  beneficiary: Address;
+  shares: bigint; // in WAD (1e18)
+}
+
+export interface StreamableFeesConfig {
+  lockDuration: number; // in seconds
+  beneficiaries: BeneficiaryData[];
+}
+
+export interface V4MigratorData {
+  fee: number; // in bips
+  tickSpacing: number;
+  lockDuration: number; // in seconds
+  beneficiaries: BeneficiaryData[];
 }

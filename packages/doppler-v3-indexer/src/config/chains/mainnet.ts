@@ -22,6 +22,8 @@ export const mainnetConfig: ChainConfig = {
       stateView: COMMON_ADDRESSES.ZERO_ADDRESS as Address,
       dopplerLens: COMMON_ADDRESSES.ZERO_ADDRESS,
       v4Initializer2: COMMON_ADDRESSES.ZERO_ADDRESS,
+      v4Migrator: COMMON_ADDRESSES.ZERO_ADDRESS,
+      v4MigratorHook: COMMON_ADDRESSES.ZERO_ADDRESS,
     },
     shared: {
       airlock: COMMON_ADDRESSES.ZERO_ADDRESS as Address,
