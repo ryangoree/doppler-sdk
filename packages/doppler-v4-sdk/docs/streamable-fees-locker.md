@@ -49,8 +49,11 @@ const v4MigratorConfig: V4MigratorData = {
   beneficiaries: sortedBeneficiaries,
 };
 
-// Encode the migrator data
-const liquidityMigratorData = factory.encodeV4MigratorData(v4MigratorConfig);
+// Encode the migrator data (automatically includes 5% for airlock owner)
+const liquidityMigratorData = await factory.encodeV4MigratorData(v4MigratorConfig);
+
+// Or exclude the default beneficiary:
+// const liquidityMigratorData = await factory.encodeV4MigratorData(v4MigratorConfig, false);
 ```
 
 ### 3. Standard Governance Configuration
@@ -170,7 +173,7 @@ const v4Config: V4MigratorData = {
 // 3. Build and launch
 const config = await factory.buildConfig({
   // ... token parameters
-  liquidityMigratorData: factory.encodeV4MigratorData(v4Config),
+  liquidityMigratorData: await factory.encodeV4MigratorData(v4Config),
 }, addresses, {
   useGovernance: false // For no-op governance
 });

@@ -246,12 +246,51 @@ export class ReadWriteFactory extends ReadFactory {
   /**
    * Encodes V4 migrator data for Uniswap V4 migration with StreamableFeesLocker
    * @param v4Config - Configuration for V4 migration
+   * @param includeDefaultBeneficiary - Whether to include the airlock owner as a default 5% beneficiary
    * @returns Encoded migrator data
    * @throws {Error} If beneficiaries are invalid
    */
-  public encodeV4MigratorData(v4Config: V4MigratorData): Hex {
+  public async encodeV4MigratorData(
+    v4Config: V4MigratorData,
+    includeDefaultBeneficiary: boolean = true
+  ): Promise<Hex> {
+    let beneficiaries = [...v4Config.beneficiaries];
+
+    if (includeDefaultBeneficiary) {
+      // Get the airlock owner address
+      const airlockOwner = await this.owner();
+      
+      // Check if airlock owner is already in the beneficiaries list
+      const existingOwnerIndex = beneficiaries.findIndex(
+        b => b.beneficiary.toLowerCase() === airlockOwner.toLowerCase()
+      );
+
+      if (existingOwnerIndex === -1) {
+        // Add airlock owner as 5% beneficiary
+        const ownerShares = BigInt(0.05e18); // 5% in WAD
+        
+        // Scale down other beneficiaries proportionally
+        const remainingShares = WAD - ownerShares; // 95% remaining
+        const currentTotal = beneficiaries.reduce((sum, b) => sum + b.shares, BigInt(0));
+        
+        beneficiaries = beneficiaries.map(b => ({
+          ...b,
+          shares: (b.shares * remainingShares) / currentTotal
+        }));
+        
+        // Add the owner beneficiary
+        beneficiaries.push({
+          beneficiary: airlockOwner,
+          shares: ownerShares
+        });
+        
+        // Sort beneficiaries by address
+        beneficiaries = this.sortBeneficiaries(beneficiaries);
+      }
+    }
+
     // Validate beneficiaries
-    this.validateBeneficiaries(v4Config.beneficiaries);
+    this.validateBeneficiaries(beneficiaries);
     
     return encodeAbiParameters(
       [
@@ -267,7 +306,7 @@ export class ReadWriteFactory extends ReadFactory {
         v4Config.fee,
         v4Config.tickSpacing,
         v4Config.lockDuration,
-        v4Config.beneficiaries.map(b => ({
+        beneficiaries.map(b => ({
           beneficiary: b.beneficiary,
           shares: b.shares
         }))

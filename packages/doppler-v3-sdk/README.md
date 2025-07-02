@@ -171,8 +171,11 @@ const migratorConfig: V4MigratorData = {
   beneficiaries: sortedBeneficiaries
 };
 
-// Step 4: Encode the migrator data
-const encodedMigratorData = factory.encodeV4MigratorData(migratorConfig);
+// Step 4: Encode the migrator data (automatically includes 5% for airlock owner)
+const encodedMigratorData = await factory.encodeV4MigratorData(migratorConfig);
+
+// Or exclude the default beneficiary:
+// const encodedMigratorData = await factory.encodeV4MigratorData(migratorConfig, false);
 
 // Step 5: Create the pool with V4 migration configuration
 const createParams = await factory.buildConfig({
