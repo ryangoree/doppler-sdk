@@ -69,5 +69,8 @@ export const DOPPLER_V3_ADDRESSES: { [chainId: number]: DopplerV3Addresses } = {
     quoterV2: "0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a" as Address,
     univ2Router02: "0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24" as Address,
     bundler: "0x136191B46478cAB023cbC01a36160C4Aad81677a" as Address,
+    noOpGovernanceFactory: "0xe7dfbd5b0a2c3b4464653a9becdc489229ef090e" as Address,
+    streamableFeesLocker: "0x0a00775d71a42cd33d62780003035e7f5b47bd3a" as Address,
+    v4Migrator: "0x5328a67747c9db61457eb1a23be16bd73d1659c6" as Address,
   },
 };
