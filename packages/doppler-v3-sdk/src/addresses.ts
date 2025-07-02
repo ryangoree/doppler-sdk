@@ -30,19 +30,19 @@ export const DOPPLER_V3_ADDRESSES: { [chainId: number]: DopplerV3Addresses } = {
   },
   // base sepolia
   84532: {
-    airlock: '0x3411306ce66c9469bff1535ba955503c4bde1c6e' as Address,
-    tokenFactory: '0xc69ba223c617f7d936b3cf2012aa644815dbe9ff' as Address,
-    v3Initializer: "0x4c3062b9ccfdbcb10353f57c1b59a29d4c5cfa47" as Address,
-    governanceFactory: '0x9dbfaadc8c0cb2c34ba698dd9426555336992e20' as Address,
+    airlock: '0xbe5ad4efe4085af00fd4a9e30b754cdcefe9c6ad' as Address,
+    tokenFactory: '0xf140987e88208b1ef48cf5d39448cc82edf1f51e' as Address,
+    v3Initializer: "0xb5e6ee3baa67004259846ad151bb0a2d2836f12d" as Address,
+    governanceFactory: '0x482055c3a704610b22e77acc29863f92bcfd4298' as Address,
     noOpGovernanceFactory: '0x916b8987e4ad325c10d58ed8dc2036a6ff5eb228' as Address,
-    liquidityMigrator: '0x04a898f3722c38f9def707bd17dc78920efa977c' as Address,
-    v4Migrator: '0xb2ec6559704467306d04322a5dc082b2af4562dd' as Address,
-    streamableFeesLocker: '0x4da7d7a8034510c0ffd38a9252237ae8dba3cb61' as Address,
+    liquidityMigrator: '0xd797e6af3211ae124b8edff69db21ffe6c659104' as Address,
+    v4Migrator: '0x853fbee6391d75c82cb0cf77eb83251896a2d77a' as Address,
+    streamableFeesLocker: '0x3345e557c5c0b474be1eb4693264008b8562aa9c' as Address,
     universalRouter: "0x492E6456D9528771018DeB9E87ef7750EF184104" as Address,
     permit2: "0x000000000022D473030F116dDEE9F6B43aC78BA3" as Address,
     quoterV2: "0xC5290058841028F1614F3A6F0F5816cAd0df5E27" as Address,
     univ2Router02: "0x1689E7B1F10000AE47eBfE339a4f69dECd19F602" as Address,
-    bundler: "0xab7bacb0d5c2c10152f92d34e07f530eb3cb0fb1" as Address,
+    bundler: "0x8f4de9a41af4593ff34fd10892e51981e30acaf4" as Address,
   },
   // ink
   57073: {
