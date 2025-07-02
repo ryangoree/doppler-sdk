@@ -1,13 +1,11 @@
 import {
-  WriteContract,
+  ReadWriteContract,
   ReadContract,
-  WriteAdapter,
   Drift,
   createDrift,
-  WriteFunction,
-  AdapterWriteMethod,
+  ReadWriteAdapter,
 } from '@delvtech/drift';
-import { Address, Hex, TransactionReceipt } from 'viem';
+import { Address, Hex } from 'viem';
 import { poolManagerAbi, stateViewAbi } from '@/abis';
 import { PoolKey } from '@/types';
 import { ReadV4Pool } from './ReadV4Pool';
@@ -65,20 +63,22 @@ export interface DonateParams {
  * ```
  */
 export class ReadWriteV4Pool extends ReadV4Pool {
-  poolManagerWrite: WriteContract<PoolManagerABI>;
-  driftWrite: Drift<WriteAdapter>;
+  drift: Drift<ReadWriteAdapter>;
+  poolManager: ReadWriteContract<PoolManagerABI>;
+  poolKey: PoolKey;
 
   constructor(
-    poolManager: WriteContract<PoolManagerABI>,
+    poolManager: ReadWriteContract<PoolManagerABI>,
     stateView: ReadContract<StateViewABI>,
     poolKey: PoolKey,
-    drift?: Drift<WriteAdapter>
+    drift: Drift<ReadWriteAdapter> = createDrift()
   ) {
     // Pass the poolManager as ReadContract to parent class
     super(poolManager as any, stateView, poolKey, drift as any);
-    
-    this.poolManagerWrite = poolManager;
-    this.driftWrite = drift || createDrift({ rpcUrl: poolManager.rpcUrl });
+
+    this.poolKey = poolKey;
+    this.poolManager = poolManager;
+    this.drift = drift;
   }
 
   /**
@@ -87,7 +87,7 @@ export class ReadWriteV4Pool extends ReadV4Pool {
    * @param params Swap parameters
    * @returns Transaction receipt
    */
-  async swap(params: SwapParams): Promise<TransactionReceipt> {
+  async swap(params: SwapParams): Promise<Hex> {
     const swapParams = {
       zeroForOne: params.zeroForOne,
       amountSpecified: params.amountSpecified,
@@ -95,16 +95,11 @@ export class ReadWriteV4Pool extends ReadV4Pool {
     };
 
     // V4 swaps are executed through the PoolManager's swap function
-    const txHash = await this.poolManagerWrite.write({
-      functionName: 'swap',
-      args: [
-        this.poolKey,
-        swapParams,
-        params.hookData || '0x', // Empty hook data for standard pools
-      ],
+    return await this.poolManager.write("swap", {
+      key: this.poolKey,
+      params: swapParams,
+      hookData: params.hookData || '0x', // Empty hook data for standard pools
     });
-
-    return this.driftWrite.waitForTransaction({ txHash });
   }
 
   /**
@@ -113,7 +108,7 @@ export class ReadWriteV4Pool extends ReadV4Pool {
    * @param params Liquidity modification parameters
    * @returns Transaction receipt
    */
-  async modifyLiquidity(params: ModifyLiquidityParams): Promise<TransactionReceipt> {
+  async modifyLiquidity(params: ModifyLiquidityParams): Promise<Hex> {
     const modifyLiquidityParams = {
       tickLower: params.tickLower,
       tickUpper: params.tickUpper,
@@ -122,16 +117,11 @@ export class ReadWriteV4Pool extends ReadV4Pool {
     };
 
     // V4 liquidity modifications go through the PoolManager
-    const txHash = await this.poolManagerWrite.write({
-      functionName: 'modifyLiquidity',
-      args: [
-        this.poolKey,
-        modifyLiquidityParams,
-        '0x', // Hook data
-      ],
+    return await this.poolManager.write("modifyLiquidity", {
+      key: this.poolKey,
+      params: modifyLiquidityParams,
+      hookData: '0x', // Hook data
     });
-
-    return this.driftWrite.waitForTransaction({ txHash });
   }
 
   /**
@@ -149,7 +139,7 @@ export class ReadWriteV4Pool extends ReadV4Pool {
     tickUpper: number,
     liquidity: bigint,
     salt?: Hex
-  ): Promise<TransactionReceipt> {
+  ): Promise<Hex> {
     return this.modifyLiquidity({
       tickLower,
       tickUpper,
@@ -173,7 +163,7 @@ export class ReadWriteV4Pool extends ReadV4Pool {
     tickUpper: number,
     liquidity: bigint,
     salt?: Hex
-  ): Promise<TransactionReceipt> {
+  ): Promise<Hex> {
     return this.modifyLiquidity({
       tickLower,
       tickUpper,
@@ -189,18 +179,13 @@ export class ReadWriteV4Pool extends ReadV4Pool {
    * @param params Donation parameters
    * @returns Transaction receipt
    */
-  async donate(params: DonateParams): Promise<TransactionReceipt> {
-    const txHash = await this.poolManagerWrite.write({
-      functionName: 'donate',
-      args: [
-        this.poolKey,
-        params.amount0,
-        params.amount1,
-        '0x', // Hook data
-      ],
+  async donate(params: DonateParams): Promise<Hex> {
+    return await this.poolManager.write("donate", {
+      key: this.poolKey,
+      amount0: params.amount0,
+      amount1: params.amount1,
+      hookData: '0x', // Hook data
     });
-
-    return this.driftWrite.waitForTransaction({ txHash });
   }
 
   /**
@@ -214,17 +199,12 @@ export class ReadWriteV4Pool extends ReadV4Pool {
   async initialize(
     sqrtPriceX96: bigint,
     hookData?: Hex
-  ): Promise<TransactionReceipt> {
-    const txHash = await this.poolManagerWrite.write({
-      functionName: 'initialize',
-      args: [
-        this.poolKey,
-        sqrtPriceX96,
-        hookData || '0x',
-      ],
+  ): Promise<Hex> {
+    return await this.poolManager.write("initialize", {
+      key: this.poolKey,
+      sqrtPriceX96,
+      hookData: hookData || '0x',
     });
-
-    return this.driftWrite.waitForTransaction({ txHash });
   }
 
   /**
@@ -240,13 +220,13 @@ export class ReadWriteV4Pool extends ReadV4Pool {
     currency: Address,
     recipient: Address,
     amount: bigint
-  ): Promise<TransactionReceipt> {
-    const txHash = await this.poolManagerWrite.write({
-      functionName: 'take',
-      args: [currency, recipient, amount],
+  ): Promise<Hex> {
+    return await this.poolManager.write("take", {
+      amount,
+      currency,
+      to: recipient,
     });
 
-    return this.driftWrite.waitForTransaction({ txHash });
   }
 
   /**
@@ -255,12 +235,7 @@ export class ReadWriteV4Pool extends ReadV4Pool {
    * 
    * @returns Transaction receipt
    */
-  async settle(): Promise<TransactionReceipt> {
-    const txHash = await this.poolManagerWrite.write({
-      functionName: 'settle',
-      args: [],
-    });
-
-    return this.driftWrite.waitForTransaction({ txHash });
+  async settle(): Promise<Hex> {
+    return await this.poolManager.write("settle");
   }
 }

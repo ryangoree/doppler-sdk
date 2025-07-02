@@ -1,8 +1,6 @@
 import {
-  ReadContract,
-  WriteContract,
   ReadAdapter,
-  WriteAdapter,
+  ReadWriteAdapter,
   Drift,
   createDrift,
 } from '@delvtech/drift';
@@ -54,16 +52,16 @@ export class V4PoolFactory {
     poolKey: PoolKey,
     poolManagerAddress: Address,
     stateViewAddress: Address,
-    drift?: Drift<ReadAdapter>
+    drift: Drift<ReadAdapter> = createDrift()
   ): ReadV4Pool {
     const driftInstance = drift || createDrift({});
-    
-    const poolManager = driftInstance.readContract({
+
+    const poolManager = driftInstance.contract({
       abi: poolManagerAbi,
       address: poolManagerAddress,
     });
-    
-    const stateView = driftInstance.readContract({
+
+    const stateView = driftInstance.contract({
       abi: stateViewAbi,
       address: stateViewAddress,
     });
@@ -84,21 +82,19 @@ export class V4PoolFactory {
     poolKey: PoolKey,
     poolManagerAddress: Address,
     stateViewAddress: Address,
-    drift?: Drift<WriteAdapter>
+    drift: Drift<ReadWriteAdapter> = createDrift()
   ): ReadWriteV4Pool {
-    const driftInstance = drift || createDrift({});
-    
-    const poolManager = driftInstance.writeContract({
+    const poolManager = drift.contract({
       abi: poolManagerAbi,
       address: poolManagerAddress,
     });
-    
-    const stateView = driftInstance.readContract({
+
+    const stateView = drift.contract({
       abi: stateViewAbi,
       address: stateViewAddress,
     });
 
-    return new ReadWriteV4Pool(poolManager, stateView, poolKey, driftInstance);
+    return new ReadWriteV4Pool(poolManager, stateView, poolKey, drift);
   }
 
   /**
@@ -156,7 +152,7 @@ export class V4PoolFactory {
     hooks: Address,
     poolManagerAddress: Address,
     stateViewAddress: Address,
-    drift?: Drift<WriteAdapter>
+    drift: Drift<ReadWriteAdapter> = createDrift()
   ): ReadWriteV4Pool {
     const poolKey = buildPoolKey({
       currency0: token0,
@@ -192,11 +188,11 @@ export class V4PoolFactory {
     // Query the indexer for pool details
     // This would require implementing a GraphQL query to fetch v4pools by poolId
     // For now, this is a placeholder that shows the intended interface
-    
+
     throw new Error(
       'fromPoolId requires indexer integration. Use fromPoolKey or fromTokens instead.'
     );
-    
+
     // Future implementation would:
     // 1. Query indexer for v4pools where poolId matches
     // 2. Extract PoolKey components from result

@@ -69,9 +69,9 @@ export class ReadV4Pool {
     poolManager: ReadContract<PoolManagerABI>,
     stateView: ReadContract<StateViewABI>,
     poolKey: PoolKey,
-    drift?: Drift<ReadAdapter>
+    drift: Drift<ReadAdapter> = createDrift()
   ) {
-    this.drift = drift || createDrift({ rpcUrl: poolManager.rpcUrl });
+    this.drift = drift;
     this.poolManager = poolManager;
     this.stateView = stateView;
     this.poolKey = poolKey;
@@ -126,64 +126,28 @@ export class ReadV4Pool {
   /**
    * Returns the current pool state (slot0).
    */
-  async getSlot0(): Promise<Slot0> {
-    const result = await this.stateView.read({
-      functionName: 'getSlot0',
-      args: [this.poolId],
+  async getSlot0(): Promise<FunctionReturn<StateViewABI, "getSlot0">> {
+    return await this.stateView.read("getSlot0", {
+      poolId: this.poolId,
     });
-
-    return {
-      sqrtPriceX96: result[0],
-      tick: result[1],
-      protocolFee: result[2],
-      lpFee: result[3],
-    };
   }
 
   /**
    * Returns the total liquidity in the pool.
    */
-  async getLiquidity(): Promise<bigint> {
-    return this.stateView.read({
-      functionName: 'getLiquidity',
-      args: [this.poolId],
+  async getLiquidity(): Promise<FunctionReturn<StateViewABI, "getLiquidity">> {
+    return await this.stateView.read("getLiquidity", {
+      poolId: this.poolId,
     });
   }
 
   /**
    * Returns information about a specific tick.
    */
-  async getTickInfo(tick: number): Promise<TickInfo> {
-    const result = await this.stateView.read({
-      functionName: 'getTickInfo',
-      args: [this.poolId, tick],
-    });
-
-    return {
-      liquidityGross: result.liquidityGross,
-      liquidityNet: result.liquidityNet,
-      feeGrowthOutside0X128: result.feeGrowthOutside0X128,
-      feeGrowthOutside1X128: result.feeGrowthOutside1X128,
-    };
-  }
-
-  /**
-   * Returns the global fee growth for token0.
-   */
-  async getFeeGrowthGlobal0(): Promise<bigint> {
-    return this.stateView.read({
-      functionName: 'getFeeGrowthGlobal0X128',
-      args: [this.poolId],
-    });
-  }
-
-  /**
-   * Returns the global fee growth for token1.
-   */
-  async getFeeGrowthGlobal1(): Promise<bigint> {
-    return this.stateView.read({
-      functionName: 'getFeeGrowthGlobal1X128',
-      args: [this.poolId],
+  async getTickInfo(tick: number): Promise<FunctionReturn<StateViewABI, "getTickInfo">> {
+    return await this.stateView.read("getTickInfo", {
+      poolId: this.poolId,
+      tick,
     });
   }
 
