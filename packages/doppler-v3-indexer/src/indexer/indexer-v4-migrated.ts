@@ -1,26 +1,22 @@
 import { ponder } from "ponder:registry";
 import { chainConfigs } from "@app/config/chains";
-import { getPoolId } from "@app/utils/v4-utils/getPoolId";
-import { PoolKey } from "@app/types/v4-types";
 import { insertSwapIfNotExists } from "./shared/entities/swap";
 import { updatePool } from "./shared/entities/pool";
 import { updateAsset } from "./shared/entities/asset";
 import { fetchEthPrice } from "./shared/oracle";
 import { computeV4Price } from "@app/utils/v4-utils/computeV4Price";
 import { Address } from "viem";
-import { 
+import {
   insertOrUpdateBuckets,
   insertOrUpdateDailyVolume,
   compute24HourPriceChange,
 } from "./shared/timeseries";
-import { SwapService, SwapOrchestrator, PriceService } from "@app/core";
+import { SwapService, SwapOrchestrator } from "@app/core";
 import { computeDollarLiquidity } from "@app/utils/computeDollarLiquidity";
 import { tryAddActivePool } from "./shared/scheduledJobs";
 import { insertTokenIfNotExists } from "./shared/entities/token";
 import { CHAINLINK_ETH_DECIMALS } from "@app/utils/constants";
-import { computeMarketCap } from "./shared/oracle";
-import { pool, position, v4pools } from "ponder:schema";
-import { fetchExistingPool } from "./shared/entities/pool";
+import { position } from "ponder:schema";
 import { fetchExistingV4Pool, updateV4Pool } from "./shared/entities/v4pools";
 import { insertPositionIfNotExists, updatePosition } from "./shared/entities/position";
 
@@ -35,21 +31,21 @@ const getV4MigratorHook = (chainName: string): Address | null => {
 
 // Track PoolManager Initialize events for pools created via V4Migrator
 ponder.on("PoolManager:Initialize", async ({ event, context }) => {
-  const { id: poolId, currency0, currency1, fee, tickSpacing, hooks, sqrtPriceX96, tick } = event.args;
+  const { id: poolId, hooks, sqrtPriceX96, tick } = event.args;
   const { timestamp } = event.block;
   const { db, chain } = context;
-  
+
   // Get the V4MigratorHook address for this chain
   const v4MigratorHook = getV4MigratorHook(chain.name);
   if (!v4MigratorHook) {
     return; // V4 migrator not configured for this chain
   }
-  
+
   // Only process if this pool uses our migrator hook
   if (hooks.toLowerCase() !== v4MigratorHook.toLowerCase()) {
     return; // Not a migrated pool
   }
-  
+
   // Get the existing v4pool entity (should have been created by Airlock:Migrate)
   let existingV4Pool;
   try {
@@ -61,20 +57,20 @@ ponder.on("PoolManager:Initialize", async ({ event, context }) => {
     console.warn(`V4 pool ${poolId} initialized via V4Migrator but not found in database`);
     return;
   }
-  
+
   // Get ETH price for initial calculations
   const ethPrice = await fetchEthPrice(timestamp, context);
-  
+
   // Calculate the initial price from tick
   const price = computeV4Price({
     currentTick: Number(tick),
     isToken0: existingV4Pool.isToken0,
     baseTokenDecimals: 18,
   });
-  
+
   // Calculate initial dollar price
   const dollarPrice = (price * ethPrice) / CHAINLINK_ETH_DECIMALS;
-  
+
   // Update the v4pool with initialization data
   await updateV4Pool({
     poolId: poolId,
@@ -94,7 +90,7 @@ ponder.on("PoolManager:Swap", async ({ event, context }) => {
   const { timestamp } = event.block;
   const { hash: txHash, from: txFrom } = event.transaction;
   const { db, chain } = context;
-  
+
   // Check if this pool was created via migration
   let v4pool;
   try {
@@ -105,14 +101,14 @@ ponder.on("PoolManager:Swap", async ({ event, context }) => {
   } catch (error) {
     return; // V4 pool not found, skip
   }
-  
+
   if (!v4pool.migratedFromPool) {
     return; // Not a migrated pool, skip
   }
-  
+
   // Get ETH price for USD calculations
   const ethPrice = await fetchEthPrice(timestamp, context);
-  
+
   // Calculate the new price after the swap
   const newTick = Number(tick);
   const price = computeV4Price({
@@ -120,19 +116,19 @@ ponder.on("PoolManager:Swap", async ({ event, context }) => {
     isToken0: v4pool.isToken0, // Use the stored token order
     baseTokenDecimals: 18,
   });
-  
+
   // Determine swap amounts (V4 uses negative values for amounts out)
   const amountIn = amount0 > 0n ? amount0 : amount1;
   const amountOut = amount0 < 0n ? -amount0 : -amount1;
   const isZeroForOne = amount0 > 0n;
-  
+
   // Determine the swap type
   const type = SwapService.determineSwapType({
     isToken0: v4pool.isToken0,
     amount0: amount0 > 0n ? amount0 : -amount0,
     amount1: amount1 > 0n ? amount1 : -amount1,
   });
-  
+
   // Get token total supply for market cap calculation
   const { totalSupply } = await insertTokenIfNotExists({
     tokenAddress: v4pool.asset!,
@@ -141,7 +137,7 @@ ponder.on("PoolManager:Swap", async ({ event, context }) => {
     context,
     isDerc20: true,
   });
-  
+
   // Calculate market metrics
   const metrics = SwapService.calculateMarketMetrics({
     totalSupply,
@@ -149,12 +145,12 @@ ponder.on("PoolManager:Swap", async ({ event, context }) => {
     swapAmountIn: amountIn,
     swapAmountOut: amountOut,
     ethPriceUSD: ethPrice,
-    assetDecimals: 18n,
+    assetDecimals: 18,
     assetBalance: v4pool.reserves0, // Use stored reserves
     quoteBalance: v4pool.reserves1,
     isQuoteETH: v4pool.isQuoteEth,
   });
-  
+
   // Calculate swap value in USD
   let quoteDelta = 0n;
   if (v4pool.isToken0) {
@@ -170,15 +166,15 @@ ponder.on("PoolManager:Swap", async ({ event, context }) => {
       quoteDelta = -amount0;
     }
   }
-  const swapValueUsd = Number(quoteDelta * ethPrice / CHAINLINK_ETH_DECIMALS);
-  
+  const swapValueUsd = quoteDelta * ethPrice / CHAINLINK_ETH_DECIMALS;
+
   // Calculate 24-hour price change
   const priceChange = await compute24HourPriceChange({
     poolAddress: poolId,
     marketCapUsd: metrics.marketCapUsd,
     context,
   });
-  
+
   // Create swap data
   const swapData = SwapOrchestrator.createSwapData({
     poolAddress: poolId,
@@ -195,19 +191,19 @@ ponder.on("PoolManager:Swap", async ({ event, context }) => {
     price,
     ethPriceUSD: ethPrice,
   });
-  
+
   // Create market metrics
   const marketMetrics = {
     liquidityUsd: metrics.liquidityUsd,
     marketCapUsd: metrics.marketCapUsd,
-    swapValueUsd,
+    swapValueUsd: swapValueUsd,
     percentDayChange: priceChange,
   };
-  
+
   // Calculate fee amounts
   // V4 fees are taken from the amount in
   const feeAmount = (amountIn * BigInt(fee)) / 1000000n; // fee is in hundredths of a bip
-  
+
   // Define entity updaters
   const entityUpdaters = {
     updatePool,
@@ -217,7 +213,7 @@ ponder.on("PoolManager:Swap", async ({ event, context }) => {
     insertOrUpdateDailyVolume,
     tryAddActivePool,
   };
-  
+
   // Perform common updates via orchestrator
   await Promise.all([
     SwapOrchestrator.performSwapUpdates(
@@ -242,7 +238,7 @@ ponder.on("PoolManager:Swap", async ({ event, context }) => {
         tick: newTick,
         sqrtPriceX96: sqrtPriceX96,
         liquidity,
-        volumeUsd: v4pool.volumeUsd + BigInt(Math.floor(swapValueUsd)), 
+        volumeUsd: v4pool.volumeUsd + swapValueUsd,
         lastSwapTimestamp: timestamp,
         totalFee0: isZeroForOne ? v4pool.totalFee0 + feeAmount : v4pool.totalFee0,
         totalFee1: !isZeroForOne ? v4pool.totalFee1 + feeAmount : v4pool.totalFee1,
@@ -258,7 +254,7 @@ ponder.on("PoolManager:ModifyLiquidity", async ({ event, context }) => {
   const { id: poolId, sender, tickLower, tickUpper, liquidityDelta, salt } = event.args;
   const { timestamp } = event.block;
   const { db, chain } = context;
-  
+
   // Check if this pool was created via migration
   let v4pool;
   try {
@@ -269,19 +265,19 @@ ponder.on("PoolManager:ModifyLiquidity", async ({ event, context }) => {
   } catch (error) {
     return; // V4 pool not found, skip
   }
-  
+
   if (!v4pool.migratedFromPool) {
     return; // Not a migrated pool, skip
   }
-  
+
   // Get ETH price for liquidity calculations
   const ethPrice = await fetchEthPrice(timestamp, context);
-  
+
   // Update pool liquidity
-  const newLiquidity = liquidityDelta > 0n 
+  const newLiquidity = liquidityDelta > 0n
     ? v4pool.liquidity + BigInt(liquidityDelta)
     : v4pool.liquidity - BigInt(-liquidityDelta);
-  
+
   // Calculate dollar liquidity
   const dollarLiquidity = await computeDollarLiquidity({
     assetBalance: v4pool.reserves0,
@@ -289,7 +285,7 @@ ponder.on("PoolManager:ModifyLiquidity", async ({ event, context }) => {
     price: v4pool.price,
     ethPrice,
   });
-  
+
   await updateV4Pool({
     poolId: poolId,
     context,
@@ -299,7 +295,7 @@ ponder.on("PoolManager:ModifyLiquidity", async ({ event, context }) => {
       lastRefreshed: timestamp,
     },
   });
-  
+
   // Update position tracking if this is a new position
   if (liquidityDelta > 0n) {
     const existingPosition = await db.find(position, {
@@ -308,7 +304,7 @@ ponder.on("PoolManager:ModifyLiquidity", async ({ event, context }) => {
       tickUpper: Number(tickUpper),
       chainId: BigInt(chain.id),
     });
-    
+
     if (existingPosition) {
       await updatePosition({
         poolAddress: poolId,
@@ -335,10 +331,10 @@ ponder.on("PoolManager:ModifyLiquidity", async ({ event, context }) => {
 
 // Track PoolManager Donate events for migrated pools
 ponder.on("PoolManager:Donate", async ({ event, context }) => {
-  const { id: poolId, sender, amount0, amount1 } = event.args;
+  const { id: poolId, amount0, amount1 } = event.args;
   const { timestamp } = event.block;
   const { db, chain } = context;
-  
+
   // Check if this pool was created via migration
   let v4pool;
   try {
@@ -349,11 +345,11 @@ ponder.on("PoolManager:Donate", async ({ event, context }) => {
   } catch (error) {
     return; // V4 pool not found, skip
   }
-  
+
   if (!v4pool.migratedFromPool) {
     return; // Not a migrated pool, skip
   }
-  
+
   // Update pool reserves with donated amounts
   await updateV4Pool({
     poolId: poolId,
