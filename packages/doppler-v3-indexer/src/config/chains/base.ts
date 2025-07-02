@@ -66,8 +66,8 @@ export const baseConfig: ChainConfig = {
       v4Initializer2: "0x77EbfBAE15AD200758E9E2E61597c0B07d731254" as Address,
       stateView: "0xa3c0c9b65bad0b08107aa264b0f3db444b867a71" as Address,
       dopplerLens: "0x094d926a969b3024ca46d2186bf13fd5cdba9ce2" as Address,
-      v4Migrator: "0x82Cc0DAAea3c9Ee022bC61dbC7Bf6dB6460b6000" as Address,
-      v4MigratorHook: "0x82cc0daaea3c9ee022bc61dbc7bf6db6460b6000" as Address,
+      v4Migrator: "0x5328a67747c9db61457eb1a23be16bd73d1659c6" as Address,
+      v4MigratorHook: "0x7a7e77e2411752f0d2ea227467f8c3e5acdf6000" as Address,
     },
     shared: {
       airlock: "0x660eAaEdEBc968f8f3694354FA8EC0b4c5Ba8D12" as Address,
