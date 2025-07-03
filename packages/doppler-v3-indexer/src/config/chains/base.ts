@@ -6,7 +6,8 @@ import {
   V4_START_BLOCKS,
   ORACLE_ADDRESSES,
   COMMON_ADDRESSES,
-  RPC_ENV_VARS
+  RPC_ENV_VARS,
+  V4_MIGRATOR_START_BLOCKS
 } from "./constants";
 
 export const baseSepoliaConfig: ChainConfig = {
@@ -14,6 +15,7 @@ export const baseSepoliaConfig: ChainConfig = {
   name: "baseSepolia",
   startBlock: START_BLOCKS.baseSepolia,
   v4StartBlock: V4_START_BLOCKS.baseSepolia,
+  v4MigratorStartBlock: V4_MIGRATOR_START_BLOCKS.baseSepolia,
   oracleStartBlock: START_BLOCKS.mainnet,
   rpcEnvVar: RPC_ENV_VARS.baseSepolia,
   addresses: {
@@ -30,8 +32,8 @@ export const baseSepoliaConfig: ChainConfig = {
       dopplerLens: "0x4a8d81db741248a36d9eb3bc6ef648bf798b47a7" as Address,
       stateView: "0x571291b572ed32ce6751a2cb2486ebee8defb9b4" as Address,
       v4Initializer: "0xca2079706a4c2a4a1aa637dfb47d7f27fe58653f" as Address,
-      v4Migrator: "0xb2ec6559704467306d04322a5dc082b2af4562dd" as Address,
-      v4MigratorHook: "0x1cb2230a3b228014532dd491b0ba385e53b7a000" as Address,
+      v4Migrator: "0xe713efCe3C639432fC3ca902f34edAF15Ebcf3aC" as Address,
+      v4MigratorHook: "0x508812fcdd4972A59B66EB2cAD3772279C052000" as Address,
     },
     shared: {
       airlock: "0x3411306ce66c9469bff1535ba955503c4bde1c6e" as Address,
@@ -50,6 +52,7 @@ export const baseConfig: ChainConfig = {
   name: "base",
   startBlock: START_BLOCKS.base,
   v4StartBlock: V4_START_BLOCKS.base,
+  v4MigratorStartBlock: V4_MIGRATOR_START_BLOCKS.base,
   oracleStartBlock: START_BLOCKS.mainnet,
   rpcEnvVar: RPC_ENV_VARS.base,
   addresses: {
@@ -66,8 +69,8 @@ export const baseConfig: ChainConfig = {
       v4Initializer2: "0x77EbfBAE15AD200758E9E2E61597c0B07d731254" as Address,
       stateView: "0xa3c0c9b65bad0b08107aa264b0f3db444b867a71" as Address,
       dopplerLens: "0x094d926a969b3024ca46d2186bf13fd5cdba9ce2" as Address,
-      v4Migrator: "0x5328a67747c9db61457eb1a23be16bd73d1659c6" as Address,
-      v4MigratorHook: "0x7a7e77e2411752f0d2ea227467f8c3e5acdf6000" as Address,
+      v4Migrator: "0xa24E35a5d71d02a59b41E7c93567626302da1958" as Address,
+      v4MigratorHook: "0x1370AD7FdA3b054eca3532A066B968433e736000" as Address,
     },
     shared: {
       airlock: "0x660eAaEdEBc968f8f3694354FA8EC0b4c5Ba8D12" as Address,

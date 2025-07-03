@@ -156,7 +156,7 @@ export const generateV4Contracts = (): ContractConfigMap => {
         v4MigratorChains.map(([name, config]) => [
           name,
           {
-            startBlock: config.v4StartBlock!,
+            startBlock: config.v4MigratorStartBlock!,
             address: config.addresses.v4.v4Migrator,
           },
         ])
@@ -171,7 +171,7 @@ export const generateV4Contracts = (): ContractConfigMap => {
       v4Chains.map(([name, config]) => [
         name,
         {
-          startBlock: config.v4StartBlock!,
+          startBlock: config.v4MigratorStartBlock!,
           address: config.addresses.v4.poolManager,
         },
       ])

@@ -25,6 +25,11 @@ export const V4_START_BLOCKS = {
   base: 30822164,
 } as const;
 
+export const V4_MIGRATOR_START_BLOCKS = {
+  baseSepolia: 27881556,
+  base: 32374780,
+} as const;
+
 // Special contract addresses used across chains
 export const COMMON_ADDRESSES = {
   WETH_BASE: "0x4200000000000000000000000000000000000006" as Address,

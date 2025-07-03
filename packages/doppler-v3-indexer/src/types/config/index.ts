@@ -18,6 +18,7 @@ export interface ChainConfig {
   name: Network;
   startBlock: number;
   v4StartBlock?: number;
+  v4MigratorStartBlock?: number;
   oracleStartBlock: number;
   rpcEnvVar: string;
   addresses: ChainAddresses;
