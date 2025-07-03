@@ -36,7 +36,7 @@ export const DOPPLER_V3_ADDRESSES: { [chainId: number]: DopplerV3Addresses } = {
     governanceFactory: '0x482055c3a704610b22e77acc29863f92bcfd4298' as Address,
     noOpGovernanceFactory: '0x916b8987e4ad325c10d58ed8dc2036a6ff5eb228' as Address,
     liquidityMigrator: '0xd797e6af3211ae124b8edff69db21ffe6c659104' as Address,
-    v4Migrator: '0x853fbee6391d75c82cb0cf77eb83251896a2d77a' as Address,
+    v4Migrator: '0xb2ec6559704467306d04322a5dc082b2af4562dd' as Address,
     streamableFeesLocker: '0x3345e557c5c0b474be1eb4693264008b8562aa9c' as Address,
     universalRouter: "0x492E6456D9528771018DeB9E87ef7750EF184104" as Address,
     permit2: "0x000000000022D473030F116dDEE9F6B43aC78BA3" as Address,
