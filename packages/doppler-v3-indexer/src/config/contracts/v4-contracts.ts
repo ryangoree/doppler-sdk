@@ -137,7 +137,7 @@ export const generateV4Contracts = (): ContractConfigMap => {
       v4Chains.map(([name, config]) => [
         name,
         {
-          startBlock: config.v4StartBlock!,
+          startBlock: config.v4MigratorStartBlock!,
           address: config.addresses.v4.poolManager,
         },
       ])
@@ -163,20 +163,6 @@ export const generateV4Contracts = (): ContractConfigMap => {
       ),
     };
   }
-
-  // PoolManager contract - needed to track migrated V4 pools
-  contracts.PoolManager = {
-    abi: PoolManagerABI,
-    chain: Object.fromEntries(
-      v4Chains.map(([name, config]) => [
-        name,
-        {
-          startBlock: config.v4MigratorStartBlock!,
-          address: config.addresses.v4.poolManager,
-        },
-      ])
-    ),
-  };
 
   return contracts;
 };
