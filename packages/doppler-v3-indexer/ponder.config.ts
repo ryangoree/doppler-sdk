@@ -10,14 +10,11 @@ import {
   PoolManagerABI,
   UniswapV2PairABI,
 } from "./src/abis";
-import {
-  CHAIN_IDS,
-  configs,
-} from "./addresses";
 import { UniswapV2FactoryABI } from "@app/abis/UniswapV2Factory";
 import { BLOCK_INTERVALS } from "@app/config/blocks/intervals";
+import { chainConfigs, CHAIN_IDS, V4_START_BLOCKS } from "./src/config/chains";
 
-const { unichain, mainnet, baseSepolia, ink, base } = configs;
+const { unichain, mainnet, baseSepolia, ink, base } = chainConfigs;
 
 export default createConfig({
   database: {
@@ -108,19 +105,19 @@ export default createConfig({
       chain: {
         unichain: {
           startBlock: unichain.startBlock,
-          address: unichain.shared.airlock,
+          address: unichain.addresses.shared.airlock,
         },
         ink: {
           startBlock: ink.startBlock,
-          address: ink.shared.airlock,
+          address: ink.addresses.shared.airlock,
         },
         baseSepolia: {
-          startBlock: baseSepolia.v4StartBlock,
-          address: baseSepolia.shared.airlock,
+          startBlock: V4_START_BLOCKS.baseSepolia,
+          address: baseSepolia.addresses.shared.airlock,
         },
         base: {
           startBlock: base.startBlock,
-          address: base.shared.airlock,
+          address: base.addresses.shared.airlock,
         },
       },
     },
@@ -129,19 +126,19 @@ export default createConfig({
       chain: {
         unichain: {
           startBlock: unichain.startBlock,
-          address: unichain.v3.v3Initializer,
+          address: unichain.addresses.v3.v3Initializer,
         },
         ink: {
           startBlock: ink.startBlock,
-          address: ink.v3.v3Initializer,
+          address: ink.addresses.v3.v3Initializer,
         },
         baseSepolia: {
-          startBlock: baseSepolia.v4StartBlock,
-          address: baseSepolia.v3.v3Initializer,
+          startBlock: V4_START_BLOCKS.baseSepolia,
+          address: baseSepolia.addresses.v3.v3Initializer,
         },
         base: {
           startBlock: base.startBlock,
-          address: base.v3.v3Initializer,
+          address: base.addresses.v3.v3Initializer,
         },
       },
     },
@@ -149,20 +146,20 @@ export default createConfig({
       abi: UniswapV4InitializerABI,
       chain: {
         unichain: {
-          startBlock: unichain.v4StartBlock,
-          address: unichain.v4.v4Initializer,
+          startBlock: V4_START_BLOCKS.unichain,
+          address: unichain.addresses.v4.v4Initializer,
         },
         ink: {
-          startBlock: ink.v4StartBlock,
-          address: ink.v4.v4Initializer,
+          startBlock: V4_START_BLOCKS.ink,
+          address: ink.addresses.v4.v4Initializer,
         },
         baseSepolia: {
-          startBlock: baseSepolia.v4StartBlock,
-          address: baseSepolia.v4.v4Initializer,
+          startBlock: V4_START_BLOCKS.baseSepolia,
+          address: baseSepolia.addresses.v4.v4Initializer,
         },
         base: {
-          startBlock: base.v4StartBlock,
-          address: base.v4.v4Initializer,
+          startBlock: V4_START_BLOCKS.base,
+          address: base.addresses.v4.v4Initializer,
         },
       },
     },
@@ -170,16 +167,16 @@ export default createConfig({
       abi: UniswapV4InitializerABI,
       chain: {
         base: {
-          startBlock: base.v4StartBlock,
-          address: base.v4.v4Initializer2,
+          startBlock: V4_START_BLOCKS.base,
+          address: base.addresses.v4.v4Initializer2,
         },
         unichain: {
-          startBlock: unichain.v4StartBlock,
-          address: unichain.v4.v4Initializer2,
+          startBlock: V4_START_BLOCKS.unichain,
+          address: unichain.addresses.v4.v4Initializer2,
         },
         ink: {
-          startBlock: ink.v4StartBlock,
-          address: ink.v4.v4Initializer2,
+          startBlock: V4_START_BLOCKS.ink,
+          address: ink.addresses.v4.v4Initializer2,
         },
       },
     },
@@ -189,7 +186,7 @@ export default createConfig({
         unichain: {
           startBlock: unichain.startBlock,
           address: factory({
-            address: unichain.v3.v3Initializer,
+            address: unichain.addresses.v3.v3Initializer,
             event: getAbiItem({ abi: UniswapV3InitializerABI, name: "Create" }),
             parameter: "asset",
           }),
@@ -197,15 +194,15 @@ export default createConfig({
         ink: {
           startBlock: ink.startBlock,
           address: factory({
-            address: ink.v3.v3Initializer,
+            address: ink.addresses.v3.v3Initializer,
             event: getAbiItem({ abi: UniswapV3InitializerABI, name: "Create" }),
             parameter: "asset",
           }),
         },
         baseSepolia: {
-          startBlock: baseSepolia.v4StartBlock,
+          startBlock: V4_START_BLOCKS.baseSepolia,
           address: factory({
-            address: baseSepolia.v3.v3Initializer,
+            address: baseSepolia.addresses.v3.v3Initializer,
             event: getAbiItem({ abi: UniswapV3InitializerABI, name: "Create" }),
             parameter: "asset",
           }),
@@ -213,7 +210,7 @@ export default createConfig({
         base: {
           startBlock: base.startBlock,
           address: factory({
-            address: base.v3.v3Initializer,
+            address: base.addresses.v3.v3Initializer,
             event: getAbiItem({ abi: UniswapV3InitializerABI, name: "Create" }),
             parameter: "asset",
           }),
@@ -224,33 +221,33 @@ export default createConfig({
       abi: DERC20ABI,
       chain: {
         baseSepolia: {
-          startBlock: baseSepolia.v4StartBlock,
+          startBlock: V4_START_BLOCKS.baseSepolia,
           address: factory({
-            address: baseSepolia.v4.v4Initializer,
+            address: baseSepolia.addresses.v4.v4Initializer,
             event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
             parameter: "asset",
           }),
         },
         base: {
-          startBlock: base.v4StartBlock,
+          startBlock: V4_START_BLOCKS.base,
           address: factory({
-            address: base.v4.v4Initializer,
+            address: base.addresses.v4.v4Initializer,
             event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
             parameter: "asset",
           }),
         },
         unichain: {
-          startBlock: unichain.v4StartBlock,
+          startBlock: V4_START_BLOCKS.unichain,
           address: factory({
-            address: unichain.v4.v4Initializer,
+            address: unichain.addresses.v4.v4Initializer,
             event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
             parameter: "asset",
           }),
         },
         ink: {
-          startBlock: ink.v4StartBlock,
+          startBlock: V4_START_BLOCKS.ink,
           address: factory({
-            address: ink.v4.v4Initializer,
+            address: ink.addresses.v4.v4Initializer,
             event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
             parameter: "asset",
           }),
@@ -261,25 +258,25 @@ export default createConfig({
       abi: DERC20ABI,
       chain: {
         base: {
-          startBlock: base.v4StartBlock,
+          startBlock: V4_START_BLOCKS.base,
           address: factory({
-            address: base.v4.v4Initializer2,
+            address: base.addresses.v4.v4Initializer2,
             event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
             parameter: "asset",
           }),
         },
         unichain: {
-          startBlock: unichain.v4StartBlock,
+          startBlock: V4_START_BLOCKS.unichain,
           address: factory({
-            address: unichain.v4.v4Initializer2,
+            address: unichain.addresses.v4.v4Initializer2,
             event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
             parameter: "asset",
           }),
         },
         ink: {
-          startBlock: ink.v4StartBlock,
+          startBlock: V4_START_BLOCKS.ink,
           address: factory({
-            address: ink.v4.v4Initializer2,
+            address: ink.addresses.v4.v4Initializer2,
             event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
             parameter: "asset",
           }),
@@ -292,7 +289,7 @@ export default createConfig({
         unichain: {
           startBlock: unichain.startBlock,
           address: factory({
-            address: unichain.v3.v3Initializer,
+            address: unichain.addresses.v3.v3Initializer,
             event: getAbiItem({ abi: UniswapV3InitializerABI, name: "Create" }),
             parameter: "poolOrHook",
           }),
@@ -300,15 +297,15 @@ export default createConfig({
         ink: {
           startBlock: ink.startBlock,
           address: factory({
-            address: ink.v3.v3Initializer,
+            address: ink.addresses.v3.v3Initializer,
             event: getAbiItem({ abi: UniswapV3InitializerABI, name: "Create" }),
             parameter: "poolOrHook",
           }),
         },
         baseSepolia: {
-          startBlock: baseSepolia.v4StartBlock,
+          startBlock: V4_START_BLOCKS.baseSepolia,
           address: factory({
-            address: baseSepolia.v3.v3Initializer,
+            address: baseSepolia.addresses.v3.v3Initializer,
             event: getAbiItem({ abi: UniswapV3InitializerABI, name: "Create" }),
             parameter: "poolOrHook",
           }),
@@ -316,7 +313,7 @@ export default createConfig({
         base: {
           startBlock: base.startBlock,
           address: factory({
-            address: base.v3.v3Initializer,
+            address: base.addresses.v3.v3Initializer,
             event: getAbiItem({ abi: UniswapV3InitializerABI, name: "Create" }),
             parameter: "poolOrHook",
           }),
@@ -327,9 +324,9 @@ export default createConfig({
       abi: UniswapV2PairABI,
       chain: {
         baseSepolia: {
-          startBlock: baseSepolia.v4StartBlock,
+          startBlock: V4_START_BLOCKS.baseSepolia,
           address: factory({
-            address: baseSepolia.shared.airlock,
+            address: baseSepolia.addresses.shared.airlock,
             event: getAbiItem({
               abi: AirlockABI,
               name: "Migrate",
@@ -340,7 +337,7 @@ export default createConfig({
         ink: {
           startBlock: ink.startBlock,
           address: factory({
-            address: ink.shared.airlock,
+            address: ink.addresses.shared.airlock,
             event: getAbiItem({
               abi: AirlockABI,
               name: "Migrate",
@@ -351,7 +348,7 @@ export default createConfig({
         base: {
           startBlock: base.startBlock,
           address: factory({
-            address: base.shared.airlock,
+            address: base.addresses.shared.airlock,
             event: getAbiItem({
               abi: AirlockABI,
               name: "Migrate",
@@ -367,7 +364,7 @@ export default createConfig({
         unichain: {
           startBlock: unichain.startBlock,
           address: factory({
-            address: unichain.v2.factory,
+            address: unichain.addresses.v2.factory,
             event: getAbiItem({
               abi: UniswapV2FactoryABI,
               name: "PairCreated",
@@ -381,20 +378,20 @@ export default createConfig({
       abi: PoolManagerABI,
       chain: {
         baseSepolia: {
-          startBlock: baseSepolia.v4StartBlock,
-          address: baseSepolia.v4.poolManager,
+          startBlock: V4_START_BLOCKS.baseSepolia,
+          address: baseSepolia.addresses.v4.poolManager,
         },
         base: {
-          startBlock: base.v4StartBlock,
-          address: base.v4.poolManager,
+          startBlock: V4_START_BLOCKS.base,
+          address: base.addresses.v4.poolManager,
         },
         unichain: {
-          startBlock: unichain.v4StartBlock,
-          address: unichain.v4.poolManager,
+          startBlock: V4_START_BLOCKS.unichain,
+          address: unichain.addresses.v4.poolManager,
         },
         ink: {
-          startBlock: ink.v4StartBlock,
-          address: ink.v4.poolManager,
+          startBlock: V4_START_BLOCKS.ink,
+          address: ink.addresses.v4.poolManager,
         },
       },
     },
@@ -402,33 +399,33 @@ export default createConfig({
       abi: DopplerABI,
       chain: {
         baseSepolia: {
-          startBlock: baseSepolia.v4StartBlock,
+          startBlock: V4_START_BLOCKS.baseSepolia,
           address: factory({
-            address: baseSepolia.v4.v4Initializer,
+            address: baseSepolia.addresses.v4.v4Initializer,
             event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
             parameter: "poolOrHook",
           }),
         },
         base: {
-          startBlock: base.v4StartBlock,
+          startBlock: V4_START_BLOCKS.base,
           address: factory({
-            address: base.v4.v4Initializer,
+            address: base.addresses.v4.v4Initializer,
             event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
             parameter: "poolOrHook",
           }),
         },
         unichain: {
-          startBlock: unichain.v4StartBlock,
+          startBlock: V4_START_BLOCKS.unichain,
           address: factory({
-            address: unichain.v4.v4Initializer,
+            address: unichain.addresses.v4.v4Initializer,
             event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
             parameter: "poolOrHook",
           }),
         },
         ink: {
-          startBlock: ink.v4StartBlock,
+          startBlock: V4_START_BLOCKS.ink,
           address: factory({
-            address: ink.v4.v4Initializer,
+            address: ink.addresses.v4.v4Initializer,
             event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
             parameter: "poolOrHook",
           }),
@@ -439,16 +436,16 @@ export default createConfig({
       abi: DopplerABI,
       chain: {
         base: {
-          startBlock: base.v4StartBlock,
-          address: base.v4.v4Initializer2,
+          startBlock: V4_START_BLOCKS.base,
+          address: base.addresses.v4.v4Initializer2,
         },
         unichain: {
-          startBlock: unichain.v4StartBlock,
-          address: unichain.v4.v4Initializer2,
+          startBlock: V4_START_BLOCKS.unichain,
+          address: unichain.addresses.v4.v4Initializer2,
         },
         ink: {
-          startBlock: ink.v4StartBlock,
-          address: ink.v4.v4Initializer2,
+          startBlock: V4_START_BLOCKS.ink,
+          address: ink.addresses.v4.v4Initializer2,
         },
       },
     },
