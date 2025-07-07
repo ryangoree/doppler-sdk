@@ -1,5 +1,5 @@
 import { ponder } from "ponder:registry";
-import { pool, v4pools } from "ponder:schema";
+import { asset, pool, v4pools } from "ponder:schema";
 import { insertAssetIfNotExists, updateAsset } from "./shared/entities/asset";
 import { insertTokenIfNotExists, updateToken } from "./shared/entities/token";
 import { insertV2PoolIfNotExists } from "./shared/entities/v2Pool";
@@ -7,18 +7,37 @@ import { updateUserAsset } from "./shared/entities/userAsset";
 import { insertUserAssetIfNotExists } from "./shared/entities/userAsset";
 import { insertUserIfNotExists, updateUser } from "./shared/entities/user";
 import { updatePool } from "./shared/entities/pool";
-import { V4MigratorABI } from "../abis";
 import { chainConfigs } from "../config/chains";
-import { getPoolId } from "../utils/v4-utils/getPoolId";
-
+import { UniswapV2FactoryABI } from "../abis/UniswapV2Factory";
 
 ponder.on("Airlock:Migrate", async ({ event, context }) => {
+  const { chain } = context;
   const { timestamp } = event.block;
   const assetId = event.args.asset.toLowerCase() as `0x${string}`;
   const poolAddress = event.args.pool.toLowerCase() as `0x${string}`;
 
+  const factoryAddress = chainConfigs[chain.name].addresses.v2.factory;
+
+  const assetEntity = await context.db.find(asset, {
+    address: assetId,
+  });
+
+  if (!assetEntity) {
+    console.warn(`Asset ${assetId} not found`);
+    return;
+  }
+
+  const numeraire = assetEntity.numeraire;
+
+  const pair = await context.client.readContract({
+    abi: UniswapV2FactoryABI,
+    address: factoryAddress,
+    functionName: "getPair",
+    args: [assetId, numeraire],
+  });
+
   // Check if this is a V4 migration (pool address is 0x0)
-  if (poolAddress != "0x0000000000000000000000000000000000000000" && poolAddress != "0xf6C2AF6AC04ab8FbbBe58D136c7E3aDfF4C8eb2b") {
+  if (pair != "0x0000000000000000000000000000000000000000") {
     // V2 Migration (existing logic)
     const v2Pool = await insertV2PoolIfNotExists({
       assetAddress: assetId,
