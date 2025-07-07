@@ -143,20 +143,16 @@ export const insertTokenIfNotExists = async ({
         const response = await fetch(url);
         tokenUriData = await response.json();
 
-        console.log("tokenUriData", tokenUriData);
-
         if (
           tokenUriData &&
           typeof tokenUriData === "object" &&
           "image" in tokenUriData &&
           typeof tokenUriData.image === "string"
         ) {
-          console.log("in here?");
           if (tokenUriData.image.startsWith("https://")) {
             image = tokenUriData.image;
           }
         } else {
-          console.log("adding pending image");
           // Add to pending list for retry
           await addPendingTokenImage({
             context,
