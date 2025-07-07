@@ -96,7 +96,7 @@ export default createConfig({
     PendingTokenImagesBase: {
       chain: "base",
       startBlock: base.startBlock,
-      interval: BLOCK_INTERVALS.FIFTY_BLOCKS, // Check every 50 blocks
+      interval: BLOCK_INTERVALS.THOUSAND_BLOCKS * 3, // Check every 3000 blocks
     },
   },
   contracts: {
