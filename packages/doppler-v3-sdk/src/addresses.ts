@@ -43,6 +43,7 @@ export const DOPPLER_V3_ADDRESSES: { [chainId: number]: DopplerV3Addresses } = {
     quoterV2: "0xC5290058841028F1614F3A6F0F5816cAd0df5E27" as Address,
     univ2Router02: "0x1689E7B1F10000AE47eBfE339a4f69dECd19F602" as Address,
     bundler: "0xab7bacb0d5c2c10152f92d34e07f530eb3cb0fb1" as Address,
+    lockableV3Initializer: "0xe3203fd6531ad6c1dd3c9b38e257f1aa6fbf9fb6" as Address,
   },
   // ink
   57073: {
