@@ -18,8 +18,7 @@ ponder.on("Airlock:Migrate", async ({ event, context }) => {
   const poolAddress = event.args.pool.toLowerCase() as `0x${string}`;
 
   // Check if this is a V4 migration (pool address is 0x0)
-  if (poolAddress != "0x0000000000000000000000000000000000000000") {
-    console.log("V4 Migration");
+  if (poolAddress != "0x0000000000000000000000000000000000000000" && poolAddress != "0xf6C2AF6AC04ab8FbbBe58D136c7E3aDfF4C8eb2b") {
     // V2 Migration (existing logic)
     const v2Pool = await insertV2PoolIfNotExists({
       assetAddress: assetId,

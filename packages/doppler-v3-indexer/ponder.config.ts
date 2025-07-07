@@ -51,47 +51,47 @@ export default createConfig({
     ChainlinkEthPriceFeed: {
       chain: "mainnet",
       startBlock: mainnet.startBlock,
-      interval: (60 * 5) / 12, // every 5 minutes
+      interval: BLOCK_INTERVALS.FIVE_MINUTES, // every 5 minutes
     },
     BaseSepoliaV4PoolCheckpoints: {
       chain: "baseSepolia",
       startBlock: baseSepolia.v4StartBlock,
-      interval: 50, // every 50 blocks
+      interval: BLOCK_INTERVALS.FIFTY_BLOCKS, // every 50 blocks
     },
     BaseV4PoolCheckpoints: {
       chain: "base",
       startBlock: base.v4StartBlock,
-      interval: 50, // every 50 blocks
+      interval: BLOCK_INTERVALS.FIFTY_BLOCKS, // every 50 blocks
     },
     UnichainV4PoolCheckpoints: {
       chain: "unichain",
       startBlock: unichain.v4StartBlock,
-      interval: 50, // every 50 blocks
+      interval: BLOCK_INTERVALS.FIFTY_BLOCKS, // every 50 blocks
     },
     InkV4PoolCheckpoints: {
       chain: "ink",
       startBlock: ink.v4StartBlock,
-      interval: 50, // every 50 blocks
+      interval: BLOCK_INTERVALS.FIFTY_BLOCKS, // every 50 blocks
     },
     MetricRefresherUnichain: {
       chain: "unichain",
       startBlock: unichain.startBlock,
-      interval: 1000, // every 1000 blocks
+      interval: BLOCK_INTERVALS.THOUSAND_BLOCKS, // every 1000 blocks
     },
     MetricRefresherInk: {
       chain: "ink",
       startBlock: ink.startBlock,
-      interval: 1000, // every 1000 blocks
+      interval: BLOCK_INTERVALS.THOUSAND_BLOCKS, // every 1000 blocks
     },
     MetricRefresherBase: {
       chain: "base",
       startBlock: base.startBlock,
-      interval: 1000, // every 1000 blocks
+      interval: BLOCK_INTERVALS.THOUSAND_BLOCKS, // every 1000 blocks
     },
     MetricRefresherBaseSepolia: {
       chain: "baseSepolia",
       startBlock: baseSepolia.startBlock,
-      interval: 1000, // every 1000 blocks
+      interval: BLOCK_INTERVALS.THOUSAND_BLOCKS, // every 1000 blocks
     },
     PendingTokenImagesBase: {
       chain: "base",
