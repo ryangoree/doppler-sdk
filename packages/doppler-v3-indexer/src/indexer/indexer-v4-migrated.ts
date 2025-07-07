@@ -33,7 +33,7 @@ const getV4MigratorHook = (chainName: string): Address | null => {
 ponder.on("PoolManager:Initialize", async ({ event, context }) => {
   const { id: poolId, hooks, sqrtPriceX96, tick } = event.args;
   const { timestamp } = event.block;
-  const { db, chain } = context;
+  const { chain } = context;
 
   // Get the V4MigratorHook address for this chain
   const v4MigratorHook = getV4MigratorHook(chain.name);
@@ -89,7 +89,7 @@ ponder.on("PoolManager:Swap", async ({ event, context }) => {
   const { id: poolId, sender, amount0, amount1, sqrtPriceX96, liquidity, tick, fee } = event.args;
   const { timestamp } = event.block;
   const { hash: txHash, from: txFrom } = event.transaction;
-  const { db, chain } = context;
+  const { chain } = context;
 
   // Check if this pool was created via migration
   let v4pool;
@@ -251,7 +251,7 @@ ponder.on("PoolManager:Swap", async ({ event, context }) => {
 
 // Track PoolManager ModifyLiquidity events for migrated pools
 ponder.on("PoolManager:ModifyLiquidity", async ({ event, context }) => {
-  const { id: poolId, sender, tickLower, tickUpper, liquidityDelta, salt } = event.args;
+  const { id: poolId, sender, tickLower, tickUpper, liquidityDelta } = event.args;
   const { timestamp } = event.block;
   const { db, chain } = context;
 
@@ -279,7 +279,7 @@ ponder.on("PoolManager:ModifyLiquidity", async ({ event, context }) => {
     : v4pool.liquidity - BigInt(-liquidityDelta);
 
   // Calculate dollar liquidity
-  const dollarLiquidity = await computeDollarLiquidity({
+  const dollarLiquidity = computeDollarLiquidity({
     assetBalance: v4pool.reserves0,
     quoteBalance: v4pool.reserves1,
     price: v4pool.price,
@@ -333,7 +333,6 @@ ponder.on("PoolManager:ModifyLiquidity", async ({ event, context }) => {
 ponder.on("PoolManager:Donate", async ({ event, context }) => {
   const { id: poolId, amount0, amount1 } = event.args;
   const { timestamp } = event.block;
-  const { db, chain } = context;
 
   // Check if this pool was created via migration
   let v4pool;
