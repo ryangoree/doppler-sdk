@@ -9,6 +9,7 @@ import { computeGraduationPercentage } from "@app/utils/v4-utils";
 import { DERC20ABI } from "@app/abis";
 import { V4PoolData } from "@app/types";
 import { configs } from "@app/types";
+import { getLockableV3PoolData } from "@app/utils/v3-utils/getV3PoolData";
 
 export const fetchExistingPool = async ({
   poolAddress,
@@ -256,7 +257,7 @@ export const insertLockableV3PoolIfNotExists = async ({
     return existingPool;
   }
 
-  const poolData = await getV3PoolData({
+  const poolData = await getLockableV3PoolData({
     address,
     context,
   });

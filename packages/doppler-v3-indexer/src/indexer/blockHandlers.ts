@@ -53,11 +53,10 @@ ponder.on("MetricRefresherInk:block", async ({ event, context }) => {
 
   } catch (error) {
     console.error(`Error in ink refresh job: ${error}`);
-    // Log error but don't throw to prevent handler from failing completely
   }
 });
 
-// // // Handler for base network
+// Handler for base network
 ponder.on("MetricRefresherBase:block", async ({ event, context }) => {
 
   try {
@@ -67,8 +66,7 @@ ponder.on("MetricRefresherBase:block", async ({ event, context }) => {
     });
 
   } catch (error) {
-    console.error(`Error in ink refresh job: ${error}`);
-    // Log error but don't throw to prevent handler from failing completely
+    console.error(`Error in base refresh job: ${error}`);
   }
 });
 

@@ -327,7 +327,7 @@ export default createConfig({
         baseSepolia: {
           startBlock: V4_START_BLOCKS.baseSepolia,
           address: factory({
-            address: baseSepolia.addresses.v3.v3Initializer,
+            address: baseSepolia.addresses.v3.lockableV3Initializer,
             event: getAbiItem({ abi: LockableUniswapV3InitializerABI, name: "Create" }),
             parameter: "poolOrHook",
           }),

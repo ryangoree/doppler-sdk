@@ -65,7 +65,7 @@ ponder.on("Airlock:Migrate", async ({ event, context }) => {
       }),
     ]);
   }
-  // // V4 Migration
+  // V4 Migration
   // const { chain } = context;
   // if (!chain) {
   //   console.warn("Chain not available in context");
@@ -181,8 +181,8 @@ ponder.on("Airlock:Migrate", async ({ event, context }) => {
   //       isToken0: assetId === baseToken.toLowerCase(),
   //       isQuoteEth: quoteToken.toLowerCase() === "0x0000000000000000000000000000000000000000" ||
   //         quoteToken.toLowerCase() === chainConfigs[chain.name as keyof typeof chainConfigs].addresses.shared.weth.toLowerCase(),
-  //     });
-  //   }
+  // });
+  // }
 
   //   // Update the old pool as migrated (store the V4 pool ID)
   //   await updatePool({
@@ -205,7 +205,7 @@ ponder.on("Airlock:Migrate", async ({ event, context }) => {
   //       // Note: We keep poolAddress pointing to the original pool
   //       // The v4pools entity tracks the new pool
   //     },
-  //   });
+  // });
 
   // } catch (error) {
   //   console.error(`Failed to process V4 migration for asset ${assetId}:`, error);
