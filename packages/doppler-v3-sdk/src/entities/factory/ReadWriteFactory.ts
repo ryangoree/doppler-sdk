@@ -356,31 +356,39 @@ export class ReadWriteFactory extends ReadFactory {
       throw new Error("Total shares must be equal to 1e18");
     }
 
-    const beneficiaries = v3PoolConfig.beneficiaries.map((beneficiary) => [beneficiary.beneficiary, beneficiary.shares] as const);
-
+    // Wrapping all the components in a tuple since the data is decoded as a InitData struct
     return encodeAbiParameters(
       [
-        { type: "uint24" },
-        { type: "int24" },
-        { type: "int24" },
-        { type: "uint16" },
-        { type: "uint256" },
         {
-          type: "tuple[]", components: [
-            { type: "address" },
-            { type: "uint96" }
+          type: "tuple",
+          components: [
+            { name: "fee", type: "uint24" },
+            { name: "startTick", type: "int24" },
+            { name: "endTick", type: "int24" },
+            { name: "numPositions", type: "uint16" },
+            { name: "maxShareToBeSold", type: "uint256" },
+            {
+              name: "beneficiaries",
+              type: "tuple[]",
+              components: [
+                { type: "address", name: "beneficiary" },
+                { type: "uint96", name: "shares" }
+              ]
+            },
           ]
         },
-
       ],
       [
-        v3PoolConfig.fee,
-        v3PoolConfig.startTick,
-        v3PoolConfig.endTick,
-        v3PoolConfig.numPositions,
-        v3PoolConfig.maxShareToBeSold,
-        beneficiaries,
-      ]);
+        {
+          fee: v3PoolConfig.fee,
+          startTick: v3PoolConfig.startTick,
+          endTick: v3PoolConfig.endTick,
+          numPositions: v3PoolConfig.numPositions,
+          maxShareToBeSold: v3PoolConfig.maxShareToBeSold,
+          beneficiaries: v3PoolConfig.beneficiaries,
+        }
+      ],
+    );
   }
 
   /**
