@@ -24,7 +24,7 @@ export const baseSepoliaConfig: ChainConfig = {
     },
     v3: {
       v3Initializer: "0x4c3062b9ccfdbcb10353f57c1b59a29d4c5cfa47" as Address,
-      lockableV3Initializer: "0xe3203fd6531ad6c1dd3c9b38e257f1aa6fbf9fb6" as Address,
+      lockableV3Initializer: "0x1fb8a108ff5c16213ebe3456314858d6b069a23b" as Address,
     },
     v4: {
       poolManager: "0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408" as Address,

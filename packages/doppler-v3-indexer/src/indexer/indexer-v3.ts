@@ -106,7 +106,6 @@ ponder.on("LockableUniswapV3Initializer:Create", async ({ event, context }) => {
   const assetId = asset.toLowerCase() as `0x${string}`;
   const poolOrHookId = poolOrHook.toLowerCase() as `0x${string}`;
 
-
   const ethPrice = await fetchEthPrice(timestamp, context);
 
   const [poolEntity, assetTokenEntity] = await Promise.all([
@@ -170,6 +169,17 @@ ponder.on("LockableUniswapV3Initializer:Create", async ({ event, context }) => {
   ]);
 });
 
+ponder.on("LockableUniswapV3Initializer:Lock", async ({ event, context }) => {
+  const { pool } = event.args;
+
+  await updatePool({
+    poolAddress: pool,
+    context,
+    update: {
+      isStreaming: true
+    },
+  });
+})
 
 ponder.on("LockableUniswapV3Pool:Mint", async ({ event, context }) => {
   const address = event.log.address.toLowerCase() as `0x${string}`;

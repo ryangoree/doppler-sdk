@@ -8,7 +8,7 @@ import {
 import { computeV3Price } from "./computeV3Price";
 import { getMulticallOptions } from "@app/core/utils";
 import { LockablePoolState, LockableV3PoolData, PoolState, V3PoolData } from "@app/types/v3-types";
-import { LockableUniswapV3InitializerABI } from "@app/abis/v3-abis/LockableUniswapV3Initializer";
+import { LockableUniswapV3InitializerABI } from "@app/abis/v3-abis/LockableUniswapV3InitializerABI";
 import { chainConfigs } from "@app/config";
 
 export const getV3PoolData = async ({

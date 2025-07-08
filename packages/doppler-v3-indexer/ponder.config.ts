@@ -13,7 +13,7 @@ import {
 import { UniswapV2FactoryABI } from "@app/abis/UniswapV2Factory";
 import { BLOCK_INTERVALS } from "@app/config/blocks/intervals";
 import { chainConfigs, CHAIN_IDS, V4_START_BLOCKS, LOCKABLE_V3_INITIALIZER_START_BLOCKS } from "./src/config/chains";
-import { LockableUniswapV3InitializerABI } from "@app/abis/v3-abis/LockableUniswapV3Initializer";
+import { LockableUniswapV3InitializerABI } from "@app/abis/v3-abis/LockableUniswapV3InitializerABI";
 
 const { unichain, mainnet, baseSepolia, ink, base } = chainConfigs;
 

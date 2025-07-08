@@ -1,6 +1,6 @@
 {
   "name": "doppler-v3-sdk",
-  "version": "1.0.40",
+  "version": "1.0.41",
   "description": "SDK for interacting with Doppler v3 protocol",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

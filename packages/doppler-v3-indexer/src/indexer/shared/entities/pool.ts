@@ -308,7 +308,6 @@ export const insertLockableV3PoolIfNotExists = async ({
     percentDayChange: 0,
     isToken0,
     marketCapUsd,
-    isStreaming: true,
     isQuoteEth
   });
 };
