@@ -12,7 +12,8 @@ import {
 } from "./src/abis";
 import { UniswapV2FactoryABI } from "@app/abis/UniswapV2Factory";
 import { BLOCK_INTERVALS } from "@app/config/blocks/intervals";
-import { chainConfigs, CHAIN_IDS, V4_START_BLOCKS } from "./src/config/chains";
+import { chainConfigs, CHAIN_IDS, V4_START_BLOCKS, LOCKABLE_V3_INITIALIZER_START_BLOCKS } from "./src/config/chains";
+import { LockableUniswapV3InitializerABI } from "@app/abis/v3-abis/LockableUniswapV3Initializer";
 
 const { unichain, mainnet, baseSepolia, ink, base } = chainConfigs;
 
@@ -320,6 +321,19 @@ export default createConfig({
         },
       },
     },
+    LockableUniswapV3Pool: {
+      abi: UniswapV3PoolABI,
+      chain: {
+        baseSepolia: {
+          startBlock: V4_START_BLOCKS.baseSepolia,
+          address: factory({
+            address: baseSepolia.addresses.v3.v3Initializer,
+            event: getAbiItem({ abi: LockableUniswapV3InitializerABI, name: "Create" }),
+            parameter: "poolOrHook",
+          }),
+        },
+      },
+    },
     UniswapV2Pair: {
       abi: UniswapV2PairABI,
       chain: {
@@ -446,6 +460,15 @@ export default createConfig({
         ink: {
           startBlock: V4_START_BLOCKS.ink,
           address: ink.addresses.v4.v4Initializer2,
+        },
+      },
+    },
+    LockableUniswapV3Initializer: {
+      abi: LockableUniswapV3InitializerABI,
+      chain: {
+        baseSepolia: {
+          startBlock: LOCKABLE_V3_INITIALIZER_START_BLOCKS.baseSepolia,
+          address: baseSepolia.addresses.v3.lockableV3Initializer,
         },
       },
     },

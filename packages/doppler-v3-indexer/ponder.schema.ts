@@ -213,6 +213,7 @@ export const pool = onchainTable(
     migratedToV4PoolId: t.hex(), // For V4 migrations, stores the 32-byte pool ID
     migratedFromPool: t.hex(),
     isQuoteEth: t.boolean().notNull(),
+    isStreaming: t.boolean().notNull().default(false),
   }),
   (table) => ({
     pk: primaryKey({
@@ -248,29 +249,29 @@ export const v4pools = onchainTable(
     // Identity - using 32-byte pool ID as primary key
     poolId: t.hex().notNull(),
     chainId: t.bigint().notNull(),
-    
+
     // PoolKey components for reconstruction
     currency0: t.hex().notNull(),
     currency1: t.hex().notNull(),
     fee: t.integer().notNull(),
     tickSpacing: t.integer().notNull(),
     hooks: t.hex().notNull(),
-    
+
     // Pool state
     sqrtPriceX96: t.bigint().notNull(),
     liquidity: t.bigint().notNull(),
     tick: t.integer().notNull(),
-    
+
     // Token references
     baseToken: t.hex().notNull(),
     quoteToken: t.hex().notNull(),
     asset: t.hex(), // Reference to asset if this is a Doppler token
-    
+
     // Migration tracking
     migratedFromPool: t.hex(), // Original Doppler pool address
     migratedAt: t.bigint().notNull(),
     migratorVersion: t.text().notNull().default("v4"),
-    
+
     // Metrics
     price: t.bigint().notNull(),
     volumeUsd: t.bigint().notNull().default(0n),
@@ -279,18 +280,18 @@ export const v4pools = onchainTable(
     totalFee1: t.bigint().notNull().default(0n),
     reserves0: t.bigint().notNull().default(0n),
     reserves1: t.bigint().notNull().default(0n),
-    
+
     // Timestamps
     createdAt: t.bigint().notNull(),
     lastRefreshed: t.bigint(),
     lastSwapTimestamp: t.bigint(),
-    
+
     // Price tracking
     percentDayChange: t.doublePrecision().notNull().default(0),
-    
+
     // Relations
     dailyVolume: t.hex(),
-    
+
     // Helper fields
     isToken0: t.boolean().notNull(),
     isQuoteEth: t.boolean().notNull(),

@@ -63,6 +63,7 @@ export type V4Addresses = {
 
 export type V3Addresses = {
   v3Initializer: Address;
+  lockableV3Initializer: Address;
 };
 
 export type V2Addresses = {

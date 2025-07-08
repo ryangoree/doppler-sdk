@@ -97,7 +97,80 @@ ponder.on("UniswapV3Initializer:Create", async ({ event, context }) => {
   ]);
 });
 
-ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
+ponder.on("LockableUniswapV3Initializer:Create", async ({ event, context }) => {
+  const { poolOrHook, asset, numeraire } = event.args;
+  const timestamp = event.block.timestamp;
+
+  const creatorId = event.transaction.from.toLowerCase() as `0x${string}`;
+  const numeraireId = numeraire.toLowerCase() as `0x${string}`;
+  const assetId = asset.toLowerCase() as `0x${string}`;
+  const poolOrHookId = poolOrHook.toLowerCase() as `0x${string}`;
+
+  const ethPrice = await fetchEthPrice(timestamp, context);
+
+  const [poolEntity, assetTokenEntity] = await Promise.all([
+    insertPoolIfNotExists({
+      poolAddress: poolOrHookId,
+      context,
+      timestamp,
+      ethPrice,
+    }),
+    insertTokenIfNotExists({
+      tokenAddress: assetId,
+      creatorAddress: creatorId,
+      timestamp,
+      context,
+    }),
+    insertTokenIfNotExists({
+      tokenAddress: numeraireId,
+      creatorAddress: creatorId,
+      timestamp,
+      context,
+      isDerc20: false,
+    }),
+  ])
+
+  const { price } = poolEntity;
+  const { totalSupply } = assetTokenEntity;
+  const marketCapUsd = computeMarketCap({
+    price,
+    ethPrice,
+    totalSupply,
+  });
+
+  // benchmark time 
+  await Promise.all([
+    insertActivePoolsBlobIfNotExists({
+      context,
+    }),
+    insertAssetIfNotExists({
+      assetAddress: assetId,
+      timestamp,
+      context,
+    }),
+    insertOrUpdateBuckets({
+      poolAddress: poolOrHookId,
+      price,
+      timestamp,
+      ethPrice,
+      context,
+    }),
+    insertOrUpdateDailyVolume({
+      poolAddress: poolOrHookId,
+      amountIn: 0n,
+      amountOut: 0n,
+      timestamp,
+      context,
+      tokenIn: assetId,
+      tokenOut: numeraireId,
+      ethPrice,
+      marketCapUsd,
+    }),
+  ]);
+});
+
+
+ponder.on("LockableUniswapV3Pool:Mint", async ({ event, context }) => {
   const address = event.log.address.toLowerCase() as `0x${string}`;
   const { tickLower, tickUpper, amount, owner, amount0, amount1 } = event.args;
   const timestamp = event.block.timestamp;
@@ -137,13 +210,6 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
     ethPrice,
   });
 
-  const graduationThresholdDelta = computeGraduationThresholdDelta({
-    tickLower,
-    tickUpper,
-    liquidity: amount,
-    isToken0,
-  });
-
   const [positionEntity] = await Promise.all([
     insertPositionIfNotExists({
       poolAddress: address,
@@ -170,7 +236,6 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
       poolAddress: address,
       context,
       update: {
-        maxThreshold: maxThreshold + graduationThresholdDelta,
         liquidity: liquidity + amount,
         dollarLiquidity: liquidityUsd,
         reserves0: reserves0 + amount0,
@@ -193,7 +258,7 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
   }
 });
 
-ponder.on("UniswapV3Pool:Burn", async ({ event, context }) => {
+ponder.on("LockableUniswapV3Pool:Burn", async ({ event, context }) => {
   const address = event.log.address.toLowerCase() as `0x${string}`;
   const timestamp = event.block.timestamp;
   const { tickLower, tickUpper, owner, amount, amount0, amount1 } = event.args;
@@ -231,13 +296,6 @@ ponder.on("UniswapV3Pool:Burn", async ({ event, context }) => {
     ethPrice,
   });
 
-  const graduationThresholdDelta = computeGraduationThresholdDelta({
-    tickLower,
-    tickUpper,
-    liquidity,
-    isToken0,
-  });
-
   const positionEntity = await insertPositionIfNotExists({
     poolAddress: address,
     tickLower,
@@ -262,7 +320,6 @@ ponder.on("UniswapV3Pool:Burn", async ({ event, context }) => {
       update: {
         liquidity: liquidity - amount,
         dollarLiquidity: liquidityUsd,
-        maxThreshold: maxThreshold - graduationThresholdDelta,
         reserves0: reserves0 - amount0,
         reserves1: reserves1 - amount1,
       },
@@ -279,7 +336,7 @@ ponder.on("UniswapV3Pool:Burn", async ({ event, context }) => {
   ]);
 });
 
-ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
+ponder.on("LockableUniswapV3Pool:Swap", async ({ event, context }) => {
   const { chain } = context;
   const address = event.log.address.toLowerCase() as `0x${string}`;
   const timestamp = event.block.timestamp;
@@ -305,10 +362,6 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
     context,
     ethPrice,
   });
-
-  if (migrated) {
-    return;
-  }
 
   const price = PriceService.computePriceFromSqrtPriceX96({
     sqrtPriceX96,

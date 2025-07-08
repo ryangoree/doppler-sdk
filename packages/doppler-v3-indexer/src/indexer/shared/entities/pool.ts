@@ -232,3 +232,82 @@ export const insertPoolIfNotExistsV4 = async ({
     isQuoteEth
   });
 };
+
+export const insertLockableV3Pool = async ({
+  poolAddress,
+  timestamp,
+  context,
+  ethPrice,
+}: {
+  poolAddress: Address;
+  timestamp: bigint;
+  context: Context;
+  ethPrice: bigint;
+}): Promise<typeof pool.$inferSelect> => {
+  const { db, chain, client } = context;
+  const address = poolAddress.toLowerCase() as `0x${string}`;
+
+  const existingPool = await db.find(pool, {
+    address,
+    chainId: BigInt(chain.id),
+  });
+
+  if (existingPool) {
+    return existingPool;
+  }
+
+  const poolData = await getV3PoolData({
+    address,
+    context,
+  });
+
+  const { slot0Data, liquidity, price, fee, token0, poolState } = poolData;
+
+  const isToken0 = token0.toLowerCase() === poolState.asset.toLowerCase();
+
+  const assetAddr = poolState.asset.toLowerCase() as `0x${string}`;
+  const numeraireAddr = poolState.numeraire.toLowerCase() as `0x${string}`;
+
+  const isQuoteEth = poolState.numeraire.toLowerCase() === "0x0000000000000000000000000000000000000000" || poolState.numeraire.toLowerCase() === configs[chain.name].shared.weth;
+
+  const assetTotalSupply = await client.readContract({
+    address: assetAddr,
+    abi: DERC20ABI,
+    functionName: "totalSupply",
+  });
+
+  const marketCapUsd = computeMarketCap({
+    price,
+    ethPrice,
+    totalSupply: assetTotalSupply,
+  });
+
+  return await db.insert(pool).values({
+    ...poolData,
+    ...slot0Data,
+    address,
+    liquidity: liquidity,
+    createdAt: timestamp,
+    asset: assetAddr,
+    baseToken: assetAddr,
+    quoteToken: numeraireAddr,
+    price,
+    type: "v3",
+    chainId: BigInt(chain.id),
+    fee,
+    dollarLiquidity: 0n,
+    dailyVolume: address,
+    maxThreshold: 0n,
+    graduationBalance: 0n,
+    totalFee0: 0n,
+    totalFee1: 0n,
+    volumeUsd: 0n,
+    reserves0: 0n,
+    reserves1: 0n,
+    percentDayChange: 0,
+    isToken0,
+    marketCapUsd,
+    isStreaming: true,
+    isQuoteEth
+  });
+};
