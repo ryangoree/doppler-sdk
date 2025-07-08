@@ -233,7 +233,7 @@ export const insertPoolIfNotExistsV4 = async ({
   });
 };
 
-export const insertLockableV3Pool = async ({
+export const insertLockableV3PoolIfNotExists = async ({
   poolAddress,
   timestamp,
   context,

@@ -10,6 +10,8 @@ import {
   compute24HourPriceChange,
 } from "./shared/timeseries";
 import {
+  insertLockableV3Pool,
+  insertLockableV3PoolIfNotExists,
   insertPoolIfNotExists,
   updatePool,
 } from "./shared/entities/pool";
@@ -109,7 +111,7 @@ ponder.on("LockableUniswapV3Initializer:Create", async ({ event, context }) => {
   const ethPrice = await fetchEthPrice(timestamp, context);
 
   const [poolEntity, assetTokenEntity] = await Promise.all([
-    insertPoolIfNotExists({
+    insertLockableV3PoolIfNotExists({
       poolAddress: poolOrHookId,
       context,
       timestamp,
@@ -184,8 +186,7 @@ ponder.on("LockableUniswapV3Pool:Mint", async ({ event, context }) => {
     liquidity,
     reserves0,
     reserves1,
-    maxThreshold,
-  } = await insertPoolIfNotExists({
+  } = await insertLockableV3PoolIfNotExists({
     poolAddress: address,
     timestamp,
     context,
@@ -272,8 +273,7 @@ ponder.on("LockableUniswapV3Pool:Burn", async ({ event, context }) => {
     liquidity,
     reserves0,
     reserves1,
-    maxThreshold,
-  } = await insertPoolIfNotExists({
+  } = await insertLockableV3PoolIfNotExists({
     poolAddress: address,
     timestamp,
     context,
@@ -355,8 +355,7 @@ ponder.on("LockableUniswapV3Pool:Swap", async ({ event, context }) => {
     totalFee0,
     totalFee1,
     graduationBalance,
-    migrated
-  } = await insertPoolIfNotExists({
+  } = await insertLockableV3PoolIfNotExists({
     poolAddress: address,
     timestamp,
     context,
