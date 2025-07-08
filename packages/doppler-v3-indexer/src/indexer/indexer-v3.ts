@@ -24,6 +24,7 @@ import {
 import { insertSwapIfNotExists } from "./shared/entities/swap";
 import { CHAINLINK_ETH_DECIMALS } from "@app/utils/constants";
 import { SwapOrchestrator, SwapService, PriceService } from "@app/core";
+import { computeGraduationThresholdDelta } from "@app/utils/v3-utils/computeGraduationThreshold";
 
 ponder.on("UniswapV3Initializer:Create", async ({ event, context }) => {
   const { poolOrHook, asset, numeraire } = event.args;
@@ -527,6 +528,7 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
     liquidity,
     reserves0,
     reserves1,
+    maxThreshold,
   } = await insertPoolIfNotExists({
     poolAddress: address,
     timestamp,
@@ -550,6 +552,13 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
     quoteBalance: nextReservesQuote,
     price,
     ethPrice,
+  });
+
+  const graduationThresholdDelta = computeGraduationThresholdDelta({
+    tickLower,
+    tickUpper,
+    liquidity: amount,
+    isToken0,
   });
 
   const [positionEntity] = await Promise.all([
@@ -578,6 +587,7 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
       poolAddress: address,
       context,
       update: {
+        maxThreshold: maxThreshold + graduationThresholdDelta,
         liquidity: liquidity + amount,
         dollarLiquidity: liquidityUsd,
         reserves0: reserves0 + amount0,
@@ -614,6 +624,7 @@ ponder.on("UniswapV3Pool:Burn", async ({ event, context }) => {
     liquidity,
     reserves0,
     reserves1,
+    maxThreshold,
   } = await insertPoolIfNotExists({
     poolAddress: address,
     timestamp,
@@ -635,6 +646,13 @@ ponder.on("UniswapV3Pool:Burn", async ({ event, context }) => {
     quoteBalance: nextReservesQuote,
     price,
     ethPrice,
+  });
+
+  const graduationThresholdDelta = computeGraduationThresholdDelta({
+    tickLower,
+    tickUpper,
+    liquidity,
+    isToken0,
   });
 
   const positionEntity = await insertPositionIfNotExists({
@@ -661,6 +679,7 @@ ponder.on("UniswapV3Pool:Burn", async ({ event, context }) => {
       update: {
         liquidity: liquidity - amount,
         dollarLiquidity: liquidityUsd,
+        maxThreshold: maxThreshold - graduationThresholdDelta,
         reserves0: reserves0 - amount0,
         reserves1: reserves1 - amount1,
       },
@@ -696,12 +715,17 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
     totalFee0,
     totalFee1,
     graduationBalance,
+    migrated
   } = await insertPoolIfNotExists({
     poolAddress: address,
     timestamp,
     context,
     ethPrice,
   });
+
+  if (migrated) {
+    return;
+  }
 
   const price = PriceService.computePriceFromSqrtPriceX96({
     sqrtPriceX96,
@@ -841,3 +865,4 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
     }),
   ]);
 });
+
