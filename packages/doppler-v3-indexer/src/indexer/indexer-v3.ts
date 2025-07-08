@@ -106,7 +106,6 @@ ponder.on("LockableUniswapV3Initializer:Create", async ({ event, context }) => {
   const assetId = asset.toLowerCase() as `0x${string}`;
   const poolOrHookId = poolOrHook.toLowerCase() as `0x${string}`;
 
-  console.log("assetId", assetId);
 
   const ethPrice = await fetchEthPrice(timestamp, context);
 
@@ -518,7 +517,7 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
     liquidity,
     reserves0,
     reserves1,
-  } = await insertLockableV3PoolIfNotExists({
+  } = await insertPoolIfNotExists({
     poolAddress: address,
     timestamp,
     context,
@@ -605,7 +604,7 @@ ponder.on("UniswapV3Pool:Burn", async ({ event, context }) => {
     liquidity,
     reserves0,
     reserves1,
-  } = await insertLockableV3PoolIfNotExists({
+  } = await insertPoolIfNotExists({
     poolAddress: address,
     timestamp,
     context,
@@ -687,7 +686,7 @@ ponder.on("UniswapV3Pool:Swap", async ({ event, context }) => {
     totalFee0,
     totalFee1,
     graduationBalance,
-  } = await insertLockableV3PoolIfNotExists({
+  } = await insertPoolIfNotExists({
     poolAddress: address,
     timestamp,
     context,

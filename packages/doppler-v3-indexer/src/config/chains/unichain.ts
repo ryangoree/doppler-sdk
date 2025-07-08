@@ -22,6 +22,7 @@ export const unichainConfig: ChainConfig = {
     },
     v3: {
       v3Initializer: "0x9F4e56be80f08ba1A2445645EFa6d231E27b43ec" as Address,
+      lockableV3Initializer: COMMON_ADDRESSES.ZERO_ADDRESS as Address,
     },
     v4: {
       poolManager: "0x1F98400000000000000000000000000000000004" as Address,
