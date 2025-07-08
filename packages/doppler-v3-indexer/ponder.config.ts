@@ -187,98 +187,32 @@ export default createConfig({
         unichain: {
           startBlock: unichain.startBlock,
           address: factory({
-            address: unichain.addresses.v3.v3Initializer,
-            event: getAbiItem({ abi: UniswapV3InitializerABI, name: "Create" }),
+            address: unichain.addresses.shared.airlock,
+            event: getAbiItem({ abi: AirlockABI, name: "Create" }),
             parameter: "asset",
           }),
         },
         ink: {
           startBlock: ink.startBlock,
           address: factory({
-            address: ink.addresses.v3.v3Initializer,
-            event: getAbiItem({ abi: UniswapV3InitializerABI, name: "Create" }),
+            address: ink.addresses.shared.airlock,
+            event: getAbiItem({ abi: AirlockABI, name: "Create" }),
             parameter: "asset",
           }),
         },
         baseSepolia: {
           startBlock: V4_START_BLOCKS.baseSepolia,
           address: factory({
-            address: baseSepolia.addresses.v3.v3Initializer,
-            event: getAbiItem({ abi: UniswapV3InitializerABI, name: "Create" }),
+            address: baseSepolia.addresses.shared.airlock,
+            event: getAbiItem({ abi: AirlockABI, name: "Create" }),
             parameter: "asset",
           }),
         },
         base: {
           startBlock: base.startBlock,
           address: factory({
-            address: base.addresses.v3.v3Initializer,
-            event: getAbiItem({ abi: UniswapV3InitializerABI, name: "Create" }),
-            parameter: "asset",
-          }),
-        },
-      },
-    },
-    V4DERC20: {
-      abi: DERC20ABI,
-      chain: {
-        baseSepolia: {
-          startBlock: V4_START_BLOCKS.baseSepolia,
-          address: factory({
-            address: baseSepolia.addresses.v4.v4Initializer,
-            event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
-            parameter: "asset",
-          }),
-        },
-        base: {
-          startBlock: V4_START_BLOCKS.base,
-          address: factory({
-            address: base.addresses.v4.v4Initializer,
-            event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
-            parameter: "asset",
-          }),
-        },
-        unichain: {
-          startBlock: V4_START_BLOCKS.unichain,
-          address: factory({
-            address: unichain.addresses.v4.v4Initializer,
-            event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
-            parameter: "asset",
-          }),
-        },
-        ink: {
-          startBlock: V4_START_BLOCKS.ink,
-          address: factory({
-            address: ink.addresses.v4.v4Initializer,
-            event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
-            parameter: "asset",
-          }),
-        },
-      },
-    },
-    V4DERC20_2: {
-      abi: DERC20ABI,
-      chain: {
-        base: {
-          startBlock: V4_START_BLOCKS.base,
-          address: factory({
-            address: base.addresses.v4.v4Initializer2,
-            event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
-            parameter: "asset",
-          }),
-        },
-        unichain: {
-          startBlock: V4_START_BLOCKS.unichain,
-          address: factory({
-            address: unichain.addresses.v4.v4Initializer2,
-            event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
-            parameter: "asset",
-          }),
-        },
-        ink: {
-          startBlock: V4_START_BLOCKS.ink,
-          address: factory({
-            address: ink.addresses.v4.v4Initializer2,
-            event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
+            address: base.addresses.shared.airlock,
+            event: getAbiItem({ abi: AirlockABI, name: "Create" }),
             parameter: "asset",
           }),
         },
