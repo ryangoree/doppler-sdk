@@ -581,6 +581,20 @@ export class ReadWriteFactory extends ReadFactory {
       );
     }
 
+    if (params.v3PoolConfig?.beneficiaries) {
+      this.validateBeneficiaries(params.v3PoolConfig.beneficiaries);
+
+      // assert that the beneficiaries are sorted and give 0.05 ether to the airlock owner
+      const airlockOwner = await this.airlock.read("owner");
+      const airlockOwnerIndex = params.v3PoolConfig.beneficiaries.findIndex(b => b.beneficiary.toLowerCase() === airlockOwner.toLowerCase());
+      if (airlockOwnerIndex === -1) {
+        throw new Error("Airlock owner is not a beneficiary");
+      }
+      if (params.v3PoolConfig.beneficiaries[airlockOwnerIndex].shares !== parseEther("0.05")) {
+        throw new Error("Airlock owner must have 0.05 ether");
+      }
+    }
+
     // Validation Rule #2: No-Op Governance Constraint
     // Check if the governance factory is a no-op governance factory
     const chainId = await this.drift.getChainId();
