@@ -582,6 +582,7 @@ export class ReadWriteFactory extends ReadFactory {
     }
 
     if (params.v3PoolConfig?.beneficiaries) {
+      params.v3PoolConfig.beneficiaries = this.sortBeneficiaries(params.v3PoolConfig.beneficiaries);
       this.validateBeneficiaries(params.v3PoolConfig.beneficiaries);
 
       // assert that the beneficiaries are sorted and give 0.05 ether to the airlock owner
