@@ -33,6 +33,7 @@ export const inkConfig: ChainConfig = {
       dopplerLens: "0xCe3099B2F07029b086E5e92a1573C5f5A3071783" as Address,
       v4Migrator: COMMON_ADDRESSES.ZERO_ADDRESS,
       v4MigratorHook: COMMON_ADDRESSES.ZERO_ADDRESS,
+      v4InitializerSelfCorrecting: COMMON_ADDRESSES.ZERO_ADDRESS as Address,
     },
     shared: {
       airlock: "0x660eAaEdEBc968f8f3694354FA8EC0b4c5Ba8D12" as Address,

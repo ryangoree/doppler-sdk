@@ -25,11 +25,6 @@ export const V4_START_BLOCKS = {
   base: 30822164,
 } as const;
 
-export const V4_MIGRATOR_START_BLOCKS = {
-  baseSepolia: 27881556,
-  base: 32374780,
-} as const;
-
 export const LOCKABLE_V3_INITIALIZER_START_BLOCKS = {
   baseSepolia: 28070024
 } as const;

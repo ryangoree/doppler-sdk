@@ -181,6 +181,15 @@ export default createConfig({
         },
       },
     },
+    UniswapV4InitializerSelfCorrecting: {
+      abi: UniswapV4InitializerABI,
+      chain: {
+        base: {
+          startBlock: V4_START_BLOCKS.base,
+          address: base.addresses.v4.v4InitializerSelfCorrecting,
+        },
+      },
+    },
     DERC20: {
       abi: DERC20ABI,
       chain: {
@@ -201,7 +210,7 @@ export default createConfig({
           }),
         },
         baseSepolia: {
-          startBlock: V4_START_BLOCKS.baseSepolia,
+          startBlock: baseSepolia.startBlock,
           address: factory({
             address: baseSepolia.addresses.shared.airlock,
             event: getAbiItem({ abi: AirlockABI, name: "Create" }),
@@ -385,15 +394,40 @@ export default createConfig({
       chain: {
         base: {
           startBlock: V4_START_BLOCKS.base,
-          address: base.addresses.v4.v4Initializer2,
+          address: factory({
+            address: base.addresses.v4.v4Initializer2,
+            event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
+            parameter: "poolOrHook",
+          }),
         },
         unichain: {
           startBlock: V4_START_BLOCKS.unichain,
-          address: unichain.addresses.v4.v4Initializer2,
+          address: factory({
+            address: unichain.addresses.v4.v4Initializer2,
+            event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
+            parameter: "poolOrHook",
+          }),
         },
         ink: {
           startBlock: V4_START_BLOCKS.ink,
-          address: ink.addresses.v4.v4Initializer2,
+          address: factory({
+            address: ink.addresses.v4.v4Initializer2,
+            event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
+            parameter: "poolOrHook",
+          }),
+        },
+      },
+    },
+    UniswapV4PoolSelfCorrecting: {
+      abi: DopplerABI,
+      chain: {
+        base: {
+          startBlock: V4_START_BLOCKS.base,
+          address: factory({
+            address: base.addresses.v4.v4InitializerSelfCorrecting,
+            event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
+            parameter: "poolOrHook",
+          }),
         },
       },
     },

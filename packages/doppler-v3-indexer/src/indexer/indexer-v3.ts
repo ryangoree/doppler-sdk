@@ -576,6 +576,9 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
       timestamp,
       context,
     }),
+  ])
+
+  await Promise.all([
     updateAsset({
       assetAddress: baseToken,
       context,
@@ -594,7 +597,7 @@ ponder.on("UniswapV3Pool:Mint", async ({ event, context }) => {
         reserves1: reserves1 + amount1,
       },
     }),
-  ])
+  ]);
 
 
   if (positionEntity.createdAt != timestamp) {

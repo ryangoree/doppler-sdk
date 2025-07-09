@@ -7,7 +7,6 @@ import {
   ORACLE_ADDRESSES,
   COMMON_ADDRESSES,
   RPC_ENV_VARS,
-  V4_MIGRATOR_START_BLOCKS
 } from "./constants";
 
 export const baseSepoliaConfig: ChainConfig = {
@@ -15,7 +14,6 @@ export const baseSepoliaConfig: ChainConfig = {
   name: "baseSepolia",
   startBlock: START_BLOCKS.baseSepolia,
   v4StartBlock: V4_START_BLOCKS.baseSepolia,
-  v4MigratorStartBlock: V4_MIGRATOR_START_BLOCKS.baseSepolia,
   oracleStartBlock: START_BLOCKS.mainnet,
   rpcEnvVar: RPC_ENV_VARS.baseSepolia,
   addresses: {
@@ -35,6 +33,7 @@ export const baseSepoliaConfig: ChainConfig = {
       v4Initializer: "0xca2079706a4c2a4a1aa637dfb47d7f27fe58653f" as Address,
       v4Migrator: "0xe713efce3c639432fc3ca902f34edaf15ebcf3ac" as Address,
       v4MigratorHook: "0x508812fcdd4972a59b66eb2cad3772279c052000" as Address,
+      v4InitializerSelfCorrecting: "0x0000000000000000000000000000000000000000" as Address,
     },
     shared: {
       airlock: "0x3411306ce66c9469bff1535ba955503c4bde1c6e" as Address,
@@ -53,7 +52,6 @@ export const baseConfig: ChainConfig = {
   name: "base",
   startBlock: START_BLOCKS.base,
   v4StartBlock: V4_START_BLOCKS.base,
-  v4MigratorStartBlock: V4_MIGRATOR_START_BLOCKS.base,
   oracleStartBlock: START_BLOCKS.mainnet,
   rpcEnvVar: RPC_ENV_VARS.base,
   addresses: {
@@ -73,6 +71,7 @@ export const baseConfig: ChainConfig = {
       dopplerLens: "0x094d926a969b3024ca46d2186bf13fd5cdba9ce2" as Address,
       v4Migrator: "0xa24e35a5d71d02a59b41e7c93567626302da1958" as Address,
       v4MigratorHook: "0x1370ad7fda3b054eca3532a066b968433e736000" as Address,
+      v4InitializerSelfCorrecting: "0x82Ac010C67f70BACf7655cd8948a4AD92A173CAC" as Address,
     },
     shared: {
       airlock: "0x660eAaEdEBc968f8f3694354FA8EC0b4c5Ba8D12" as Address,
