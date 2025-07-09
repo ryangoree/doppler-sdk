@@ -12,7 +12,7 @@ import {
 } from "./src/abis";
 import { UniswapV2FactoryABI } from "@app/abis/UniswapV2Factory";
 import { BLOCK_INTERVALS } from "@app/config/blocks/intervals";
-import { chainConfigs, CHAIN_IDS, V4_START_BLOCKS, LOCKABLE_V3_INITIALIZER_START_BLOCKS } from "./src/config/chains";
+import { chainConfigs, CHAIN_IDS, V4_START_BLOCKS, LOCKABLE_V3_INITIALIZER_START_BLOCKS, SELF_CORRECTING_V4_INITIALIZER_START_BLOCKS } from "./src/config/chains";
 import { LockableUniswapV3InitializerABI } from "@app/abis/v3-abis/LockableUniswapV3InitializerABI";
 
 const { unichain, mainnet, baseSepolia, ink, base } = chainConfigs;
@@ -185,7 +185,7 @@ export default createConfig({
       abi: UniswapV4InitializerABI,
       chain: {
         base: {
-          startBlock: V4_START_BLOCKS.base,
+          startBlock: SELF_CORRECTING_V4_INITIALIZER_START_BLOCKS.base,
           address: base.addresses.v4.v4InitializerSelfCorrecting,
         },
       },
@@ -430,7 +430,7 @@ export default createConfig({
       abi: DopplerABI,
       chain: {
         base: {
-          startBlock: V4_START_BLOCKS.base,
+          startBlock: SELF_CORRECTING_V4_INITIALIZER_START_BLOCKS.base,
           address: factory({
             address: base.addresses.v4.v4InitializerSelfCorrecting,
             event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),

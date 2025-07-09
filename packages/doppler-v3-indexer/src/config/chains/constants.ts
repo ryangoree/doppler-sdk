@@ -30,6 +30,10 @@ export const LOCKABLE_V3_INITIALIZER_START_BLOCKS = {
   base: 32640102,
 } as const;
 
+export const SELF_CORRECTING_V4_INITIALIZER_START_BLOCKS = {
+  base: 32424227,
+} as const;
+
 // Special contract addresses used across chains
 export const COMMON_ADDRESSES = {
   WETH_BASE: "0x4200000000000000000000000000000000000006" as Address,
