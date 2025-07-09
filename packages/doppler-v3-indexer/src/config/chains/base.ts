@@ -60,7 +60,7 @@ export const baseConfig: ChainConfig = {
     },
     v3: {
       v3Initializer: "0xaA47D2977d622DBdFD33eeF6a8276727c52EB4e5" as Address,
-      lockableV3Initializer: zeroAddress as Address,
+      lockableV3Initializer: "0xE0dC4012AC9C868F09c6e4b20d66ED46D6F258d0" as Address,
     },
     v4: {
       poolManager: "0x498581ff718922c3f8e6a244956af099b2652b2b" as Address,

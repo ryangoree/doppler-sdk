@@ -268,9 +268,17 @@ export default createConfig({
       abi: UniswapV3PoolABI,
       chain: {
         baseSepolia: {
-          startBlock: V4_START_BLOCKS.baseSepolia,
+          startBlock: LOCKABLE_V3_INITIALIZER_START_BLOCKS.baseSepolia,
           address: factory({
             address: baseSepolia.addresses.v3.lockableV3Initializer,
+            event: getAbiItem({ abi: LockableUniswapV3InitializerABI, name: "Create" }),
+            parameter: "poolOrHook",
+          }),
+        },
+        base: {
+          startBlock: LOCKABLE_V3_INITIALIZER_START_BLOCKS.base,
+          address: factory({
+            address: base.addresses.v3.lockableV3Initializer,
             event: getAbiItem({ abi: LockableUniswapV3InitializerABI, name: "Create" }),
             parameter: "poolOrHook",
           }),
@@ -437,6 +445,10 @@ export default createConfig({
         baseSepolia: {
           startBlock: LOCKABLE_V3_INITIALIZER_START_BLOCKS.baseSepolia,
           address: baseSepolia.addresses.v3.lockableV3Initializer,
+        },
+        base: {
+          startBlock: LOCKABLE_V3_INITIALIZER_START_BLOCKS.base,
+          address: base.addresses.v3.lockableV3Initializer,
         },
       },
     },
