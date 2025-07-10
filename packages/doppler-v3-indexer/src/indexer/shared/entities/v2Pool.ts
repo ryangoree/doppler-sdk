@@ -39,7 +39,6 @@ export const insertV2PoolIfNotExists = async ({
     return existingV2Pool;
   }
 
-
   const { baseToken } = await insertPoolIfNotExists({
     poolAddress,
     timestamp,
@@ -54,10 +53,11 @@ export const insertV2PoolIfNotExists = async ({
 
   const poolAddr = poolAddress.toLowerCase() as `0x${string}`;
 
-  const { reserve0, reserve1 } = await getPoolDataSafe({
+  const { reserve0, reserve1 } = await getPairData({
     address: migrationPoolAddr,
     context,
   });
+
 
   const price = PriceService.computePriceFromReserves({
     assetBalance: reserve0,

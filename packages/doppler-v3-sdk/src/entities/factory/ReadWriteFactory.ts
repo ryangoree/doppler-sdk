@@ -581,24 +581,39 @@ export class ReadWriteFactory extends ReadFactory {
       );
     }
 
-    // Validation Rule #2: No-Op Governance Constraint
-    // Check if the governance factory is a no-op governance factory
-    const chainId = await this.drift.getChainId();
-    const addresses = DOPPLER_V3_ADDRESSES[chainId];
-    const isNoOp = addresses?.noOpGovernanceFactory &&
-      params.contracts.governanceFactory.toLowerCase() ===
-      addresses.noOpGovernanceFactory.toLowerCase();
+    if (params.v3PoolConfig?.beneficiaries) {
+      params.v3PoolConfig.beneficiaries = this.sortBeneficiaries(params.v3PoolConfig.beneficiaries);
+      this.validateBeneficiaries(params.v3PoolConfig.beneficiaries);
 
-    if (isNoOp) {
-      const excess = saleConfig.initialSupply - (saleConfig.numTokensToSell + totalVestedAmount);
-      if (excess !== 0n) {
-        throw new Error(
-          `Configuration Error: No-op governance requires zero excess tokens. ` +
-          `The current configuration creates an excess of ${excess} tokens. ` +
-          `Please set initialSupply to be exactly the sum of numTokensToSell and vested amounts.`
-        );
+      // assert that the beneficiaries are sorted and give 0.05 ether to the airlock owner
+      const airlockOwner = await this.airlock.read("owner");
+      const airlockOwnerIndex = params.v3PoolConfig.beneficiaries.findIndex(b => b.beneficiary.toLowerCase() === airlockOwner.toLowerCase());
+      if (airlockOwnerIndex === -1) {
+        throw new Error("Airlock owner is not a beneficiary");
+      }
+      if (params.v3PoolConfig.beneficiaries[airlockOwnerIndex].shares !== parseEther("0.05")) {
+        throw new Error("Airlock owner must have 0.05 ether");
       }
     }
+
+    // Validation Rule #2: No-Op Governance Constraint
+    // Check if the governance factory is a no-op governance factory
+    // const chainId = await this.drift.getChainId();
+    // const addresses = DOPPLER_V3_ADDRESSES[chainId];
+    // const isNoOp = addresses?.noOpGovernanceFactory &&
+    //   params.contracts.governanceFactory.toLowerCase() ===
+    //   addresses.noOpGovernanceFactory.toLowerCase();
+
+    // if (isNoOp) {
+    //   const excess = saleConfig.initialSupply - (saleConfig.numTokensToSell + totalVestedAmount);
+    //   if (excess !== 0n) {
+    //     throw new Error(
+    //       `Configuration Error: No-op governance requires zero excess tokens. ` +
+    //       `The current configuration creates an excess of ${excess} tokens. ` +
+    //       `Please set initialSupply to be exactly the sum of numTokensToSell and vested amounts.`
+    //     );
+    //   }
+    // }
 
     // If validation passes, proceed with the original logic
     let isToken0 = true;

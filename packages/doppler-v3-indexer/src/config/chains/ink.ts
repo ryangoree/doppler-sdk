@@ -1,12 +1,12 @@
 import { Address } from "viem";
 import { ChainConfig } from "./types";
-import { 
-  CHAIN_IDS, 
-  START_BLOCKS, 
-  V4_START_BLOCKS, 
-  ORACLE_ADDRESSES, 
-  COMMON_ADDRESSES, 
-  RPC_ENV_VARS 
+import {
+  CHAIN_IDS,
+  START_BLOCKS,
+  V4_START_BLOCKS,
+  ORACLE_ADDRESSES,
+  COMMON_ADDRESSES,
+  RPC_ENV_VARS
 } from "./constants";
 
 export const inkConfig: ChainConfig = {
@@ -22,6 +22,7 @@ export const inkConfig: ChainConfig = {
     },
     v3: {
       v3Initializer: "0xaA47D2977d622DBdFD33eeF6a8276727c52EB4e5" as Address,
+      lockableV3Initializer: COMMON_ADDRESSES.ZERO_ADDRESS as Address,
     },
     v4: {
       poolManager: "0x360e68faccca8ca495c1b759fd9eee466db9fb32" as Address,
@@ -32,6 +33,7 @@ export const inkConfig: ChainConfig = {
       dopplerLens: "0xCe3099B2F07029b086E5e92a1573C5f5A3071783" as Address,
       v4Migrator: COMMON_ADDRESSES.ZERO_ADDRESS,
       v4MigratorHook: COMMON_ADDRESSES.ZERO_ADDRESS,
+      v4InitializerSelfCorrecting: COMMON_ADDRESSES.ZERO_ADDRESS as Address,
     },
     shared: {
       airlock: "0x660eAaEdEBc968f8f3694354FA8EC0b4c5Ba8D12" as Address,

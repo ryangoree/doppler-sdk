@@ -1,15 +1,17 @@
-import { Hex, zeroAddress } from "viem";
+import { Hex } from "viem";
 import { Context } from "ponder:registry";
 import { AirlockABI } from "@app/abis";
 import { AssetData } from "@app/types/shared";
+import { chainConfigs } from "@app/config";
 
 export const getAssetData = async (
   assetTokenAddr: Hex,
   context: Context
 ): Promise<AssetData> => {
+  const { chain } = context;
   const assetData = await context.client.readContract({
     abi: AirlockABI,
-    address: context.contracts.Airlock.address,
+    address: chainConfigs[chain.name].addresses.shared.airlock,
     functionName: "getAssetData",
     args: [assetTokenAddr],
   });

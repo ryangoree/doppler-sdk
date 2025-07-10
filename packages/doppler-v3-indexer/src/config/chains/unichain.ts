@@ -22,6 +22,7 @@ export const unichainConfig: ChainConfig = {
     },
     v3: {
       v3Initializer: "0x9F4e56be80f08ba1A2445645EFa6d231E27b43ec" as Address,
+      lockableV3Initializer: COMMON_ADDRESSES.ZERO_ADDRESS as Address,
     },
     v4: {
       poolManager: "0x1F98400000000000000000000000000000000004" as Address,
@@ -32,6 +33,7 @@ export const unichainConfig: ChainConfig = {
       v4Initializer2: COMMON_ADDRESSES.ZERO_ADDRESS,
       v4Migrator: COMMON_ADDRESSES.ZERO_ADDRESS,
       v4MigratorHook: COMMON_ADDRESSES.ZERO_ADDRESS,
+      v4InitializerSelfCorrecting: COMMON_ADDRESSES.ZERO_ADDRESS,
     },
     shared: {
       airlock: "0x77EbfBAE15AD200758E9E2E61597c0B07d731254" as Address,

@@ -42,8 +42,8 @@ export const DOPPLER_V4_ADDRESSES: { [chainId: number]: DopplerV4Addresses } = {
     noOpGovernanceFactory: '0x916b8987e4ad325c10d58ed8dc2036a6ff5eb228' as Address,
     migrator: '0xb2ec6559704467306d04322a5dc082b2af4562dd' as Address,
     streamableFeesLocker: '0x4da7d7a8034510c0ffd38a9252237ae8dba3cb61' as Address,
-    dopplerDeployer: '0x4bf819dfa4066bd7c9f21ea3db911bd8c10cb3ca' as Address,
-    v4Initializer: '0xca2079706a4c2a4a1aa637dfb47d7f27fe58653f' as Address,
+    dopplerDeployer: '0x60a039e4add40ca95e0475c11e8a4182d06c9aa0' as Address,
+    v4Initializer: '0x8e891d249f1ecbffa6143c03eb1b12843aef09d3' as Address,
     poolManager: '0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408' as Address,
     v3Initializer: '0x4c3062b9ccfdbcb10353f57c1b59a29d4c5cfa47' as Address,
     universalRouter: '0x492e6456d9528771018deb9e87ef7750ef184104' as Address,
@@ -53,8 +53,8 @@ export const DOPPLER_V4_ADDRESSES: { [chainId: number]: DopplerV4Addresses } = {
   // base
   8453: {
     poolManager: '0x498581ff718922c3f8e6a244956af099b2652b2b' as Address,
-    dopplerDeployer: '0x5cadb034267751a364ddd4d321c99e07a307f915' as Address,
-    v4Initializer: '0x77ebfbae15ad200758e9e2e61597c0b07d731254' as Address,
+    dopplerDeployer: '0x2f2bacd46d3f5c9ee052ab392b73711db89129db' as Address,
+    v4Initializer: '0x82ac010c67f70bacf7655cd8948a4ad92a173cac' as Address,
     airlock: '0x660eAaEdEBc968f8f3694354FA8EC0b4c5Ba8D12' as Address,
     tokenFactory: '0xFAafdE6a5b658684cC5eb0C5c2c755B00A246F45' as Address,
     v3Initializer: '0xaA47D2977d622DBdFD33eeF6a8276727c52EB4e5' as Address,

@@ -1,4 +1,4 @@
-import { Address } from "viem";
+import { Address, zeroAddress } from "viem";
 import { ChainConfig } from "./types";
 import { CHAIN_IDS, START_BLOCKS, ORACLE_ADDRESSES, COMMON_ADDRESSES, RPC_ENV_VARS } from "./constants";
 
@@ -14,6 +14,7 @@ export const mainnetConfig: ChainConfig = {
     },
     v3: {
       v3Initializer: COMMON_ADDRESSES.ZERO_ADDRESS as Address,
+      lockableV3Initializer: COMMON_ADDRESSES.ZERO_ADDRESS as Address,
     },
     v4: {
       poolManager: COMMON_ADDRESSES.ZERO_ADDRESS as Address,
@@ -24,6 +25,7 @@ export const mainnetConfig: ChainConfig = {
       v4Initializer2: COMMON_ADDRESSES.ZERO_ADDRESS,
       v4Migrator: COMMON_ADDRESSES.ZERO_ADDRESS,
       v4MigratorHook: COMMON_ADDRESSES.ZERO_ADDRESS,
+      v4InitializerSelfCorrecting: COMMON_ADDRESSES.ZERO_ADDRESS,
     },
     shared: {
       airlock: COMMON_ADDRESSES.ZERO_ADDRESS as Address,

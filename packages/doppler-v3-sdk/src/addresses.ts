@@ -43,7 +43,7 @@ export const DOPPLER_V3_ADDRESSES: { [chainId: number]: DopplerV3Addresses } = {
     quoterV2: "0xC5290058841028F1614F3A6F0F5816cAd0df5E27" as Address,
     univ2Router02: "0x1689E7B1F10000AE47eBfE339a4f69dECd19F602" as Address,
     bundler: "0xab7bacb0d5c2c10152f92d34e07f530eb3cb0fb1" as Address,
-    lockableV3Initializer: "0xe3203fd6531ad6c1dd3c9b38e257f1aa6fbf9fb6" as Address,
+    lockableV3Initializer: "0x16ada5be50c3c2d94af5feae6b539c40a78ad53c" as Address,
   },
   // ink
   57073: {
@@ -73,5 +73,6 @@ export const DOPPLER_V3_ADDRESSES: { [chainId: number]: DopplerV3Addresses } = {
     noOpGovernanceFactory: "0xe7dfbd5b0a2c3b4464653a9becdc489229ef090e" as Address,
     streamableFeesLocker: "0x0a00775d71a42cd33d62780003035e7f5b47bd3a" as Address,
     v4Migrator: "0xa24e35a5d71d02a59b41e7c93567626302da1958" as Address,
+    lockableV3Initializer: "0xe0dc4012ac9c868f09c6e4b20d66ed46d6f258d0" as Address,
   },
 };

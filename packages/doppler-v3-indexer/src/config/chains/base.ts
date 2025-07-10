@@ -1,4 +1,4 @@
-import { Address } from "viem";
+import { Address, zeroAddress } from "viem";
 import { ChainConfig } from "./types";
 import {
   CHAIN_IDS,
@@ -7,7 +7,6 @@ import {
   ORACLE_ADDRESSES,
   COMMON_ADDRESSES,
   RPC_ENV_VARS,
-  V4_MIGRATOR_START_BLOCKS
 } from "./constants";
 
 export const baseSepoliaConfig: ChainConfig = {
@@ -15,7 +14,6 @@ export const baseSepoliaConfig: ChainConfig = {
   name: "baseSepolia",
   startBlock: START_BLOCKS.baseSepolia,
   v4StartBlock: V4_START_BLOCKS.baseSepolia,
-  v4MigratorStartBlock: V4_MIGRATOR_START_BLOCKS.baseSepolia,
   oracleStartBlock: START_BLOCKS.mainnet,
   rpcEnvVar: RPC_ENV_VARS.baseSepolia,
   addresses: {
@@ -24,7 +22,7 @@ export const baseSepoliaConfig: ChainConfig = {
     },
     v3: {
       v3Initializer: "0x4c3062b9ccfdbcb10353f57c1b59a29d4c5cfa47" as Address,
-      lockableV3Initializer: "0xe3203fd6531ad6c1dd3c9b38e257f1aa6fbf9fb6" as Address,
+      lockableV3Initializer: "0x1fb8a108ff5c16213ebe3456314858d6b069a23b" as Address,
     },
     v4: {
       poolManager: "0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408" as Address,
@@ -35,6 +33,7 @@ export const baseSepoliaConfig: ChainConfig = {
       v4Initializer: "0xca2079706a4c2a4a1aa637dfb47d7f27fe58653f" as Address,
       v4Migrator: "0xe713efce3c639432fc3ca902f34edaf15ebcf3ac" as Address,
       v4MigratorHook: "0x508812fcdd4972a59b66eb2cad3772279c052000" as Address,
+      v4InitializerSelfCorrecting: "0x0000000000000000000000000000000000000000" as Address,
     },
     shared: {
       airlock: "0x3411306ce66c9469bff1535ba955503c4bde1c6e" as Address,
@@ -53,7 +52,6 @@ export const baseConfig: ChainConfig = {
   name: "base",
   startBlock: START_BLOCKS.base,
   v4StartBlock: V4_START_BLOCKS.base,
-  v4MigratorStartBlock: V4_MIGRATOR_START_BLOCKS.base,
   oracleStartBlock: START_BLOCKS.mainnet,
   rpcEnvVar: RPC_ENV_VARS.base,
   addresses: {
@@ -62,6 +60,7 @@ export const baseConfig: ChainConfig = {
     },
     v3: {
       v3Initializer: "0xaA47D2977d622DBdFD33eeF6a8276727c52EB4e5" as Address,
+      lockableV3Initializer: "0xE0dC4012AC9C868F09c6e4b20d66ED46D6F258d0" as Address,
     },
     v4: {
       poolManager: "0x498581ff718922c3f8e6a244956af099b2652b2b" as Address,
@@ -72,6 +71,7 @@ export const baseConfig: ChainConfig = {
       dopplerLens: "0x094d926a969b3024ca46d2186bf13fd5cdba9ce2" as Address,
       v4Migrator: "0xa24e35a5d71d02a59b41e7c93567626302da1958" as Address,
       v4MigratorHook: "0x1370ad7fda3b054eca3532a066b968433e736000" as Address,
+      v4InitializerSelfCorrecting: "0x82Ac010C67f70BACf7655cd8948a4AD92A173CAC" as Address,
     },
     shared: {
       airlock: "0x660eAaEdEBc968f8f3694354FA8EC0b4c5Ba8D12" as Address,

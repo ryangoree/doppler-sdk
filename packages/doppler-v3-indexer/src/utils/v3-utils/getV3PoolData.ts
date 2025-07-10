@@ -5,11 +5,11 @@ import {
   UniswapV3InitializerABI,
   UniswapV3PoolABI,
 } from "@app/abis";
-import { configs } from "addresses";
 import { computeV3Price } from "./computeV3Price";
 import { getMulticallOptions } from "@app/core/utils";
-import { LockablePoolState, PoolState, V3PoolData } from "@app/types/v3-types";
-import { LockableUniswapV3InitializerABI } from "@app/abis/v3-abis/LockableUniswapV3Initializer";
+import { LockablePoolState, LockableV3PoolData, PoolState, V3PoolData } from "@app/types/v3-types";
+import { LockableUniswapV3InitializerABI } from "@app/abis";
+import { chainConfigs } from "@app/config";
 
 export const getV3PoolData = async ({
   address,
@@ -232,7 +232,7 @@ const getPoolState = async ({
   context: Context;
 }) => {
   const { client } = context;
-  const { v3Initializer } = configs[context.chain.name].v3;
+  const v3Initializer = chainConfigs[context.chain.name].addresses.v3.v3Initializer;
 
   const poolData = await client.readContract({
     abi: UniswapV3InitializerABI,
@@ -265,7 +265,7 @@ const getLockablePoolState = async ({
   context: Context;
 }) => {
   const { client } = context;
-  const { lockableV3Initializer } = configs[context.chain.name].v3;
+  const lockableV3Initializer = chainConfigs[context.chain.name].addresses.v3.lockableV3Initializer;
 
   const poolData = await client.readContract({
     abi: LockableUniswapV3InitializerABI,

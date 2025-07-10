@@ -8,6 +8,7 @@ export interface V4Addresses {
   dopplerDeployer: Address;
   v4Initializer: Address;
   v4Initializer2: Address;
+  v4InitializerSelfCorrecting: Address;
   stateView: Address;
   dopplerLens: Address;
   v4Migrator: Address;
