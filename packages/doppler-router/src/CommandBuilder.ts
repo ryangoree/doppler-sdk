@@ -6,6 +6,7 @@ export enum CommandType {
   V3_SWAP_EXACT_OUT = 0x01,
   PERMIT2_TRANSFER_FROM = 0x02,
   SWEEP = 0x04,
+  PAY_PORTION = 0x06,
   V2_SWAP_EXACT_IN = 0x08,
   V2_SWAP_EXACT_OUT = 0x09,
   PERMIT2_PERMIT = 0x0a,
@@ -72,6 +73,11 @@ const ABI_DEFINITION: { [key in CommandType]: any[] } = {
     { type: "bool" },
   ],
   [CommandType.SWEEP]: [
+    { type: "address" },
+    { type: "address" },
+    { type: "uint256" },
+  ],
+  [CommandType.PAY_PORTION]: [
     { type: "address" },
     { type: "address" },
     { type: "uint256" },
@@ -179,6 +185,22 @@ export class CommandBuilder {
 
   addV4Swap(actions: Hex, params: Hex[]): this {
     return this.addCommand(CommandType.V4_SWAP, [actions, params]);
+  }
+
+  addSweep(
+    recipient: Address,
+    asset: Address,
+    amount: bigint
+  ): this {
+    return this.addCommand(CommandType.SWEEP, [recipient, asset, amount]);
+  }
+
+  addPayPortion(
+    recipient: Address,
+    asset: Address,
+    bips: bigint
+  ): this {
+    return this.addCommand(CommandType.PAY_PORTION, [recipient, asset, bips]);
   }
 
   build(): [Hex, Hex[]] {
