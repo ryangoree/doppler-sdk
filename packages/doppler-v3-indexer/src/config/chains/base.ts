@@ -19,10 +19,12 @@ export const baseSepoliaConfig: ChainConfig = {
   addresses: {
     v2: {
       factory: "0x7Ae58f10f7849cA6F5fB71b7f45CB416c9204b1e" as Address,
+      v2Migrator: "0xb2ec6559704467306d04322a5dc082b2af4562dd" as Address,
     },
     v3: {
       v3Initializer: "0x4c3062b9ccfdbcb10353f57c1b59a29d4c5cfa47" as Address,
       lockableV3Initializer: "0x1fb8a108ff5c16213ebe3456314858d6b069a23b" as Address,
+      v3Migrator: COMMON_ADDRESSES.ZERO_ADDRESS,
     },
     v4: {
       poolManager: "0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408" as Address,
@@ -40,7 +42,6 @@ export const baseSepoliaConfig: ChainConfig = {
       tokenFactory: "0xc69ba223c617f7d936b3cf2012aa644815dbe9ff" as Address,
       universalRouter: "0x492e6456d9528771018deb9e87ef7750ef184104" as Address,
       governanceFactory: "0x9dbfaadc8c0cb2c34ba698dd9426555336992e20" as Address,
-      migrator: "0xb2ec6559704467306d04322a5dc082b2af4562dd" as Address,
       weth: COMMON_ADDRESSES.WETH_BASE,
     },
     oracle: ORACLE_ADDRESSES,
@@ -57,10 +58,12 @@ export const baseConfig: ChainConfig = {
   addresses: {
     v2: {
       factory: "0x8909Dc15e40173Ff4699343b6eB8132c65e18eC6" as Address,
+      v2Migrator: "0x5F3bA43D44375286296Cb85F1EA2EBfa25dde731" as Address,
     },
     v3: {
       v3Initializer: "0xaA47D2977d622DBdFD33eeF6a8276727c52EB4e5" as Address,
       lockableV3Initializer: "0xE0dC4012AC9C868F09c6e4b20d66ED46D6F258d0" as Address,
+      v3Migrator: "0x4fb11B8B6aa5B0861A39F6127aE3f91F0763C03e" as Address,
     },
     v4: {
       poolManager: "0x498581ff718922c3f8e6a244956af099b2652b2b" as Address,
@@ -78,7 +81,6 @@ export const baseConfig: ChainConfig = {
       tokenFactory: "0xFAafdE6a5b658684cC5eb0C5c2c755B00A246F45" as Address,
       universalRouter: "0x6ff5693b99212da76ad316178a184ab56d299b43" as Address,
       governanceFactory: "0xb4deE32EB70A5E55f3D2d861F49Fb3D79f7a14d9" as Address,
-      migrator: "0x5F3bA43D44375286296Cb85F1EA2EBfa25dde731" as Address,
       weth: COMMON_ADDRESSES.WETH_BASE,
     },
     oracle: ORACLE_ADDRESSES,

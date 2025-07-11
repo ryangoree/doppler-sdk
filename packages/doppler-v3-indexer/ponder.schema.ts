@@ -243,6 +243,21 @@ export const v2Pool = onchainTable("v2_pool", (t) => ({
   isToken0: t.boolean().notNull(),
 }));
 
+export const migrationPool = onchainTable("migration_pool", (t) => ({
+  address: t.hex().notNull().primaryKey(),
+  chainId: t.bigint().notNull(),
+  baseToken: t.hex().notNull(),
+  quoteToken: t.hex().notNull(),
+  reserveBaseToken: t.bigint().notNull(),
+  reserveQuoteToken: t.bigint().notNull(),
+  price: t.bigint().notNull(),
+  parentPool: t.hex().notNull(),
+  migratedAt: t.bigint().notNull(),
+  isToken0: t.boolean().notNull(),
+  type: t.text().notNull().default("v2"),
+  fee: t.integer().notNull(),
+}));
+
 export const v4pools = onchainTable(
   "v4_pools",
   (t) => ({
@@ -405,6 +420,13 @@ export const poolRelations = relations(pool, ({ one, many }) => ({
 export const v2PoolRelations = relations(v2Pool, ({ one }) => ({
   v3Pool: one(pool, {
     fields: [v2Pool.v3Pool],
+    references: [pool.address],
+  }),
+}));
+
+export const migrationPoolRelations = relations(migrationPool, ({ one }) => ({
+  parentPool: one(pool, {
+    fields: [migrationPool.parentPool],
     references: [pool.address],
   }),
 }));

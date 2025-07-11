@@ -14,6 +14,7 @@ import { UniswapV2FactoryABI } from "@app/abis/UniswapV2Factory";
 import { BLOCK_INTERVALS } from "@app/config/blocks/intervals";
 import { chainConfigs, CHAIN_IDS, V4_START_BLOCKS, LOCKABLE_V3_INITIALIZER_START_BLOCKS, SELF_CORRECTING_V4_INITIALIZER_START_BLOCKS } from "./src/config/chains";
 import { LockableUniswapV3InitializerABI } from "@app/abis/v3-abis/LockableUniswapV3InitializerABI";
+import { UniswapV3MigratorAbi } from "@app/abis/v3-abis/UniswapV3Migrator";
 
 const { unichain, mainnet, baseSepolia, ink, base } = chainConfigs;
 
@@ -224,6 +225,28 @@ export default createConfig({
             event: getAbiItem({ abi: AirlockABI, name: "Create" }),
             parameter: "asset",
           }),
+        },
+      },
+    },
+    UniswapV3MigrationPool: {
+      abi: UniswapV3PoolABI,
+      chain: {
+        baseSepolia: {
+          startBlock: 28245945, // hardcoded for now
+          address: factory({
+            address: baseSepolia.addresses.v3.v3Migrator,
+            event: getAbiItem({ abi: AirlockABI, name: "Migrate" }),
+            parameter: "pool",
+          }),
+        },
+      },
+    },
+    UniswapV3Migrator: {
+      abi: UniswapV3MigratorAbi,
+      chain: {
+        baseSepolia: {
+          startBlock: 28245945, // hardcoded for now
+          address: baseSepolia.addresses.v3.v3Migrator,
         },
       },
     },
