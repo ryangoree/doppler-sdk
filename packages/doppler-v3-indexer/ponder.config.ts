@@ -189,6 +189,10 @@ export default createConfig({
           startBlock: SELF_CORRECTING_V4_INITIALIZER_START_BLOCKS.base,
           address: base.addresses.v4.v4InitializerSelfCorrecting,
         },
+        baseSepolia: {
+          startBlock: SELF_CORRECTING_V4_INITIALIZER_START_BLOCKS.baseSepolia,
+          address: baseSepolia.addresses.v4.v4InitializerSelfCorrecting,
+        }
       },
     },
     DERC20: {
@@ -456,6 +460,14 @@ export default createConfig({
           startBlock: SELF_CORRECTING_V4_INITIALIZER_START_BLOCKS.base,
           address: factory({
             address: base.addresses.v4.v4InitializerSelfCorrecting,
+            event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
+            parameter: "poolOrHook",
+          }),
+        },
+        baseSepolia: {
+          startBlock: SELF_CORRECTING_V4_INITIALIZER_START_BLOCKS.baseSepolia,
+          address: factory({
+            address: baseSepolia.addresses.v4.v4InitializerSelfCorrecting,
             event: getAbiItem({ abi: UniswapV4InitializerABI, name: "Create" }),
             parameter: "poolOrHook",
           }),

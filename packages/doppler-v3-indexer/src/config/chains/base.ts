@@ -35,7 +35,7 @@ export const baseSepoliaConfig: ChainConfig = {
       v4Initializer: "0xca2079706a4c2a4a1aa637dfb47d7f27fe58653f" as Address,
       v4Migrator: "0xe713efce3c639432fc3ca902f34edaf15ebcf3ac" as Address,
       v4MigratorHook: "0x508812fcdd4972a59b66eb2cad3772279c052000" as Address,
-      v4InitializerSelfCorrecting: "0x0000000000000000000000000000000000000000" as Address,
+      v4InitializerSelfCorrecting: "0x8e891d249f1ecbffa6143c03eb1b12843aef09d3" as Address,
     },
     shared: {
       airlock: "0x3411306ce66c9469bff1535ba955503c4bde1c6e" as Address,
