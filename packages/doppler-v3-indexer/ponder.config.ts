@@ -249,6 +249,14 @@ export default createConfig({
             parameter: "pool",
           }),
         },
+        base: {
+          startBlock: 32862752, // hardcoded for now
+          address: factory({
+            address: base.addresses.v3.v3Migrator,
+            event: getAbiItem({ abi: UniswapV3MigratorAbi, name: "Migrate" }),
+            parameter: "pool",
+          }),
+        },
       },
     },
     UniswapV3Migrator: {
@@ -257,6 +265,10 @@ export default createConfig({
         baseSepolia: {
           startBlock: 28245945, // hardcoded for now
           address: baseSepolia.addresses.v3.v3Migrator,
+        },
+        base: {
+          startBlock: 32862752, // hardcoded for now
+          address: base.addresses.v3.v3Migrator,
         },
       },
     },
