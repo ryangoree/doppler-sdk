@@ -2,7 +2,10 @@ import { ponder } from "ponder:registry";
 import { asset, pool, v4pools } from "ponder:schema";
 import { insertAssetIfNotExists, updateAsset } from "./shared/entities/asset";
 import { insertTokenIfNotExists, updateToken } from "./shared/entities/token";
-import { insertV2MigrationPoolIfNotExists, insertV2PoolIfNotExists } from "./shared/entities/v2Pool";
+import {
+  insertV2MigrationPoolIfNotExists,
+  insertV2PoolIfNotExists,
+} from "./shared/entities/v2Pool";
 import { updateUserAsset } from "./shared/entities/userAsset";
 import { insertUserAssetIfNotExists } from "./shared/entities/userAsset";
 import { insertUserIfNotExists, updateUser } from "./shared/entities/user";
@@ -23,7 +26,9 @@ ponder.on("Airlock:Migrate", async ({ event, context }) => {
 
   const v2Migrator = chainConfigs[chain.name].addresses.v2.v2Migrator;
 
-  if (assetEntity!.liquidityMigrator.toLowerCase() == v2Migrator.toLowerCase()) {
+  if (
+    assetEntity!.liquidityMigrator.toLowerCase() == v2Migrator.toLowerCase()
+  ) {
     const v2Pool = await insertV2MigrationPoolIfNotExists({
       assetAddress: assetId,
       timestamp,
@@ -61,16 +66,22 @@ ponder.on("UniswapV3Migrator:Migrate", async ({ event, context }) => {
   const token0Address = token0.toLowerCase() as `0x${string}`;
   const token1Address = token1.toLowerCase() as `0x${string}`;
 
-  if (token0Address.toLowerCase() == zeroAddress || token0Address.toLowerCase() == chainConfigs[chain.name].addresses.shared.weth) {
+  let isToken0 = false;
+
+  if (
+    token0Address.toLowerCase() == zeroAddress ||
+    token0Address.toLowerCase() ==
+      chainConfigs[chain.name].addresses.shared.weth
+  ) {
     isToken0 = false;
   } else {
     const assetEntityCheck = await context.db.find(asset, {
-      address: token0Address
-    })
+      address: token0Address,
+    });
     if (assetEntityCheck) {
-      isToken0 = true
+      isToken0 = true;
     } else {
-      isToken0 = false
+      isToken0 = false;
     }
   }
 
@@ -80,6 +91,7 @@ ponder.on("UniswapV3Migrator:Migrate", async ({ event, context }) => {
 
   const migrationPool = await insertV3MigrationPoolIfNotExists({
     poolAddress,
+    parentPool: assetEntity!.poolAddress,
     timestamp,
     context,
   });
@@ -104,8 +116,6 @@ ponder.on("UniswapV3Migrator:Migrate", async ({ event, context }) => {
       },
     }),
   ]);
-
-
 });
 
 ponder.on("DERC20:Transfer", async ({ event, context }) => {
@@ -121,42 +131,43 @@ ponder.on("DERC20:Transfer", async ({ event, context }) => {
   const toId = to.toLowerCase() as `0x${string}`;
   const assetId = address.toLowerCase() as `0x${string}`;
 
-  const [tokenData, assetData, fromUser, toUserAsset, fromUserAsset] = await Promise.all([
-    insertTokenIfNotExists({
-      tokenAddress: assetId,
-      creatorAddress,
-      timestamp,
-      context,
-      isDerc20: true,
-    }),
-    insertAssetIfNotExists({
-      assetAddress: assetId,
-      timestamp,
-      context,
-    }),
-    insertUserIfNotExists({
-      userId: fromId,
-      timestamp,
-      context,
-    }),
-    insertUserAssetIfNotExists({
-      userId: toId,
-      assetId: assetId,
-      timestamp,
-      context,
-    }),
-    insertUserAssetIfNotExists({
-      userId: fromId,
-      assetId: assetId,
-      timestamp,
-      context,
-    }),
-    insertUserIfNotExists({
-      userId: toId,
-      timestamp,
-      context,
-    }),
-  ]);
+  const [tokenData, assetData, fromUser, toUserAsset, fromUserAsset] =
+    await Promise.all([
+      insertTokenIfNotExists({
+        tokenAddress: assetId,
+        creatorAddress,
+        timestamp,
+        context,
+        isDerc20: true,
+      }),
+      insertAssetIfNotExists({
+        assetAddress: assetId,
+        timestamp,
+        context,
+      }),
+      insertUserIfNotExists({
+        userId: fromId,
+        timestamp,
+        context,
+      }),
+      insertUserAssetIfNotExists({
+        userId: toId,
+        assetId: assetId,
+        timestamp,
+        context,
+      }),
+      insertUserAssetIfNotExists({
+        userId: fromId,
+        assetId: assetId,
+        timestamp,
+        context,
+      }),
+      insertUserIfNotExists({
+        userId: toId,
+        timestamp,
+        context,
+      }),
+    ]);
 
   if (fromUser.lastSeenAt != timestamp) {
     await updateUser({

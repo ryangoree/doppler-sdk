@@ -12,7 +12,13 @@ import {
 } from "./src/abis";
 import { UniswapV2FactoryABI } from "@app/abis/UniswapV2Factory";
 import { BLOCK_INTERVALS } from "@app/config/blocks/intervals";
-import { chainConfigs, CHAIN_IDS, V4_START_BLOCKS, LOCKABLE_V3_INITIALIZER_START_BLOCKS, SELF_CORRECTING_V4_INITIALIZER_START_BLOCKS } from "./src/config/chains";
+import {
+  chainConfigs,
+  CHAIN_IDS,
+  V4_START_BLOCKS,
+  LOCKABLE_V3_INITIALIZER_START_BLOCKS,
+  SELF_CORRECTING_V4_INITIALIZER_START_BLOCKS,
+} from "./src/config/chains";
 import { LockableUniswapV3InitializerABI } from "@app/abis/v3-abis/LockableUniswapV3InitializerABI";
 import { UniswapV3MigratorAbi } from "@app/abis/v3-abis/UniswapV3Migrator";
 
@@ -32,22 +38,22 @@ export default createConfig({
       id: 1,
       rpc: http(process.env.PONDER_RPC_URL_1),
     },
-    unichain: {
-      id: CHAIN_IDS.unichain,
-      rpc: http(process.env.PONDER_RPC_URL_130),
-    },
+    // unichain: {
+    //   id: CHAIN_IDS.unichain,
+    //   rpc: http(process.env.PONDER_RPC_URL_130),
+    // },
     baseSepolia: {
       id: CHAIN_IDS.baseSepolia,
       rpc: http(process.env.PONDER_RPC_URL_84532),
     },
-    ink: {
-      id: CHAIN_IDS.ink,
-      rpc: http(process.env.PONDER_RPC_URL_57073),
-    },
-    base: {
-      id: CHAIN_IDS.base,
-      rpc: http(process.env.PONDER_RPC_URL_8453),
-    },
+    // ink: {
+    //   id: CHAIN_IDS.ink,
+    //   rpc: http(process.env.PONDER_RPC_URL_57073),
+    // },
+    // base: {
+    //   id: CHAIN_IDS.base,
+    //   rpc: http(process.env.PONDER_RPC_URL_8453),
+    // },
   },
   blocks: {
     ChainlinkEthPriceFeed: {
@@ -192,7 +198,7 @@ export default createConfig({
         baseSepolia: {
           startBlock: SELF_CORRECTING_V4_INITIALIZER_START_BLOCKS.baseSepolia,
           address: baseSepolia.addresses.v4.v4InitializerSelfCorrecting,
-        }
+        },
       },
     },
     DERC20: {
@@ -298,7 +304,10 @@ export default createConfig({
           startBlock: LOCKABLE_V3_INITIALIZER_START_BLOCKS.baseSepolia,
           address: factory({
             address: baseSepolia.addresses.v3.lockableV3Initializer,
-            event: getAbiItem({ abi: LockableUniswapV3InitializerABI, name: "Create" }),
+            event: getAbiItem({
+              abi: LockableUniswapV3InitializerABI,
+              name: "Create",
+            }),
             parameter: "poolOrHook",
           }),
         },

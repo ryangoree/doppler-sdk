@@ -19,7 +19,6 @@ ponder.on("MetricRefresherUnichain:block", async ({ event, context }) => {
       context,
       timestamp: Number(event.block.timestamp),
     });
-
   } catch (error) {
     console.error(`Error in unichain refresh job: ${error}`);
     // Log error but don't throw to prevent handler from failing completely
@@ -34,7 +33,6 @@ ponder.on("MetricRefresherBaseSepolia:block", async ({ event, context }) => {
       context,
       timestamp: Number(event.block.timestamp),
     });
-
   } catch (error) {
     console.error(`Error in baseSepolia refresh job: ${error}`);
     // Log error but don't throw to prevent handler from failing completely
@@ -43,14 +41,12 @@ ponder.on("MetricRefresherBaseSepolia:block", async ({ event, context }) => {
 
 // // Handler for ink network
 ponder.on("MetricRefresherInk:block", async ({ event, context }) => {
-
   try {
     // Execute optimized combined refresh job
     await refreshActivePoolsBlob({
       context,
       timestamp: Number(event.block.timestamp),
     });
-
   } catch (error) {
     console.error(`Error in ink refresh job: ${error}`);
   }
@@ -58,13 +54,11 @@ ponder.on("MetricRefresherInk:block", async ({ event, context }) => {
 
 // Handler for base network
 ponder.on("MetricRefresherBase:block", async ({ event, context }) => {
-
   try {
     await refreshActivePoolsBlob({
       context,
       timestamp: Number(event.block.timestamp),
     });
-
   } catch (error) {
     console.error(`Error in base refresh job: ${error}`);
   }
