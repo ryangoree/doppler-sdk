@@ -245,7 +245,7 @@ export default createConfig({
           startBlock: 28245945, // hardcoded for now
           address: factory({
             address: baseSepolia.addresses.v3.v3Migrator,
-            event: getAbiItem({ abi: AirlockABI, name: "Migrate" }),
+            event: getAbiItem({ abi: UniswapV3MigratorAbi, name: "Migrate" }),
             parameter: "pool",
           }),
         },

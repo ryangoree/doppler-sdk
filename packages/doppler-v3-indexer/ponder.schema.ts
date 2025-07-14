@@ -64,6 +64,7 @@ export const asset = onchainTable(
     createdAt: t.bigint().notNull(),
     migratedAt: t.bigint(),
     migrated: t.boolean().notNull().default(false),
+    migrationType: t.text().notNull().default("v2"),
     percentDayChange: t.doublePrecision().notNull().default(0),
     marketCapUsd: t.bigint().notNull().default(0n),
     holderCount: t.integer().notNull().default(0),
@@ -214,6 +215,7 @@ export const pool = onchainTable(
     migratedFromPool: t.hex(),
     isQuoteEth: t.boolean().notNull(),
     isStreaming: t.boolean().notNull().default(false),
+    migrationType: t.text().notNull().default("v2"),
   }),
   (table) => ({
     pk: primaryKey({

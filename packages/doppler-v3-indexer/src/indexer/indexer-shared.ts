@@ -2,10 +2,7 @@ import { ponder } from "ponder:registry";
 import { asset, pool, v4pools } from "ponder:schema";
 import { insertAssetIfNotExists, updateAsset } from "./shared/entities/asset";
 import { insertTokenIfNotExists, updateToken } from "./shared/entities/token";
-import {
-  insertV2MigrationPoolIfNotExists,
-  insertV2PoolIfNotExists,
-} from "./shared/entities/v2Pool";
+import { insertV2MigrationPoolIfNotExists } from "./shared/entities/v2Pool";
 import { updateUserAsset } from "./shared/entities/userAsset";
 import { insertUserAssetIfNotExists } from "./shared/entities/userAsset";
 import { insertUserIfNotExists, updateUser } from "./shared/entities/user";
@@ -89,7 +86,7 @@ ponder.on("UniswapV3Migrator:Migrate", async ({ event, context }) => {
     address: isToken0 ? token0Address : token1Address,
   });
 
-  const migrationPool = await insertV3MigrationPoolIfNotExists({
+  await insertV3MigrationPoolIfNotExists({
     poolAddress,
     parentPool: assetEntity!.poolAddress,
     timestamp,
@@ -104,15 +101,16 @@ ponder.on("UniswapV3Migrator:Migrate", async ({ event, context }) => {
         migratedAt: timestamp,
         migrated: true,
         migratedToPool: poolAddress,
+        migrationType: "v3",
       },
     }),
-    updatePool({
-      poolAddress: migrationPool.parentPool,
+    updateAsset({
+      assetAddress: isToken0 ? token0Address : token1Address,
       context,
       update: {
         migratedAt: timestamp,
         migrated: true,
-        migratedToPool: poolAddress,
+        migrationType: "v3",
       },
     }),
   ]);
