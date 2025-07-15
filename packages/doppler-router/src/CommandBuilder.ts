@@ -196,11 +196,11 @@ export class CommandBuilder {
   }
 
   addPayPortion(
-    recipient: Address,
     asset: Address,
+    recipient: Address,
     bips: bigint
   ): this {
-    return this.addCommand(CommandType.PAY_PORTION, [recipient, asset, bips]);
+    return this.addCommand(CommandType.PAY_PORTION, [asset, recipient, bips]);
   }
 
   build(): [Hex, Hex[]] {
