@@ -29,11 +29,11 @@ const DEFAULT_INITIAL_PROPOSAL_THRESHOLD = BigInt(0);
 const FLAG_MASK = BigInt(0x3fff);
 const flags = BigInt(
   (1 << 13) | // BEFORE_INITIALIZE_FLAG
-    (1 << 12) | // AFTER_INITIALIZE_FLAG
-    (1 << 11) | // BEFORE_ADD_LIQUIDITY_FLAG
-    (1 << 7) | // BEFORE_SWAP_FLAG
-    (1 << 6) | // AFTER_SWAP_FLAG
-    (1 << 5) // BEFORE_DONATE_FLAG
+  (1 << 12) | // AFTER_INITIALIZE_FLAG
+  (1 << 11) | // BEFORE_ADD_LIQUIDITY_FLAG
+  (1 << 7) | // BEFORE_SWAP_FLAG
+  (1 << 6) | // AFTER_SWAP_FLAG
+  (1 << 5) // BEFORE_DONATE_FLAG
 );
 
 /**
@@ -175,7 +175,7 @@ export class ReadWriteFactory extends ReadFactory {
     // Convert prices to ticks using the formula: tick = log(price) / log(1.0001) * tickSpacing
     const startTick = Math.floor(Math.log(priceRange.startPrice) / Math.log(1.0001) / tickSpacing) * tickSpacing;
     const endTick = Math.ceil(Math.log(priceRange.endPrice) / Math.log(1.0001) / tickSpacing) * tickSpacing;
-    
+
     return {
       startTick,
       endTick
@@ -259,7 +259,7 @@ export class ReadWriteFactory extends ReadFactory {
     if (includeDefaultBeneficiary) {
       // Get the airlock owner address
       const airlockOwner = await this.owner();
-      
+
       // Check if airlock owner is already in the beneficiaries list
       const existingOwnerIndex = beneficiaries.findIndex(
         b => b.beneficiary.toLowerCase() === airlockOwner.toLowerCase()
@@ -268,22 +268,22 @@ export class ReadWriteFactory extends ReadFactory {
       if (existingOwnerIndex === -1) {
         // Add airlock owner as 5% beneficiary
         const ownerShares = BigInt(0.05e18); // 5% in WAD
-        
+
         // Scale down other beneficiaries proportionally
         const remainingShares = WAD - ownerShares; // 95% remaining
         const currentTotal = beneficiaries.reduce((sum, b) => sum + b.shares, BigInt(0));
-        
+
         beneficiaries = beneficiaries.map(b => ({
           ...b,
           shares: (b.shares * remainingShares) / currentTotal
         }));
-        
+
         // Add the owner beneficiary
         beneficiaries.push({
           beneficiary: airlockOwner,
           shares: ownerShares
         });
-        
+
         // Sort beneficiaries by address
         beneficiaries = this.sortBeneficiaries(beneficiaries);
       }
@@ -291,16 +291,18 @@ export class ReadWriteFactory extends ReadFactory {
 
     // Validate beneficiaries
     this.validateBeneficiaries(beneficiaries);
-    
+
     return encodeAbiParameters(
       [
         { type: 'uint24' },  // fee
         { type: 'int24' },   // tickSpacing
         { type: 'uint32' },  // lockDuration
-        { type: 'tuple[]', components: [
-          { type: 'address', name: 'beneficiary' },
-          { type: 'uint96', name: 'shares' }
-        ]}
+        {
+          type: 'tuple[]', components: [
+            { type: 'address', name: 'beneficiary' },
+            { type: 'uint96', name: 'shares' }
+          ]
+        }
       ],
       [
         v4Config.fee,
@@ -395,7 +397,7 @@ export class ReadWriteFactory extends ReadFactory {
   public buildConfig(
     params: DopplerPreDeploymentConfig,
     addresses: DopplerV4Addresses,
-    options?: { useGovernance?: boolean }
+    options?: { useGovernance?: boolean, customDerc20Bytecode?: `0x${string}` }
   ): {
     createParams: CreateParams;
     hook: Hex;
@@ -513,19 +515,19 @@ export class ReadWriteFactory extends ReadFactory {
     // When using NoOpGovernanceFactory, the data is ignored, but we still need to provide valid encoding
     const governanceFactoryData = useGovernance
       ? encodeAbiParameters(
-          [
-            { type: 'string' },
-            { type: 'uint48' },
-            { type: 'uint32' },
-            { type: 'uint256' },
-          ],
-          [
-            params.name,
-            DEFAULT_INITIAL_VOTING_DELAY,
-            DEFAULT_INITIAL_VOTING_PERIOD,
-            DEFAULT_INITIAL_PROPOSAL_THRESHOLD,
-          ]
-        )
+        [
+          { type: 'string' },
+          { type: 'uint48' },
+          { type: 'uint32' },
+          { type: 'uint256' },
+        ],
+        [
+          params.name,
+          DEFAULT_INITIAL_VOTING_DELAY,
+          DEFAULT_INITIAL_VOTING_PERIOD,
+          DEFAULT_INITIAL_PROPOSAL_THRESHOLD,
+        ]
+      )
       : '0x' as Hex; // NoOpGovernanceFactory ignores the data
 
     return {
@@ -573,6 +575,7 @@ export class ReadWriteFactory extends ReadFactory {
     tokenFactoryData: TokenFactoryData;
     poolInitializer: Address;
     poolInitializerData: DopplerData;
+    customDerc20Bytecode?: `0x${string}`;
   }): [Hash, Address, Address, Hex, Hex] {
     const isToken0 =
       params.numeraire !== '0x0000000000000000000000000000000000000000';
@@ -720,7 +723,7 @@ export class ReadWriteFactory extends ReadFactory {
     );
 
     const tokenInitHash = keccak256(
-      encodePacked(['bytes', 'bytes'], [DERC20Bytecode as Hex, initHashData])
+      encodePacked(['bytes', 'bytes'], [params.customDerc20Bytecode as Hex ?? DERC20Bytecode as Hex, initHashData])
     );
 
     for (let salt = BigInt(0); salt < BigInt(1_000_000); salt++) {
