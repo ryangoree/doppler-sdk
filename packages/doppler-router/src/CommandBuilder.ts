@@ -188,8 +188,8 @@ export class CommandBuilder {
   }
 
   addSweep(
-    recipient: Address,
     asset: Address,
+    recipient: Address,
     amount: bigint
   ): this {
     return this.addCommand(CommandType.SWEEP, [asset, recipient, amount]);
