@@ -192,7 +192,7 @@ export class CommandBuilder {
     asset: Address,
     amount: bigint
   ): this {
-    return this.addCommand(CommandType.SWEEP, [recipient, asset, amount]);
+    return this.addCommand(CommandType.SWEEP, [asset, recipient, amount]);
   }
 
   addPayPortion(
