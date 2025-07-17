@@ -509,7 +509,7 @@ export class ReadWriteFactory extends ReadFactory {
 
     // Determine which governance factory to use
     const selectedGovernanceFactory = useGovernance
-      ? addresses.governanceFactory
+      ? governanceFactory
       : addresses.noOpGovernanceFactory;
 
     // When using NoOpGovernanceFactory, the data is ignored, but we still need to provide valid encoding
