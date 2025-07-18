@@ -1,7 +1,7 @@
-import { Context } from "ponder:registry";
-import { token } from "ponder.schema";
-import { Address, zeroAddress } from "viem";
 import { DERC20ABI } from "@app/abis";
+import { token } from "ponder.schema";
+import { Context } from "ponder:registry";
+import { Address, zeroAddress } from "viem";
 import { addPendingTokenImage } from "../pending-token-images";
 
 export const insertTokenIfNotExists = async ({
@@ -175,6 +175,27 @@ export const insertTokenIfNotExists = async ({
           tokenURI,
           timestamp: Number(timestamp),
         });
+      }
+    } else if (tokenURI?.includes("https://api.paragraph.com")) {
+      try {
+        const response = await fetch(tokenURI);
+        tokenUriData = await response.json();
+
+        if (
+          tokenUriData &&
+          typeof tokenUriData === "object" &&
+          "image" in tokenUriData &&
+          typeof tokenUriData.image === "string"
+        ) {
+          if (tokenUriData.image.startsWith("https://")) {
+            image = tokenUriData.image;
+          }
+        }
+      } catch (error) {
+        console.error(
+          `Failed to fetch Paragraph metadata for token ${address}:`,
+          error
+        );
       }
     }
 
